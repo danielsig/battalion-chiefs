@@ -28,6 +28,7 @@ package
 		private function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+			FlashPoint.fixedInterval = 31.25;
 			stage.addEventListener(Event.ENTER_FRAME, FlashPoint.updateHandler);
 			GameObject.world.addComponent(GameCore);
 		}
