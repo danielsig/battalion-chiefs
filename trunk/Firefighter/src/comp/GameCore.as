@@ -2,6 +2,8 @@ package comp
 {
 	
 	import com.battalion.flashpoint.core.*;
+	import com.greensock.TweenMax;
+	import factory.BoxFactory;
 	
 	/**
 	 * ...
@@ -23,6 +25,9 @@ package comp
 			sendMessage("sayThis", "YAHOO!");//no reciever, ExampleComponent has been destroyed.
 			
 			addComponent(TutorialComponent);
+			
+			var box : GameObject = BoxFactory.create( { x:400, y:225, url:"assets/img/test.png" } );
+			TweenMax.to(box.transform, 2, { x:50, y:50} );
 		}
 		
 	}
