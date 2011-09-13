@@ -40,6 +40,7 @@ package com.battalion.flashpoint.core
 		internal var _before : Object = { };
 		internal var _update : Vector.<Function> = new Vector.<Function>();
 		internal var _fixedUpdate : Vector.<Function> = new Vector.<Function>();
+		internal var _start : Vector.<Function> = new Vector.<Function>();
 		
 		
 		public function get parent() : GameObject
@@ -123,17 +124,21 @@ package com.battalion.flashpoint.core
 				this[name] = component;
 				
 				var compObj : Object = component;
-				if (compObj.hasOwnProperty("update"))
+				if (compObj.hasOwnProperty("update") && compObj.update is Function)
 				{
 					_update.push(compObj.update);
 				}
-				if (compObj.hasOwnProperty("fixedUpdate"))
+				if (compObj.hasOwnProperty("fixedUpdate") && compObj.fixedUpdate is Function)
 				{
 					_fixedUpdate.push(compObj.fixedUpdate);
 				}
-				if (compObj.hasOwnProperty("awake"))
+				if (compObj.hasOwnProperty("awake") && compObj.awake is Function)
 				{
 					compObj.awake();
+				}
+				if (compObj.hasOwnProperty("start") && compObj.start is Function)
+				{
+					_start.push(compObj.start);
 				}
 			}
 			_components.length = index;
@@ -401,17 +406,21 @@ package com.battalion.flashpoint.core
 			}
 			
 			var compObj : Object = instance;
-			if (compObj.hasOwnProperty("update"))
+			if (compObj.hasOwnProperty("update") && compObj.update is Function)
 			{
 				_update.push(compObj.update);
 			}
-			if (compObj.hasOwnProperty("fixedUpdate"))
+			if (compObj.hasOwnProperty("fixedUpdate") && compObj.fixedUpdate is Function)
 			{
 				_fixedUpdate.push(compObj.fixedUpdate);
 			}
-			if (compObj.hasOwnProperty("awake"))
+			if (compObj.hasOwnProperty("awake") && compObj.awake is Function)
 			{
 				compObj.awake();
+			}
+			if (compObj.hasOwnProperty("start") && compObj.start is Function)
+			{
+				_start.push(compObj.start);
 			}
 			
 			return instance;
@@ -590,10 +599,39 @@ package com.battalion.flashpoint.core
 		}
 		internal function update() : void
 		{
-			for each(var f : Function in _update)
+			//START
+			if (_start.length)
+			{
+				for each(var f : Function in _start)
+				{
+					f();
+				}
+				_start.length = 0;
+			}
+			//BEFORE UPDATE
+			if (_before.update)
+			{
+				for each(var before : Array in _before.update)
+				{
+					sendMessage.apply(this, before);
+				}
+				delete _before.update;
+			}
+			//UPDATE
+			for each(f in _update)
 			{
 				f();
 			}
+			//AFTER UPDATE
+			if (_after.update)
+			{
+				for each(var after : Array in _after.update)
+				{
+					sendMessage.apply(this, after);
+				}
+				delete _after.update;
+			}
+			//REPEAT ON CHILDREN
 			for each(var child : GameObject in _children)
 			{
 				child.update();
@@ -609,10 +647,30 @@ package com.battalion.flashpoint.core
 		}
 		internal function fixedUpdate() : void
 		{
+			//BEFORE FIXED UPDATE
+			if (_before.fixedUpdate)
+			{
+				for each(var before : Array in _before.fixedUpdate)
+				{
+					sendMessage.apply(this, before);
+				}
+				delete _before.fixedUpdate;
+			}
+			//FIXED UPDATE
 			for each(var f : Function in _fixedUpdate)
 			{
 				f();
 			}
+			//AFTER FIXED UPDATE
+			if (_after.fixedUpdate)
+			{
+				for each(var after : Array in _after.fixedUpdate)
+				{
+					sendMessage.apply(this, after);
+				}
+				delete _after.fixedUpdate;
+			}
+			//REPEAT ON CHILDREN
 			for each(var child : GameObject in _children)
 			{
 				child.fixedUpdate();
