@@ -42,6 +42,10 @@ package com.battalion.flashpoint.core
 		internal var _fixedUpdate : Vector.<Function> = new Vector.<Function>();
 		internal var _start : Vector.<Function> = new Vector.<Function>();
 		
+		public function get destroyed() : Boolean
+		{
+			return _parent == null;
+		}
 		
 		public function get parent() : GameObject
 		{
@@ -595,6 +599,49 @@ package com.battalion.flashpoint.core
 			if (_components.length)
 			{
 				_components[0].sequence.apply(_components[0], messages);
+			}
+		}
+		public function toString() : String
+		{
+			if (_parent != WORLD)
+			{
+				return _parent.toString() + "." + _name;
+			}
+			return _name;
+		}
+		public function log(...args) : void
+		{
+			CONFIG::debug
+			{
+				if (log.length > 0)
+				{
+					trace(this + ": " + args.join(", "));
+				}
+				else
+				{
+					var i : int = _children.length;
+					var names : Vector.<String> = new Vector.<String>(i);
+					while(i--)
+					{
+						names[i] = _children[i].name;
+					}
+					trace(this + ": " + names.join(", "));
+					for each(var comp : Component in _components)
+					{
+						var name : String = getQualifiedClassName(comp);
+						name = name.slice(name.lastIndexOf("::") + 2);
+						name = name.charAt(0).toLowerCase() + name.slice(1);
+						trace("\t" + name + ": ");
+						var info : XMLList = describeType(comp).children();
+						for each(var member : XML in info)
+						{
+							if ((member.name() == "variable" || member.name() == "accessor"))
+							{
+								trace("\t\t" + member.@name + ": " + comp[member.@name]);
+							}
+						}
+					}
+				}
 			}
 		}
 		internal function update() : void

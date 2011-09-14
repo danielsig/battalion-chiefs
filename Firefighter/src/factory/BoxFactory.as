@@ -14,10 +14,20 @@ package factory
 		public static function create(args : Object = null) : GameObject
 		{
 			args = args || { };
-			var obj : GameObject = new GameObject(Renderer);
-			if(args.x) obj.transform.x = args.x;
-			if(args.y) obj.transform.y = args.y;
-			if(args.url) obj.renderer.url = args.url;
+			if (args.name)
+			{
+				var obj : GameObject = new GameObject(args.name, Renderer);
+			}
+			else
+			{
+				obj = new GameObject(Renderer);
+			}
+			if (args.x) obj.transform.x = args.x;
+			if (args.y) obj.transform.y = args.y;
+			if (args.url) obj.renderer.url = args.url;
+			if (args.smoothing) obj.renderer.smoothing = args.smoothing;
+			if (args.pixelSnapping) obj.renderer.pixelSnapping = args.pixelSnapping;
+			if (args.children) obj.addChildren.apply(obj, args.children);
 			return obj;
 		}
 		

@@ -1,11 +1,16 @@
 package com.battalion.flashpoint.display 
 {
+	import com.battalion.flashpoint.core.Transform;
+	import com.danielsig.BitmapLoader;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import com.battalion.flashpoint.comp.Renderer;
+	import com.battalion.flashpoint.comp.Camera;
+	import com.battalion.flashpoint.core.GameObject;
 	
 	/**
 	 * ...
@@ -17,21 +22,51 @@ package com.battalion.flashpoint.display
 		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
 		
 		private var _sprites : Vector.<Sprite> =  new Vector.<Sprite>();
-		private var _dynamicLayer : Sprite = new Sprite();
 		private var _bounds : Rectangle;
+		private var _cam : Camera;
+		private var _content : Sprite = new Sprite();//to center things
+		private var _layers : Sprite = new Sprite();//to perferm transformation on all layers
+		private var _dynamicLayer : Sprite = new Sprite();
 		
 		public static function addToView(renderer : Renderer) : void
 		{
 			_renderers.push(renderer);
 		}
-		public function View(bounds : Rectangle)
+		public function View(bounds : Rectangle, camName : String = "cam")
 		{
+			CONFIG::debug
+			{
+				if (!GameObject.world)
+				{
+					throw new Error("You can not instantiate a view before you initilize the flashpoint engine.");
+				}
+			}
 			_bounds = bounds || new Rectangle;
-			addChild(_dynamicLayer);
+			_layers.addChild(_dynamicLayer);
+			_content.addChild(_layers);
+			_content.x = bounds.width * 0.5;
+			_content.y = bounds.height * 0.5;
+			addChild(_content);
 			addEventListener(Event.ENTER_FRAME, onEveryFrame);
+			_cam = new GameObject(camName || "cam", Camera).camera;
 		}
 		private function onEveryFrame(e : Event) : void
 		{
+			if (!_cam.gameObject || _cam.gameObject.destroyed)
+			{
+				trace(_cam.gameObject);
+				_cam = null;
+				parent.removeChild(this);
+				removeEventListener(Event.ENTER_FRAME, onEveryFrame);
+				return;
+			}
+			/*var mat : Matrix = new Matrix();
+			mat.invert()*/
+			var tr : Transform = _cam.gameObject.transform;
+			var m : Matrix = _cam.gameObject.transform.matrix.clone();
+			m.invert();
+			_layers.transform.matrix = m;
+			
 			_sprites.length = _renderers.length;
 			var i : int = _renderers.length;
 			while(i--)
@@ -42,14 +77,26 @@ package com.battalion.flashpoint.display
 					if (!_sprites[i])
 					{
 						_sprites[i] = new Sprite();
-						_sprites[i].addChild(new Bitmap((renderer.bitmapData as BitmapData)));
+						var bitmap : Bitmap = new Bitmap((renderer.bitmapData as BitmapData), renderer.pixelSnapping, renderer.smoothing)
+						bitmap.x = -bitmap.width * 0.5;
+						bitmap.y = -bitmap.height * 0.5;
+						_sprites[i].addChild(bitmap);
 					}
 					_dynamicLayer.addChild(_sprites[i]);
-					_sprites[i].transform.matrix = renderer.gameObject.transform.matrix;
+					if (renderer.offset)
+					{
+						var matrix : Matrix = renderer.offset.clone();
+						matrix.concat(renderer.gameObject.transform.globalMatrix);
+						_sprites[i].transform.matrix = matrix;
+					}
+					else
+					{
+						_sprites[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
+					}
 				}
-				else if(_sprites[i] && _dynamicLayer.contains(_sprites[i]))
+				else if(_sprites[i])
 				{
-					_dynamicLayer.removeChild(_sprites[i]);
+					_sprites[i].parent.removeChild(_sprites[i]);
 					_sprites[i] = null;
 				}
 			}

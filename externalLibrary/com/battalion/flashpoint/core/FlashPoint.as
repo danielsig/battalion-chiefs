@@ -27,6 +27,7 @@ package com.battalion.flashpoint.core
 			CONFIG::release
 			{
 				GameObject.world = GameObject.WORLD;
+				Component.world = GameObject.WORLD;
 			}
 			_timer.addEventListener(TimerEvent.TIMER, fixedUpdate);
 			_timer.start();
@@ -35,6 +36,7 @@ package com.battalion.flashpoint.core
 		private static function update(event : Event = null) : void
 		{
 			GameObject.WORLD.update();
+			Transform.flushGlobal();
 		}
 		private static function fixedUpdate(event : Event = null) : void
 		{

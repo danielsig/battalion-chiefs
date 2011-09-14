@@ -64,6 +64,16 @@ package com.danielsig
 			}
 			return null;
 		}
+		public static function getCache(url : String) : *
+		{
+			url = "_" + url.replace(/[^a-zA-Z0-9_-]/g, "");
+			return _cache[url];
+		}
+		public static function setCache(url : String, data : *) : void
+		{
+			url = "_" + url.replace(/[^a-zA-Z0-9_-]/g, "");
+			_cache[url] = data;
+		}
 		public static function isSheet(url : String) : Boolean
 		{
 			return url.search(/~\d+~.*/) != -1;
@@ -160,8 +170,29 @@ package com.danielsig
 			}
 			else
 			{// this is not a sprite sheet
-				_loadingBackup = true;
-				request.url = getBackupURL(url);
+				//is it cached?
+				var alternate : String = getBackupURL(url);
+				var image : * = getCache(alternate);
+				if (image == undefined)
+				{//not loaded before
+					_loadingBackup = true;
+					request.url = _urlToCache = alternate;
+				}
+				else if (image is LoaderInfo)
+				{//is loading but has not finished
+					_info = image;
+					addListeners();
+					return;
+				}
+				else if(image is Bitmap)
+				{//loaded before and succeeded
+					_content = new Bitmap(image);
+					dispatchSuccess();
+				}
+				else
+				{//loaded before but failed
+					dispatchError();
+				}
 			}
 			//trace("url:      " + request.url + " index: " + _index);
 			var loader : Loader = new Loader();
@@ -169,6 +200,10 @@ package com.danielsig
 			if(_sheetIndex != -1)
 			{
 				_sheetLoaders[_sheetIndex] = _info;
+			}
+			else if(_urlToCache)
+			{
+				setCache(_urlToCache, _info);
 			}
 			//Tracer.TraceArgs("sheetIndex: " + _sheetIndex);
 			addListeners();
@@ -207,9 +242,11 @@ package com.danielsig
 		private var _content : DisplayObject = null;
 		private var _context : LoaderContext = null;
 		private var _backupURL : String = null;
+		private var _urlToCache : String = null;
 		private var _loadingBackup : Boolean = false;
 		private var _info : LoaderInfo;
 		
+		private static var _cache : Object = {};
 		private static var _sheetURLs : Vector.<String> = new Vector.<String>();
 		private static var _sheetLoaders : Vector.<LoaderInfo> = new Vector.<LoaderInfo>();
 		private static var _sheets : Vector.<Vector.<BitmapData>> = new Vector.<Vector.<BitmapData>>();
@@ -327,22 +364,41 @@ package com.danielsig
 			else
 			{
 				_content = _info.content;
+				if (_content is Bitmap && _urlToCache)
+				{
+					setCache(_urlToCache, (_content as Bitmap).bitmapData);
+				}
+				_urlToCache = null;
 			}
 			return true;
 		}
 		private function loadBackup() : void
 		{
 			_loadingBackup = true;
-			var loader : Loader = new Loader();
-			_info = loader.contentLoaderInfo;
-			addListeners();
-			try
-			{
-				loader.load(new URLRequest(_backupURL), _context);
+			var image : * = getCache(_backupURL);
+			if (image == undefined)
+			{//not loaded before
+				_loadingBackup = true;
+				var loader : Loader = new Loader();
+				_info = loader.contentLoaderInfo;
+				addListeners();
+				try
+				{
+					loader.load(new URLRequest(_backupURL), _context);
+				}
+				catch(error : Error)
+				{
+					onFail(new IOErrorEvent(IOErrorEvent.IO_ERROR));
+				}
 			}
-			catch(error : Error)
-			{
-				onFail(new IOErrorEvent(IOErrorEvent.IO_ERROR));
+			else if(image)
+			{//loaded before and succeeded
+				_content = new Bitmap(image);
+				dispatchSuccess();
+			}
+			else
+			{//loaded before but failed
+				dispatchError();
 			}
 		}
 		private function loadSprite() : Boolean
