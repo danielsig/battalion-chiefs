@@ -6,6 +6,8 @@ package com.battalion.flashpoint.comp
 	import com.danielsig.LoaderMax;
 	import flash.display.BitmapData;
 	import flash.display.Bitmap;
+	import flash.display.PixelSnapping;
+	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
 	import flash.events.*;
@@ -16,6 +18,19 @@ package com.battalion.flashpoint.comp
 	 */
 	public final class Renderer extends Component 
 	{
+		
+		/**
+		 * in case you don't want the bitmap to be centered about the GameObject's center.
+		 */
+		public var offset : Matrix = null;
+		/**
+		 * set this property right before adding the component, in order for it to work.
+		 */
+		public var pixelSnapping : String = PixelSnapping.NEVER;
+		/**
+		 * set this property right before adding the component, in order for it to work.
+		 */
+		public var smoothing : Boolean = false;
 		
 		private var _url : String = null;
 		private var _loader : LoaderMax;

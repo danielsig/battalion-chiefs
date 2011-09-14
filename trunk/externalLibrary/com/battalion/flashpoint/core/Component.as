@@ -1,6 +1,7 @@
 package com.battalion.flashpoint.core 
 {
 	import flash.utils.getQualifiedClassName;
+	import flash.utils.describeType;
 	
 	/**
 	 * ...
@@ -15,7 +16,13 @@ package com.battalion.flashpoint.core
 		{
 			internal var _requiredBy : Vector.<Component> = new Vector.<Component>();
 			internal var _require : Vector.<Component> = new Vector.<Component>();
+			public static function get world() : GameObject
+			{
+				return GameObject.WORLD;
+			}
 		}
+		CONFIG::release
+		public static var world : GameObject;
 		
 		public final function get gameObject() : GameObject
 		{
@@ -227,7 +234,7 @@ package com.battalion.flashpoint.core
 				if (!messages.length) throw new Error("Expecting at least one message as parameter.");
 				for each(var message : String in messages)
 				{
-					if (messages == null) throw new Error("Each message in teh sequence must be non null.");
+					if (messages == null) throw new Error("Each message in the sequence must be non null.");
 				}
 			}
 			sendAfter(messages[0], invoker);
@@ -245,7 +252,7 @@ package com.battalion.flashpoint.core
 				if (!messages.length) throw new Error("Expecting at least one message as parameter.");
 				for each(var message : String in messages)
 				{
-					if (messages == null) throw new Error("Each message in teh sequence must be non null.");
+					if (messages == null) throw new Error("Each message in the sequence must be non null.");
 				}
 			}
 
@@ -255,6 +262,39 @@ package com.battalion.flashpoint.core
 				sendAfter(messages[c], messages[c-1]);
 			}
 			sendMessage(messages[0]);
+		}
+		public function toString() : String
+		{
+			var name : String = getQualifiedClassName(this);
+			name = name.slice(name.lastIndexOf("::") + 2);
+			name = name.charAt(0).toLowerCase() + name.slice(1);
+			return _gameObject ? (_gameObject + "." + name) : ("null." + name);
+		}
+		public function log(...args) : void
+		{
+			CONFIG::debug
+			{
+				var name : String = getQualifiedClassName(this);
+				name = name.slice(name.lastIndexOf("::") + 2);
+				name = name.charAt(0).toLowerCase() + name.slice(1);
+					
+				if (args.length > 0)
+				{
+					trace(_gameObject._name + "." + name + ": " + args.join(", "));
+				}
+				else
+				{
+					trace(_gameObject._name + "." + name + ": ");
+					var info : XMLList = describeType(this).children();
+					for each(var member : XML in info)
+					{
+						if ((member.name() == "variable" || member.name() == "accessor"))
+						{
+							trace("\t" + member.@name + ": " + this[member.@name]);
+						}
+					}
+				}
+			}
 		}
 	}
 
