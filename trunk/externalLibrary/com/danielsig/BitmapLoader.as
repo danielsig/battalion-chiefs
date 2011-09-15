@@ -97,7 +97,7 @@
 						newLoader.addEventListener(IOErrorEvent.IO_ERROR, bitmapFailedLoading);
 					}
 					_loaders[i] = newLoader;
-					newLoader.Load(imageUrl);
+					newLoader.load(imageUrl);
 				}
 				else
 				{
@@ -131,7 +131,7 @@
 						var url : String = LoaderMax.getBackupURL(_urls[index].slice(0, _urls[index].lastIndexOf(".")));
 						url	+= _otherFormats[_otherFormatChecks[index]];
 						var imageUrl : URLRequest = new URLRequest(url);
-						_loaders[index].Load(imageUrl);
+						_loaders[index].load(imageUrl);
 						_otherFormatChecks[index]++;
 						tryAgain = true;
 					}
