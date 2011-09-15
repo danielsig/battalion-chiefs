@@ -72,17 +72,25 @@ package com.battalion.flashpoint.display
 			while(i--)
 			{
 				var renderer : Renderer = _renderers[i];
-				if (_bounds.intersects(renderer.bounds))
+				if (renderer.bitmapData)
 				{
-					if (!_sprites[i])
+					if (renderer.updateBitmap)
 					{
-						_sprites[i] = new Sprite();
-						var bitmap : Bitmap = new Bitmap((renderer.bitmapData as BitmapData), renderer.pixelSnapping, renderer.smoothing)
-						bitmap.x = -bitmap.width * 0.5;
-						bitmap.y = -bitmap.height * 0.5;
-						_sprites[i].addChild(bitmap);
+						if (!_sprites[i])
+						{
+							_sprites[i] = new Sprite();
+							var bitmap : Bitmap = new Bitmap((renderer.bitmapData as BitmapData), renderer.pixelSnapping, renderer.smoothing)
+							bitmap.x = -bitmap.width * 0.5;
+							bitmap.y = -bitmap.height * 0.5;
+							_sprites[i].addChild(bitmap);
+							_dynamicLayer.addChild(_sprites[i]);
+						}
+						else
+						{
+							(_sprites[i].getChildAt(0) as Bitmap).bitmapData = renderer.bitmapData;
+						}
+						renderer.updateBitmap = false;
 					}
-					_dynamicLayer.addChild(_sprites[i]);
 					if (renderer.offset)
 					{
 						var matrix : Matrix = renderer.offset.clone();

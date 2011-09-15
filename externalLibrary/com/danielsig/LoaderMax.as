@@ -66,12 +66,12 @@ package com.danielsig
 		}
 		public static function getCache(url : String) : *
 		{
-			url = "_" + url.replace(/[^a-zA-Z0-9_-]/g, "");
+			url = "_" + url.replace(/[^a-zA-Z0-9_]/g, "");
 			return _cache[url];
 		}
 		public static function setCache(url : String, data : *) : void
 		{
-			url = "_" + url.replace(/[^a-zA-Z0-9_-]/g, "");
+			url = "_" + url.replace(/[^a-zA-Z0-9_]/g, "");
 			_cache[url] = data;
 		}
 		public static function isSheet(url : String) : Boolean

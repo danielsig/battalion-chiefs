@@ -101,42 +101,60 @@ package com.danielsig
 			var sprites : Vector.<BitmapData> = new Vector.<BitmapData>();
 			var xPos : int = 0;
 			var yPos : int = 0;
-			for(var i : int = 0; i < 0xFFF; i++)
+			if (sheet.getPixel(0, 0) == END)
 			{
-				var infoX : int = i % sheet.width;
-				var infoY : int = i / sheet.width;
-				var pixel : uint = sheet.getPixel32(infoX, infoY);
-
-				if(pixel != NULL && pixel == END || pixel != NULL && infoY == sheet.height)
+				var columns : int = sheet.getPixel(1, 0);
+				columns++;
+				var rows : int = sheet.getPixel(2, 0);
+				if (!rows) rows++;
+				var width : int = sheet.width / columns;
+				var height : int = (sheet.height - 1) / rows;
+				for (var row : int = 0; row < rows; row++)
 				{
-					var sple : int = 1;
-				}
-				if(pixel == NULL)
-				{
-					//Tracer.TraceLine("#" + i, "NULL");
-					sprites.push(null);
-				}
-				else if(pixel == END || infoY == sheet.height)
-				{
-					break;
-				}
-				else
-				{
-					var width : int = pixel & 0x00000FFF;
-					var nextYPos : int = (pixel & 0x00FFF000) >>> 12;
-					if(nextYPos != yPos)
+					for (var col : int = 0; col < columns; col++)
 					{
-						xPos = 0;
-						yPos = nextYPos;
+						var bitmap : BitmapData = new BitmapData(width, height);
+						bitmap.copyPixels(sheet, new Rectangle(col * width, 1 + row * height, width, height), new Point());
+						sprites.push(bitmap);
 					}
-					var height : int = getHeight(sheet, infoX, infoY, xPos);
-					var bitmap : BitmapData = new BitmapData(width, height);
-					bitmap.copyPixels(sheet, new Rectangle(xPos, yPos, width, height), new Point());
-					//Tracer.TraceLine("#" + i, xPos, yPos, width, height);
-					//Tracer.DisplayBitmapArgs(bitmap);
-					//Tracer.DisplayBitmapArgs(bitmap);
-					sprites.push(bitmap);
-					xPos += width;
+				}
+			}
+			else
+			{
+				for(var i : int = 0; i < 0xFFF; i++)
+				{
+					var infoX : int = i % sheet.width;
+					var infoY : int = i / sheet.width;
+					var pixel : uint = sheet.getPixel32(infoX, infoY);
+
+					if(pixel == NULL)
+					{
+						//Tracer.TraceLine("#" + i, "NULL");
+						sprites.push(null);
+					}
+					else if(pixel == END || infoY == sheet.height)
+					{
+						break;
+					}
+					else
+					{
+						width = pixel & 0x00000FFF;
+						var nextYPos : int = (pixel & 0x00FFF000) >>> 12;
+						if(nextYPos != yPos)//if not same row
+						{
+							//go to next row
+							xPos = 0;
+							yPos = nextYPos;
+						}
+						height = getHeight(sheet, infoX, infoY, xPos);
+						bitmap = new BitmapData(width, height);
+						bitmap.copyPixels(sheet, new Rectangle(xPos, yPos, width, height), new Point());
+						//Tracer.TraceLine("#" + i, xPos, yPos, width, height);
+						//Tracer.DisplayBitmapArgs(bitmap);
+						//Tracer.DisplayBitmapArgs(bitmap);
+						sprites.push(bitmap);
+						xPos += width;
+					}
 				}
 			}
 			//Tracer.DisplayBitmap(sprites);

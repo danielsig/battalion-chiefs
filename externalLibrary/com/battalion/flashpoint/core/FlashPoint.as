@@ -1,8 +1,8 @@
 package com.battalion.flashpoint.core 
 {
+	import aw.utils.AccurateTimer;
+	import aw.events.AccurateTimerEvent;
 	import flash.events.Event;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
 	
 	/**
 	 * ...
@@ -14,7 +14,7 @@ package com.battalion.flashpoint.core
 		public static var timeScale : Number = 1;
 		public static var fixedInterval : Number = 20;
 		
-		private static var _timer : Timer = new Timer(fixedInterval / timeScale);
+		private static var _timer : AccurateTimer = new AccurateTimer(fixedInterval / timeScale);
 		
 		/**
 		 * just think of it as a funtion and add it as an even listener to the ENTER_FRAME event of the stage. e.g
@@ -29,7 +29,7 @@ package com.battalion.flashpoint.core
 				GameObject.world = GameObject.WORLD;
 				Component.world = GameObject.WORLD;
 			}
-			_timer.addEventListener(TimerEvent.TIMER, fixedUpdate);
+			_timer.addEventListener(AccurateTimerEvent.TIMER, fixedUpdate);
 			_timer.start();
 			return update;// hehe the ultimate power of a black box :P
 		}
