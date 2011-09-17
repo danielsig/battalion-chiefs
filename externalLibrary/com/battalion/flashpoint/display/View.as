@@ -13,10 +13,12 @@ package com.battalion.flashpoint.display
 	import com.battalion.flashpoint.core.GameObject;
 	
 	/**
-	 * ...
+	 * View, FlashPoint's display object manager.<br/>
+	 * For every View instance there's a GameObject with a Camera component.
+	 * @see Camera
 	 * @author Battalion Chiefs
 	 */
-	public class View extends Sprite 
+	public final class View extends Sprite 
 	{
 		
 		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
@@ -28,9 +30,24 @@ package com.battalion.flashpoint.display
 		private var _layers : Sprite = new Sprite();//to perferm transformation on all layers
 		private var _dynamicLayer : Sprite = new Sprite();
 		
+		/** @private **/
 		public static function addToView(renderer : Renderer) : void
 		{
 			_renderers.push(renderer);
+		}
+		/** @private **/
+		public static function removeFromView(renderer : Renderer) : void
+		{
+			var index : int = _renderers.indexOf(renderer);
+			if (index < _renderers.length - 1)
+			{
+				_renderers[index] = _renderers.pop();
+			}
+			else if (_renderers.length > 0)
+			{
+				_renderers.length--;
+			}
+			renderer.bitmapData = null;
 		}
 		public function View(bounds : Rectangle, camName : String = "cam")
 		{

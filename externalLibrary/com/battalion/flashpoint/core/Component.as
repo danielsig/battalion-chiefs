@@ -2,19 +2,36 @@ package com.battalion.flashpoint.core
 {
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.describeType;
+	import flash.utils.getDefinitionByName;
 	
 	/**
-	 * ...
+	 * Extend this class in order to make new components.
+	 * Do not instantate components yourself. Instead pass the type of a component as a parameter to certain methods within the GameObject class.
+	 * <strong>Good Design Princibles</strong><p>
+	 * Strive to make only exclusive Components. Always have a good reason for creating non-exclusive components.
+	 * Make all your stateless components exclusive. A stateless Component is basicly a Component with no properties.
+	 * The only exception to make a non-exclusive Component is if it fulfills any of the folowing requirements:
+	 * </p>
+	 * <ul>
+	 * <li>The only public methods are awake, start, update, fixedUpdate and/or onDestroy.</li>
+	 * <li>It's a concise component.</li>
+	 * <li>It has exactly one public method.</li>
+	 * </ul>
+	 * @see IExclusiveComponent
+	 * @see IConciseComponent
+	 * @see GameObject
 	 * @author Battalion Chiefs
 	 */
 	public class Component 
 	{
-		
+		/** @private **/
 		internal var _gameObject : GameObject;
 		
 		CONFIG::debug
 		{
+			/** @private **/
 			internal var _requiredBy : Vector.<Component> = new Vector.<Component>();
+			/** @private **/
 			internal var _require : Vector.<Component> = new Vector.<Component>();
 			public static function get world() : GameObject
 			{
@@ -24,6 +41,9 @@ package com.battalion.flashpoint.core
 		CONFIG::release
 		public static var world : GameObject;
 		
+		/**
+		 * This GameObject.
+		 */
 		public final function get gameObject() : GameObject
 		{
 			CONFIG::debug
@@ -32,6 +52,9 @@ package com.battalion.flashpoint.core
 			}
 			return _gameObject;
 		}
+		/**
+		 * Destroys this Component.
+		 */
 		public final function destroy() : void
 		{
 			CONFIG::debug
@@ -41,6 +64,7 @@ package com.battalion.flashpoint.core
 			}
 			removeComponent(this);
 		}
+		/** @private **/
 		internal final function destroyConcise(message : String) : void
 		{
 			CONFIG::debug
@@ -136,6 +160,58 @@ package com.battalion.flashpoint.core
 			}
 			return instance;
 		}
+		/**
+		 * Use this to communicate with other Components in this GameObject.
+		 * Calls every function named message on every Component in this GameObject.
+		 * An exception to this is when you want to send a message only to a component of a specific type.
+		 * 
+		 * 
+		 * @example Here's an example of how sendMessage works:<listing version="3.0">
+		 * sendMessage("applyDamage", 10);
+		 * //	myComponent: Ouch! -10Hp.
+		 * //	myOtherComponent: Ouch! -10Hp.
+		 * ...
+		 * public class MyComponent extends component implements IExclusiveComponent
+		 * {
+		 * 	public function applyDamage(amount : int) : void
+		 * 	{
+		 * 		log("Ouch! -" + amount + "Hp.");
+		 * 	}
+		 * }
+		 * ...
+		 * public class MyOtherComponent extends component implements IExclusiveComponent
+		 * {
+		 * 	public function applyDamage(amount : int) : void
+		 * 	{
+		 * 		log("Ouch! -" + amount + "Hp.");
+		 * 	}
+		 * }</listing>
+		 * @example Here's an example of how to send a message only to a component of a specific type:<listing version="3.0">
+		 * sendMessage("MyComponent_applyDamage", 10);
+		 * //	myComponent: Ouch! -10Hp.
+		 * ...
+		 * public class MyComponent extends component implements IExclusiveComponent
+		 * {
+		 * 	public function applyDamage(amount : int) : void
+		 * 	{
+		 * 		log("Ouch! -" + amount + "Hp.");
+		 * 	}
+		 * }
+		 * ...
+		 * public class MyOtherComponent extends component implements IExclusiveComponent
+		 * {
+		 * 	public function applyDamage(amount : int) : void
+		 * 	{
+		 * 		log("Ouch! -" + amount + "Hp.");
+		 * 	}
+		 * }</listing>
+		 * @see #sendBefore()
+		 * @see #sendAfter()
+		 * @see #chain()
+		 * @see #sequence()
+		 * @param	message, the name of the message to send.
+		 * @param	...args, the parameters to pass along with the function call.
+		 */
 		public final function sendMessage(message : String, ...args) : void
 		{
 			CONFIG::debug
@@ -145,15 +221,36 @@ package com.battalion.flashpoint.core
 			}
 			var msg : Object = _gameObject._messages;
 			var receivers : Vector.<Function>;
-			
 			if (!msg.hasOwnProperty(message))
 			{
+				
+				var indexOfUnderScore : int = message.indexOf("_");
+				if (indexOfUnderScore > 0)
+				{
+					var functionName : String = message.slice(indexOfUnderScore + 1);
+					var className : String = message.slice(0, indexOfUnderScore);
+					className = className.charAt(0).toLowerCase() + className.slice(1);
+					if (_gameObject.hasOwnProperty(className))
+					{
+						var targetClass : Class = getDefinitionByName(getQualifiedClassName(_gameObject[className])) as Class;
+					}
+					else
+					{
+						targetClass = null;
+					}
+				}
+				else
+				{
+					functionName = message;
+					targetClass = Component;
+				}
+				
 				receivers = new Vector.<Function>();
 				for each(var component : Component in _gameObject._components)
 				{
-					if (component.hasOwnProperty(message))
+					if (component is targetClass && component.hasOwnProperty(functionName))
 					{
-						receivers.push(component[message]);
+						receivers.push(component[functionName]);
 					}
 				}
 				msg[message] = receivers;
@@ -194,6 +291,14 @@ package com.battalion.flashpoint.core
 				delete _gameObject._after[message]
 			}
 		}
+		/**
+		 * Use this to communicate with other Components in this GameObject.
+		 * Like <a href="../core/Component.html#sendMessage()"><code>sendMessage()</code></a> except it differs the call until the target message has been sent.
+		 * 
+		 * @param	message, the function name to call on every Component in this GameObject.
+		 * @param	target, the message that triggers this message, evidently preceding this message.
+		 * @param	...args, the parameters to pass along with the function call.
+		 */
 		public final function sendAfter(message : String, target : String, ...args) : void
 		{
 			CONFIG::debug
@@ -209,6 +314,14 @@ package com.battalion.flashpoint.core
 			}
 			_gameObject._after[target][message] = args;
 		}
+		/**
+		 * Use this to communicate with other Components in this GameObject.
+		 * Like <a href="../core/Component.html#sendMessage()"><code>sendMessage()</code></a> except it differs the call until right before the target message will been sent.
+		 * 
+		 * @param	message, the function name to call on every Component in this GameObject.
+		 * @param	target, the message that should succeed this message.
+		 * @param	...args, the parameters to pass along with the function call.
+		 */
 		public final function sendBefore(message : String, target : String, ...args) : void
 		{
 			CONFIG::debug
@@ -225,6 +338,14 @@ package com.battalion.flashpoint.core
 			}
 			_gameObject._before[target][message] = args;
 		}
+		/**
+		 * Use this to communicate with other Components in this GameObject.
+		 * Chains together messages to be sent after the invoker message is sent.
+		 * 
+		 * @see #sendMessage()
+		 * @param	invoker, the meessage name that triggers this chain of messages.
+		 * @param	...messages, the messages to be chained.
+		 */
 		public final function chain(invoker : String, ...messages) : void
 		{
 			CONFIG::debug
@@ -244,6 +365,13 @@ package com.battalion.flashpoint.core
 				sendAfter(messages[c], messages[c-1]);
 			}
 		}
+		/**
+		 * Use this to communicate with other Components in this GameObject.
+		 * Like <a href="#chain()"><code>chain()</code></a> except that the first parameter is the invoker, and it is called right after the chain has been made.
+		 * 
+		 * @see #sendMessage()
+		 * @param	...messages, the messages to be chained and called.
+		 */
 		public final function sequence(...messages) : void
 		{
 			CONFIG::debug
@@ -270,6 +398,10 @@ package com.battalion.flashpoint.core
 			name = name.charAt(0).toLowerCase() + name.slice(1);
 			return _gameObject ? (_gameObject + "." + name) : ("null." + name);
 		}
+		/**
+		 * Use this instead of trace when possible.
+		 * @param	...args, if no arguments, the Component will list all it's properties and variables.
+		 */
 		public function log(...args) : void
 		{
 			CONFIG::debug

@@ -5,12 +5,29 @@ package com.battalion.flashpoint.core
 	import flash.utils.*;
 	
 	/**
-	 * ...
+	 * GameObjects are the only physical entities in FlashPoint.
+	 * Instantiate this class and then add components to it.
+	 * All GameObjects have a Transform component by default and it can not be removed.
+	 * All components of a specified type are accessable through the getComponents() method.
+	 * When only one component of a specified type exists, you can use the getComponent() method
+	 * but it is advisable to access it using the dot operator.
+	 * @example An example on how to use the dot operator to access Components:<listing version="3.0">
+var myGameObject : GameObject = new GameObject(Renderer);
+trace(myGameObject.renderer);//WORLD.Untitled.renderer
+	 * </listing>
+	 * @example An Example of how to use the dot operator to access GameObjects:<listing version="3.0">
+var myGameObject : GameObject = new GameObject("foo");
+var myChild : GameObject = new GameObject("bar");
+myGameObject.addChild(myChild);
+trace(myChild);//WORLD.foo.bar
+	 * </listing>
+	 * @see Component
+	 * @see Transform
 	 * @author Battalion Chiefs
 	 */
-	public final dynamic class GameObject 
+	public final dynamic class GameObject
 	{
-		
+		/** @private **/
 		internal static var WORLD : GameObject;
 		
 		CONFIG::debug
@@ -23,6 +40,7 @@ package com.battalion.flashpoint.core
 		{
 			return _transform;
 		}
+		/** @private **/
 		CONFIG::debug
 		internal var _transform : Transform;
 		
@@ -31,22 +49,37 @@ package com.battalion.flashpoint.core
 		CONFIG::release
 		public var transform : Transform;
 		
+		/** @private **/
 		internal var _name : String;
+		/** @private **/
 		internal var _parent : GameObject = WORLD;
+		/** @private **/
 		internal var _children : Vector.<GameObject> = new Vector.<GameObject>();
+		/** @private **/
 		internal var _components : Vector.<Component>;
+		/** @private **/
 		internal var _messages : Object = { };
+		/** @private **/
 		internal var _after : Object = { };
+		/** @private **/
 		internal var _before : Object = { };
+		/** @private **/
 		internal var _update : Vector.<Function> = new Vector.<Function>();
+		/** @private **/
 		internal var _fixedUpdate : Vector.<Function> = new Vector.<Function>();
+		/** @private **/
 		internal var _start : Vector.<Function> = new Vector.<Function>();
 		
-		public function get destroyed() : Boolean
+		/**
+		 * This is clearly obvious.
+		 */
+		public function get isDestroyed() : Boolean
 		{
 			return _parent == null;
 		}
-		
+		/**
+		 * The parent GameObject.
+		 */
 		public function get parent() : GameObject
 		{
 			CONFIG::debug
@@ -63,7 +96,12 @@ package com.battalion.flashpoint.core
 			}
 			(value || WORLD).addChild(this);
 		}
-		
+		/**
+		 * The name of this GameObject. The name is used for referencing it from it's parent.<pre></pre>
+		 * @example A GameObject with the name "myGameObject" with no parent, can be accessed like this:<listing version="3.0">
+		 * GameObject.world.myGameObject
+		 * </listing>
+		 */
 		public function get name() : String
 		{
 			CONFIG::debug
@@ -77,12 +115,18 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (value == null) throw new Error("Name must be non null.");
+				if (value == null) throw new Error("Name must be non-null.");
 			}
 			_parent.updateNameOf(this, value);
 			_name = value;
 		}
-		
+		/**
+		 * Creates a GameObject.
+		 * The arguements are Component types that should be instantiated and added to this GameObject.<pre></pre>
+		 * Optionally, the first parameter can be a String denoting the name of the GameObject.<pre></pre>
+		 * Also, if the first or second parameter is a GameObject instance, then that will become this GameObjet's parent.
+		 * @param	...args the name of the GameObject, the parent GameObject and finally a list of Component class types to add.
+		 */
 		public function GameObject(...args)
 		{
 			if (args.length && args[0] is String)
@@ -93,7 +137,11 @@ package com.battalion.flashpoint.core
 			{
 				_name = "Untitled";
 			}
-			if (WORLD)
+			if (args.length && args[0] is GameObject)
+			{
+				parent = args.shift();
+			}
+			else if (WORLD)
 			{
 				parent = WORLD;
 			}
@@ -111,7 +159,8 @@ package com.battalion.flashpoint.core
 				transform = (_components[index++] = new Transform()) as Transform;
 				transform._gameObject = this;
 			}
-			
+			var awakeCalls : Vector.<Function> = new Vector.<Function>(args.length);
+			var awakeIndex : int = 0;
 			for each(var comp : Class in args)
 			{
 				CONFIG::debug
@@ -122,30 +171,51 @@ package com.battalion.flashpoint.core
 				var component : Component = _components[index++] = new comp();//faster than push()
 				component._gameObject = this;
 				
+				CONFIG::debug
+				{
+					if (component is IExclusiveComponent && getComponents(comp).length > 1) throw new Error(getQualifiedClassName(comp) + " is an exclusive component but you're trying to add two instances on one GameObject.");
+				}
+				
 				var name : String = getQualifiedClassName(component);
 				name = name.slice(name.lastIndexOf("::") + 2);
 				name = name.charAt(0).toLowerCase() + name.slice(1);
-				this[name] = component;
 				
-				var compObj : Object = component;
-				if (compObj.hasOwnProperty("update") && compObj.update is Function)
+				if (!(component is IConciseComponent))
 				{
-					_update.push(compObj.update);
+					this[name] = component;
+					
+					var compObj : Object = component;
+					if (compObj.hasOwnProperty("update") && compObj.update is Function)
+					{
+						_update.push(compObj.update);
+					}
+					if (compObj.hasOwnProperty("fixedUpdate") && compObj.fixedUpdate is Function)
+					{
+						_fixedUpdate.push(compObj.fixedUpdate);
+					}
+					if (compObj.hasOwnProperty("awake") && compObj.awake is Function)
+					{
+						awakeCalls[awakeIndex++] = compObj.awake;
+					}
+					if (compObj.hasOwnProperty("start") && compObj.start is Function)
+					{
+						_start.push(compObj.start);
+					}
 				}
-				if (compObj.hasOwnProperty("fixedUpdate") && compObj.fixedUpdate is Function)
+				else if (!_messages.hasOwnProperty(name))
 				{
-					_fixedUpdate.push(compObj.fixedUpdate);
+					_messages[name] = new <Function>[component[name]];
 				}
-				if (compObj.hasOwnProperty("awake") && compObj.awake is Function)
+				else
 				{
-					compObj.awake();
-				}
-				if (compObj.hasOwnProperty("start") && compObj.start is Function)
-				{
-					_start.push(compObj.start);
+					_messages[name].push(component[name]);
 				}
 			}
 			_components.length = index;
+			while (awakeIndex--)
+			{
+				awakeCalls[awakeIndex]();
+			}
 		}
 		
 		private function updateNameOf(child : GameObject, newName : String) : void
@@ -216,7 +286,7 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (child == null) throw new Error("Child must be non null.");
+				if (child == null) throw new Error("Child must be non-null.");
 			}
 			child._parent.unparentChild(child);
 			_children.push(child);
@@ -228,7 +298,7 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (child == null) throw new Error("Child must be non null.");
+				if (child == null) throw new Error("Child must be non-null.");
 				if (child._parent != this) throw new Error("GameObject does not contain the specified child.");
 			}
 			WORLD.addChild(child);
@@ -265,7 +335,7 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (type == null) throw new Error("Type must be non null.");
+				if (type == null) throw new Error("Type must be non-null.");
 			}
 			var results : Vector.<Component> = new Vector.<Component>();
 			for each(var component : Component in _components)
@@ -282,7 +352,7 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (type == null) throw new Error("Type must be non null.");
+				if (type == null) throw new Error("Type must be non-null.");
 			}
 			for each(var component : Component in _components)
 			{
@@ -298,7 +368,7 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (type == null) throw new Error("Type must be non null.");
+				if (type == null) throw new Error("Type must be non-null.");
 			}
 			for each(var component : Component in _components)
 			{
@@ -309,24 +379,38 @@ package com.battalion.flashpoint.core
 			}
 			return null;
 		}
-		
+		/**
+		 * Destroys the GameObject and all of it's components and child GameObjects.
+		 */
 		public function destroy() : void
 		{
 			CONFIG::debug
 			{
 				if (this == WORLD) throw new Error("\r\tI was just chilling, minding my own business when suddenly you call this method:\r\t\t\"GameObject.world.destroy();\"\r\tOMG you're such a NOOB!");
 			}
+			for each(var compObj : Object in _components)
+			{
+				if (compObj.hasOwnProperty("onDestroy") && compObj.onDestroy is Function)
+				{
+					compObj.onDestroy();
+				}
+			}
 			_parent.unparentChild(this);
 			_parent = null;
 		}
 		
-		
-		public function addConcise(comp : Class, message : String) : void
+		/**
+		 * Just like addComponent except it's for concise components.
+		 * 
+		 * @param	comp, the Component type to add.
+		 * @param	lowerCaseName, (optional) mentioning the name of the class but starting with a lowercase letter is only to increase performance.
+		 */
+		public function addConcise(comp : Class, lowerCaseName : String = null) : void
 		{
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (comp == null) throw new Error("Comp must be non null."); 
+				if (comp == null) throw new Error("Comp must be non-null."); 
 				if (!Util.isComponent(comp)) throw new Error(comp + " does not extend " + Component + ".");
 				if (!Util.isConcise(comp)) throw new Error(comp + " does not implement the IConciseComponent interface.");
 			}
@@ -342,42 +426,56 @@ package com.battalion.flashpoint.core
 			instance._gameObject = this;
 			_components.push(instance);
 			
+			if (!lowerCaseName)
+			{
+				lowerCaseName = getQualifiedClassName(instance);
+				lowerCaseName = lowerCaseName.slice(lowerCaseName.lastIndexOf("::") + 2);
+				lowerCaseName = lowerCaseName.charAt(0).toLowerCase() + lowerCaseName.slice(1);
+			}
+			
 			CONFIG::debug
 			{
-				if (!instance.hasOwnProperty(message) || !(instance[message] is Function))
+				if (!instance.hasOwnProperty(lowerCaseName) || !(instance[lowerCaseName] is Function))
 				{
-					throw new Error(instance + " does not contain a function named " + message + "."); 
+					throw new Error(instance + " does not contain a function named " + lowerCaseName + "."); 
 				}
 			}
 			
-			if (!_after.hasOwnProperty(message))
+			if (!_after.hasOwnProperty(lowerCaseName))
 			{
-				_after[message] = { };
+				_after[lowerCaseName] = { };
 			}
-			if (!_after[message].destroyConcise)
+			if (!_after[lowerCaseName].destroyConcise)
 			{
-				_after[message].destroyConcise = [instance.destroyConcise];
+				_after[lowerCaseName].destroyConcise = [instance.destroyConcise];
 			}
 			else
 			{
-				_after[message].destroyConcise.push(instance.destroyConcise);
+				_after[lowerCaseName].destroyConcise.push(instance.destroyConcise);
 			}
 			
-			if (!_messages.hasOwnProperty(message))
+			if (!_messages.hasOwnProperty(lowerCaseName))
 			{
-				_messages[message] = new <Function>[instance[message]];
+				_messages[lowerCaseName] = new <Function>[instance[lowerCaseName]];
 			}
 			else
 			{
-				_messages[message].push(instance[message]);
+				_messages[lowerCaseName].push(instance[lowerCaseName]);
 			}
 		}
+		/**
+		 * Use this to add a Component.<br/>
+		 * Make sure the component is not concise.<br/>
+		 * If so, use the addConcise method instead.
+		 * 
+		 * @param	comp, the Component type to add.
+		 */
 		public function addComponent(comp : Class) : Component
 		{
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (comp == null) throw new Error("Comp must be non null."); 
+				if (comp == null) throw new Error("Comp must be non-null."); 
 				if (!Util.isComponent(comp)) throw new Error(comp + " does not extend " + Component + ".");
 				if (Util.isConcise(comp)) throw new Error(comp + " implements the IConciseComponent interface. Please use the addConcise() method instead.");
 			}
@@ -399,13 +497,34 @@ package com.battalion.flashpoint.core
 
 			for (var message : String in _messages)
 			{
-				if (instance.hasOwnProperty(message))
+				var indexOfUnderScore : int = message.indexOf("_");
+				if (indexOfUnderScore > 0)
+				{
+					var functionName : String = message.slice(indexOfUnderScore + 1);
+					var className : String = message.slice(0, indexOfUnderScore);
+					className = className.charAt(0).toLowerCase() + className.slice(1);
+					if (hasOwnProperty(className))
+					{
+						var targetClass : Class = getDefinitionByName(getQualifiedClassName(this[className])) as Class;
+					}
+					else
+					{
+						targetClass = null;
+					}
+				}
+				else
+				{
+					functionName = message;
+					targetClass = Component;
+				}
+				
+				if (instance is targetClass && instance.hasOwnProperty(functionName))
 				{
 					CONFIG::debug
 					{
-						if (!(instance[message] is Function)) throw new Error("the property " + message + " of " + instance + " conflicts with a message with the same name."); 
+						if (!(instance[functionName] is Function)) throw new Error("the property " + functionName + " of " + instance + " conflicts with a message with the same name."); 
 					}
-					_messages[message].push(instance[message]);
+					_messages[message].push(instance[functionName]);
 				}
 			}
 			
@@ -418,15 +537,14 @@ package com.battalion.flashpoint.core
 			{
 				_fixedUpdate.push(compObj.fixedUpdate);
 			}
-			if (compObj.hasOwnProperty("awake") && compObj.awake is Function)
-			{
-				compObj.awake();
-			}
 			if (compObj.hasOwnProperty("start") && compObj.start is Function)
 			{
 				_start.push(compObj.start);
 			}
-			
+			if (compObj.hasOwnProperty("awake") && compObj.awake is Function)
+			{
+				compObj.awake();
+			}
 			return instance;
 		}
 		
@@ -435,7 +553,7 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (instance == null) throw new Error("Instance must be non null."); 
+				if (instance == null) throw new Error("Instance must be non-null."); 
 				if (_components.indexOf(instance) < 0) throw new Error("GameObject does not contain " + instance + "." );
 				if (instance._requiredBy.length > 0)
 				{
@@ -457,6 +575,13 @@ package com.battalion.flashpoint.core
 			}
 			
 			var compObj : Object = instance;
+			if (compObj.hasOwnProperty("onDestroy") && compObj.onDestroy is Function)
+			{
+				if (compObj.onDestroy())
+				{
+					return;
+				}
+			}
 			if (compObj.hasOwnProperty("update"))
 			{
 				var index : int = _update.lastIndexOf(compObj.update);
@@ -484,10 +609,31 @@ package com.battalion.flashpoint.core
 			
 			for (var message : String in _messages)
 			{
-				if (instance.hasOwnProperty(message))
+				var indexOfUnderScore : int = message.indexOf("_");
+				if (indexOfUnderScore > 0)
+				{
+					var functionName : String = message.slice(indexOfUnderScore + 1);
+					var className : String = message.slice(0, indexOfUnderScore);
+					className = className.charAt(0).toLowerCase() + className.slice(1);
+					if (hasOwnProperty(className))
+					{
+						var targetClass : Class = getDefinitionByName(getQualifiedClassName(this[className])) as Class;
+					}
+					else
+					{
+						targetClass = null;
+					}
+				}
+				else
+				{
+					functionName = message;
+					targetClass = Component;
+				}
+				
+				if (instance is targetClass && instance.hasOwnProperty(functionName))
 				{
 					var rcv : Vector.<Function> = _messages[message];
-					index = rcv.indexOf(instance[message]);
+					index = rcv.indexOf(instance[functionName]);
 					if (index > -1)
 					{
 						if (index < rcv.length - 1)
@@ -531,6 +677,19 @@ package com.battalion.flashpoint.core
 				delete this[name];
 			}
 		}
+		/**
+		 * Use this to communicate with Components in this GameObject.
+		 * Calls every function named message on every Component in this GameObject.
+		 * 
+		 * @exampleText sendMessage("applyDamage", 10);
+		 * ...
+		 * public function applyDamage(amount : int) : void
+		 * {
+		 * 	log("Ouch! -" + amount + "Hp.");
+		 * }
+		 * @param	message, the function name to call on every Component in this GameObject.
+		 * @param	...args, the parameters to pass along with the function call.
+		 */
 		public function sendMessage(message : String, ...args) : void
 		{
 			//TODO: Optimize
@@ -538,13 +697,22 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (message == null) throw new Error("Message must be non null.");
+				if (message == null) throw new Error("Message must be non-null.");
 			}
 			if (_components.length)
 			{
 				_components[0].sendMessage.apply(_components[0], [message].concat(args));
 			}
 		}
+		/**
+		 * Use this to communicate with Components in this GameObject.
+		 * Like sendMessage() except it differs the call until the target message has been sent.
+		 * 
+		 * @see sendMessage()
+		 * @param	message, the function name to call on every Component in this GameObject.
+		 * @param	target, the message that triggers this message, evidently preceding this message.
+		 * @param	...args, the parameters to pass along with the function call.
+		 */
 		public function sendAfter(message : String, target : String, ...args) : void
 		{
 			//TODO: Optimize
@@ -552,14 +720,23 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (message == null) throw new Error("Message must be non null.");
-				if (target == null) throw new Error("Target must be non null.");
+				if (message == null) throw new Error("Message must be non-null.");
+				if (target == null) throw new Error("Target must be non-null.");
 			}
 			if (_components.length)
 			{
 				_components[0].sendAfter.apply(_components[0], [message, target].concat(args));
 			}
 		}
+		/**
+		 * Use this to communicate with Components in this GameObject.
+		 * Like sendMessage() except it differs the call until right before the target message will been sent.
+		 * 
+		 * @see sendMessage()
+		 * @param	message, the function name to call on every Component in this GameObject.
+		 * @param	target, the message that should succeed this message.
+		 * @param	...args, the parameters to pass along with the function call.
+		 */
 		public function sendBefore(message : String, target : String, ...args) : void
 		{
 			//TODO: Optimize
@@ -567,14 +744,22 @@ package com.battalion.flashpoint.core
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (message == null) throw new Error("Message must be non null.");
-				if (target == null) throw new Error("Target must be non null.");
+				if (message == null) throw new Error("Message must be non-null.");
+				if (target == null) throw new Error("Target must be non-null.");
 			}
 			if (_components.length)
 			{
 				_components[0].sendBefore.apply(_components[0], [message, target].concat(args));
 			}
 		}
+		/**
+		 * Use this to communicate with Components in this GameObject.
+		 * Chains together messages to be sent after the invoker message is sent.
+		 * 
+		 * @see sendMessage()
+		 * @param	invoker, the meessage name that triggers this chain of messages.
+		 * @param	...messages, the messages to be chained.
+		 */
 		public function chain(invoker : String, ...messages) : void
 		{
 			//TODO: Optimize
@@ -588,6 +773,14 @@ package com.battalion.flashpoint.core
 				_components[0].chain.apply(_components[0], [invoker].concat(messages));
 			}
 		}
+		/**
+		 * Use this to communicate with Components in this GameObject.
+		 * Like chain() except that the first parameter is the invoker, and it is called right after the chain has been made.
+		 * 
+		 * @see chain()
+		 * @see sendMessage()
+		 * @param	...messages, the messages to be chained and called.
+		 */
 		public function sequence(...messages) : void
 		{
 			//TODO: Optimize
@@ -609,6 +802,10 @@ package com.battalion.flashpoint.core
 			}
 			return _name;
 		}
+		/**
+		 * Use this instead of trace when possible.
+		 * @param	...args, if no arguments, the GameObject will list all of it's child GameObjects and Components' types, properties and variables.
+		 */
 		public function log(...args) : void
 		{
 			CONFIG::debug
