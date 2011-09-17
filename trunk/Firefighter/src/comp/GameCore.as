@@ -1,11 +1,14 @@
 package comp
 {
-	import com.greensock.loading.MP3Loader;
-	import flash.display.PixelSnapping;
 	import com.battalion.flashpoint.core.*;
+	//import com.greensock.loading.MP3Loader;
+	import flash.display.PixelSnapping;
 	import com.greensock.TweenMax;
 	import factory.BoxFactory;
 	import com.greensock.easing.Strong;
+	import com.battalion.flashpoint.comp.*;
+	import com.battalion.flashpoint.comp.misc.*;
+	import flash.utils.*;
 	
 	/**
 	 * ...
@@ -45,9 +48,10 @@ package comp
 			TweenMax.to(box2.transform, 2, { scaleX:2 } );
 			TweenMax.to(box3.transform, 2, { scaleX:2, rotation: -90, onComplete:complete } );
 			*/
-			var loader : MP3Loader = new MP3Loader("http://www.emotionreports.com/music/2001-_A_Space_Odyssey_-_Also_sprach_zarathustra.mp3");
+			/*var loader : MP3Loader = new MP3Loader("http://www.emotionreports.com/music/2001-_A_Space_Odyssey_-_Also_sprach_zarathustra.mp3");
 			loader.load();
-			
+			*/
+			/*
 			for (var i : int = 0; i < 60; i++)
 			{
 				for (var j : int = 0; j < 34; j++)
@@ -56,11 +60,20 @@ package comp
 					samus.animation.gotoAndPlay(int(Math.random() * 9));
 				}
 			}
+			*/
+			//world.cam.transform.x = 1500;
+			//world.cam.transform.y = 875.5;
+			//world.cam.transform.scale = 0.005;
+			//TweenMax.to(world.cam.transform, 95.6, { x:1480, y:830, delay:5, scale:3.8, ease:Strong.easeIn } );
 			
-			world.cam.transform.x = 1480;
-			world.cam.transform.y = 875.5;
-			world.cam.transform.scale = 0.005;
-			TweenMax.to(world.cam.transform, 95, { y:830, delay:5, scale:3.8, ease:Strong.easeIn } );
+			var samusObj : GameObject = new GameObject("samus", Animation, Destroyer);
+			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
+			//uncomment the following to destroy samus after finishing the running animation.
+			//Animation.addLabel("samusRunning", "destroyer", -1);
+			
+			//the folowing two lines of code do the exact same thing.
+			samusObj.animation.play("samusRunning");
+			samusObj.sendMessage("Animation_play", "samusRunning");
 		}
 		public function complete() : void
 		{

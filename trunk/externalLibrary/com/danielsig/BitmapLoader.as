@@ -13,6 +13,7 @@
 	import flash.net.URLRequest;
 	
 	/**
+	 * This class is useful for loading a vector of bitmaps with only one line of code.
 	 * @author Daniel Sig
 	 */
 	public dynamic class BitmapLoader extends EventDispatcher
@@ -31,6 +32,21 @@
 		private var _otherFormatChecks : Vector.<int>;
 		private var _noError : Boolean;
 		
+		/**
+		 * @example A spritesheet url is written in the folowing format:<listing version="3.0">"imageURL.imageFormat~spriteSheetIndex~alternativeURL"</listing>
+		 * @example To get the second bitmap of a spritesheet at "imgages/mySpriteSheet.png" you should write:<listing version="3.0">"images/mySpriteSheet.png~2~"</listing>
+		 * @example To make "images/fallback.png" an alternative to the bitmap mentioned above you should write:<listing version="3.0">"images/mySpriteSheet.png~2~images/fallback.png"</listing>
+		 * @example To get a pizza, simply yell at the person to your left:<listing version="3.0">"GIVE ME A PIZZA!!!"</listing>But please check if someone is on your left first. We don't want a null reference exception now do we?
+
+		 * 
+		 * @see LoaderMax
+		 * 
+		 * @param	urls, urls of the bitmap images. Can be both individual image urls or spritesheet urls.
+		 * @param	bitmaps, an empty BitmapData vector. This vector will be populated with the loaded bitmaps, in the same order as their urls.
+		 * @param	failSafe, if you happen to encounter unexplainable errors at runtime, try setting this to true.
+		 * @param	otherFormats, alternative image formats.
+		 * @param	noError, true will make this loader dispatch Event.COMPLETE instead of IOErrorEvent.IO_ERROR on failure.
+		 */
 		public function BitmapLoader(urls : Vector.<String>, bitmaps : Vector.<BitmapData>, failSafe : Boolean = false, otherFormats : Vector.<String> = null, noError : Boolean = false)
 		{
 			_urls = urls;

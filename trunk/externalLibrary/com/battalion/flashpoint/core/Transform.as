@@ -5,7 +5,9 @@ package com.battalion.flashpoint.core
 	import flash.geom.Point;
 	
 	/**
-	 * ...
+	 * Every GameObject always has exactly one Transform component.<br>
+	 * The Transform component determines the GameObject's position, rotation, scale and shearing.
+	 * @see GameObject
 	 * @author Battalion Chiefs
 	 */
 	public final class Transform extends Component implements IExclusiveComponent
@@ -70,6 +72,7 @@ package com.battalion.flashpoint.core
 			x = value.x;
 			y = value.y;
 		}
+		/** @private **/
 		internal static function flushGlobal() : void
 		{
 			world.transform.flushGlobalRecursive(new Matrix());
@@ -96,6 +99,7 @@ package com.battalion.flashpoint.core
 				child.transform.flushGlobalRecursive(globalMatrix);
 			}
 		}
+		/** @private **/
 		internal function flush() : void
 		{
 			var redo : int = 0;

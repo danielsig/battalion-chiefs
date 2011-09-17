@@ -31,11 +31,14 @@ package comp
 			trace("fixedUpdate: a game logic update loop is being performed.");
 			if (!_countDownToDelete--)
 			{
-				trace("I am about to be destroyed now, bye cruel world");
 				destroy();
 			}
 		}
-		
+		public function onDestroy() : Boolean 
+		{
+			trace("I am about to be destroyed now, bye cruel world");
+			return false;//if I would return true, I could cancel my own destruction, unless the whole GameObject is being destroyed.
+		}
 	}
 	
 }

@@ -26,7 +26,7 @@ package factory
 			if (args.x) obj.transform.x = args.x;
 			if (args.y) obj.transform.y = args.y;
 			if (args.url is String) obj.renderer.url = args.url;
-			if (args.url is Array) obj.animation.setFrameURLs.apply(obj, args.url);
+			if (args.url is Array) obj.animation.loadAndPlay.apply(obj, args.url);
 			if (args.smoothing) obj.renderer.smoothing = args.smoothing;
 			if (args.pixelSnapping) obj.renderer.pixelSnapping = args.pixelSnapping;
 			if (args.children) obj.addChildren.apply(obj, args.children);

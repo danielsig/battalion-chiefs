@@ -17,6 +17,7 @@ package com.danielsig
 	
 	
 	/**
+	 * This class is meant to compliment the Loader class provided by Adobe. This class can load normal bitmap images and spritesheets. Optionally it dispatches an Event.COMPLETE instead of a IOErrorEvent.IO_ERROR on failure.
 	 * @author Daniel Sig
 	 */
 	public class LoaderMax extends EventDispatcher
@@ -69,7 +70,7 @@ package com.danielsig
 			url = "_" + url.replace(/[^a-zA-Z0-9_]/g, "");
 			return _cache[url];
 		}
-		public static function setCache(url : String, data : *) : void
+		private static function setCache(url : String, data : *) : void
 		{
 			url = "_" + url.replace(/[^a-zA-Z0-9_]/g, "");
 			_cache[url] = data;
@@ -110,6 +111,17 @@ package com.danielsig
 		{
 			return ArrayUtilPro.getProperties(_currentLoaders, "url").join("\n");
 		}
+		/**
+		 * Alternative images are only valid when loading from spritesheets.
+		 * Don't worry about loading an image twice. EVERYTHING is cached.
+		 * The loading process of one image is also reused by others who want the same image.
+		 * @example A spritesheet url is written in the folowing format:<listing version="3.0">"imageURL.imageFormat~spriteSheetIndex~alternativeURL"</listing>
+		 * @example To get the second bitmap of a spritesheet at "imgages/mySpriteSheet.png" one should write:<listing version="3.0">"images/mySpriteSheet.png~2~"</listing>
+		 * @example To make "images/fallback.png" an alternative to the bitmap mentioned above one should write:<listing version="3.0">"images/mySpriteSheet.png~2~images/fallback.png"</listing>
+		 * @param	request, can be both a request for an individual image url or a request for a spritesheet url
+		 * @param	context, the context
+		 * @param	noError, true will make this loader dispatch Event.COMPLETE instead of IOErrorEvent.IO_ERROR on failure.
+		 */
 		public function load(request : URLRequest, context : LoaderContext = null, noError : Boolean = false) : void
 		{
 			_totalLoads++;

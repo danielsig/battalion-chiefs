@@ -4,10 +4,11 @@ package com.battalion.flashpoint.comp
 	import com.battalion.flashpoint.core.*;
 	
 	/**
-	 * ...
+	 * A camera component. There's one camera for every View instance.
+	 * @see View
 	 * @author Battalion Chiefs
 	 */
-	public class Camera extends Component 
+	public final class Camera extends Component 
 	{
 		
 		public function start() : void 

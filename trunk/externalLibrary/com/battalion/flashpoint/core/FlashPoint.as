@@ -1,23 +1,30 @@
 package com.battalion.flashpoint.core 
 {
-	import aw.utils.AccurateTimer;
-	import aw.events.AccurateTimerEvent;
+	import com.aw.utils.AccurateTimer;
+	import com.aw.events.AccurateTimerEvent;
 	import flash.events.Event;
 	
 	/**
-	 * ...
+	 * This class is the core of the FlashPoint Engine.
+	 * To Initialize it, add the updateHandler as an event listener to the Event.ENTER_FRAME event of the stage.
 	 * @author Battalion Chiefs
 	 */
 	public final class FlashPoint 
 	{
-		
+		/**
+		 * Setting the timeScale will take effect on the next fixed update.
+		 */
 		public static var timeScale : Number = 1;
+		/**
+		 * Setting the fixedInterval will take effect on the next fixed update.
+		 * This interval is the amount of milliseconds between FixedUpdate() calls on Components.
+		 */
 		public static var fixedInterval : Number = 20;
 		
 		private static var _timer : AccurateTimer = new AccurateTimer(fixedInterval / timeScale);
 		
 		/**
-		 * just think of it as a funtion and add it as an even listener to the ENTER_FRAME event of the stage. e.g
+		 * Add this as an event listener to the ENTER_FRAME event of the stage. e.g
 		 * 	stage.addEventListener(Event.ENTER_FRAME, FlashPoint.updateHandler);
 		 */
 		public static function get updateHandler() : Function

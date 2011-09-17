@@ -49,6 +49,7 @@
   <!-- SWC Libraries -->
   <libraryPaths>
     <element path="C:\Users\DanielSig\Documents\AS3\externalLibrary\MonsterDebugger.swc" />
+    <element path="C:\Users\DanielSig\Documents\AS3\externalLibrary\greensock.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>
@@ -80,7 +81,7 @@
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->
   <options>
-    <option showHiddenPaths="False" />
+    <option showHiddenPaths="True" />
     <option testMovie="ExternalPlayer" />
   </options>
 </project>
