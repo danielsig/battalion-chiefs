@@ -2,6 +2,7 @@ package com.battalion.flashpoint.core
 {
 	import com.aw.utils.AccurateTimer;
 	import com.aw.events.AccurateTimerEvent;
+	import com.battalion.audio.AudioPlayer;
 	import flash.events.Event;
 	
 	/**
@@ -14,7 +15,7 @@ package com.battalion.flashpoint.core
 		/**
 		 * Setting the timeScale will take effect on the next fixed update.
 		 */
-		public static var timeScale : Number = 1;
+		public static var timeScale : Number = 3;
 		/**
 		 * Setting the fixedInterval will take effect on the next fixed update.
 		 * This interval is the amount of milliseconds between FixedUpdate() calls on Components.
@@ -47,6 +48,7 @@ package com.battalion.flashpoint.core
 		}
 		private static function fixedUpdate(event : Event = null) : void
 		{
+			AudioPlayer.globalTimeScale = timeScale;
 			GameObject.WORLD.fixedUpdate();
 			if (fixedInterval / timeScale != _timer.delay)
 			{

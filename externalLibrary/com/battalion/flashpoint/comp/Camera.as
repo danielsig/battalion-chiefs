@@ -11,11 +11,6 @@ package com.battalion.flashpoint.comp
 	public final class Camera extends Component 
 	{
 		
-		public function start() : void 
-		{
-			
-		}
-		
 	}
 	
 }
