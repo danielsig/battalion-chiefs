@@ -402,6 +402,10 @@ trace(myChild);//WORLD.foo.bar
 		/**
 		 * Just like addComponent except it's for concise components.
 		 * 
+		 * @see IConciseComponent
+		 * @see IExclusiveComponent
+		 * @see addComponent()
+		 * 
 		 * @param	comp, the Component type to add.
 		 * @param	lowerCaseName, (optional) mentioning the name of the class but starting with a lowercase letter is only to increase performance.
 		 */
@@ -467,6 +471,9 @@ trace(myChild);//WORLD.foo.bar
 		 * Use this to add a Component.<br/>
 		 * Make sure the component is not concise.<br/>
 		 * If so, use the addConcise method instead.
+		 * 
+		 * @see IExclusiveComponent
+		 * @see addConcise()
 		 * 
 		 * @param	comp, the Component type to add.
 		 */

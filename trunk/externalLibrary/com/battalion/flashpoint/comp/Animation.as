@@ -1,6 +1,7 @@
 package com.battalion.flashpoint.comp 
 {
 	
+	import com.battalion.audio.AudioPlayer;
 	import com.battalion.flashpoint.core.*;
 	import com.danielsig.BitmapLoader;
 	import com.danielsig.StringUtilPro;
@@ -138,11 +139,17 @@ myObj.animation.play("myAnimation");
 		 */
 		public static function listAnimations() : void
 		{
-			var sple : StringUtilPro;
+			/*
+			 * The ASDoc generator thinks I'm not using the STATIC class StringUtilPro
+			 * since I don't instantiate it *facepalm*. So it refuses to generate
+			 * docs unless I at least create this stupid variable. *facepalm*
+			*/
+			var hereYouGoStupidASDocs : StringUtilPro;
+			
 			trace("animations\n{");
 			for (var animationName : String in _animations)
 			{
-				trace(StringUtilPro.toMinLength("\t" + animationName + "$", 50) + "labels: [" + _animationLabels[animationName].join(",") + "]");
+				trace(StringUtilPro.toMinLength("\t" + animationName + "$", 20) + "labels: [" + _animationLabels[animationName].join(",") + "]");
 			}
 			trace("}");
 		}
