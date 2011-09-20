@@ -3,7 +3,11 @@ package com.battalion.flashpoint.core
 	import com.aw.utils.AccurateTimer;
 	import com.aw.events.AccurateTimerEvent;
 	import com.battalion.audio.AudioPlayer;
+	import com.battalion.Input;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
+	import flash.display.Stage;
+	
 	
 	/**
 	 * This class is the core of the FlashPoint Engine.
@@ -25,11 +29,13 @@ package com.battalion.flashpoint.core
 		private static var _timer : AccurateTimer = new AccurateTimer(fixedInterval / timeScale);
 		
 		/**
-		 * Add this as an event listener to the ENTER_FRAME event of the stage. e.g
-		 * 	stage.addEventListener(Event.ENTER_FRAME, FlashPoint.updateHandler);
+		 * Use this to initialize the FlashPoint engine.
+		 * @param	stage, the Stage object.
 		 */
-		public static function get updateHandler() : Function
+		public static function init(stage : Stage) : void
 		{
+			Input.init(stage);
+			
 			GameObject.WORLD = new GameObject("WORLD");
 			GameObject.WORLD._parent = GameObject.WORLD;
 			CONFIG::release
@@ -39,8 +45,10 @@ package com.battalion.flashpoint.core
 			}
 			_timer.addEventListener(AccurateTimerEvent.TIMER, fixedUpdate);
 			_timer.start();
-			return update;// hehe the ultimate power of a black box :P
+			
+			stage.addEventListener(Event.ENTER_FRAME, update);
 		}
+		
 		private static function update(event : Event = null) : void
 		{
 			GameObject.WORLD.update();

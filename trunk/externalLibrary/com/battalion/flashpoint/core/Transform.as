@@ -32,6 +32,7 @@ package com.battalion.flashpoint.core
 		private var _shearYTan : Number = 0;
 		private var _cos : Number = 1;
 		private var _sin : Number = 0;
+		private var _cosSinCalculated : Boolean = false;
 		
 		CONFIG::debug
 		{
@@ -72,6 +73,120 @@ package com.battalion.flashpoint.core
 			x = value.x;
 			y = value.y;
 		}
+		/**
+		 * The position in global coordinates.
+		 */
+		public function get globalPosition() : Point
+		{
+			
+			return new Point(globalMatrix.tx, globalMatrix.ty);
+		}
+		public function set globalPosition(value : Point) : void
+		{
+			value = (globalMatrix as Matrix).transformPoint(value);
+			x = value.x;
+			y = value.y;
+		}
+		/**
+		 * The normalized up vector. Setting this will affect rotation. You do not have to normalize the point before assignment.
+		 */
+		public function get up() : Point
+		{
+			var vector : Point = forward;
+			var temp : Number = vector.x;
+			vector.x = vector.y;
+			vector.y = -temp;
+			return vector;
+		}
+		public function set up(value : Point) : void
+		{
+			var temp : Number = value.x;
+			value.x = -value.y;
+			value.y = temp;
+			forward = value;
+		}
+		/**
+		 * The normalized forward vector. Setting this will affect rotation. You do not have to normalize the point before assignment.
+		 */
+		public function get forward() : Point
+		{
+			var angle : Number = (180 - ((180 - rotation) % 360)) * 0.0174532925;
+			
+			if(angle < 0.7854){
+				if(angle < -1.571){
+					if(angle < -2.3562) _cos = 0.475 * angle * angle + angle * 2.9831 + 3.687;
+					else _cos = 1.2711 * angle + 0.0915 * angle * angle + 1.764;
+				}else if(angle < -0.7854) _cos = 0.676 * angle - 0.0921 * angle * angle + 1.302;
+				else _cos = -0.482 * angle * angle + 1;
+			}else if(angle < 2.3562){
+				if(angle < 1.5708) _cos = -0.676 * angle - 0.0921 * angle * angle + 1.302
+				else _cos = -1.2711 * angle + 0.0915 * angle * angle + 1.764;
+			}else _cos = 0.475 * angle * angle + angle * -2.9831 + 3.687;
+			
+			if(angle < -1.57079632) angle += 4.71238899;
+			else angle -= 1.57079632;
+			
+			if(angle < 0.7854){
+				if(angle < -1.571){
+					if(angle < -2.3562) _sin = 0.475 * angle * angle + angle * 2.9831 + 3.687;
+					else _sin = 1.2711 * angle + 0.0915 * angle * angle + 1.764;
+				}else if(angle < -0.7854) _sin = 0.676 * angle - 0.0921 * angle * angle + 1.302;
+				else _sin = -0.482 * angle * angle + 1;
+			}else if(angle < 2.3562){
+				if(angle < 1.5708) _sin = -0.676 * angle - 0.0921 * angle * angle + 1.302
+				else _sin = -1.2711 * angle + 0.0915 * angle * angle + 1.764;
+			}else _sin = 0.475 * angle * angle + angle * -2.9831 + 3.687;
+			
+			_cosSinCalculated = true;
+			_rotation = rotation;
+			return globalMatrix.deltaTransformPoint(new Point(_cos, _sin));
+		}
+		public function set forward(value : Point) : void
+		{
+			var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			matrix.invert();
+			value = matrix.deltaTransformPoint(value);
+			var xPos : Number = value.x - x;
+			var angle : Number = (value.y - y) / xPos;
+			if (xPos < 0)
+			{
+				if(angle > 0) angle = -9.4 / ((angle + 2.44) * (angle + 2.44)) - 1.57079633;
+				else angle = 9.4 / ((angle - 2.44) * (angle - 2.44)) + 1.57079633;
+			}
+			else if(angle > 0) angle = -9.4 / ((angle + 2.44) * (angle + 2.44)) + 1.57079633;
+			else angle = 9.4 / ((angle - 2.44) * (angle - 2.44)) - 1.57079633;
+			
+			rotation = 180 - ((180 - angle * 57.2957795) % 360);
+		}
+		/**
+		 * RotateTowards another globalPoint. Make sure the <code>point</code> has both an x property and an y property.
+		 * @param	point, the global coordinates to look at.
+		 * @param	angleOffset, the offset of rotation in degrees.
+		 */
+		public function rotateTowards(globalPoint : *, angleOffset : Number = 0) : void
+		{
+			CONFIG::debug
+			{
+				if (!globalPoint) throw new Error("globalPoint must be non-null.");
+				if (!globalPoint.hasOwnProperty("x")) throw new Error("globalPoint does not have an x property.");
+				if (!globalPoint.hasOwnProperty("y")) throw new Error("globalPoint does not have an y property.");
+			}
+			var localPoint : Point = new Point(globalPoint.x, globalPoint.y);
+			var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			matrix.invert();
+			localPoint = matrix.transformPoint(localPoint);
+			var xPos : Number = localPoint.x - x;
+			var angle : Number = (localPoint.y - y) / xPos;
+			if (xPos < 0)
+			{
+				if(angle > 0) angle = -9.4 / ((angle + 2.44) * (angle + 2.44)) - 1.57079633;
+				else angle = 9.4 / ((angle - 2.44) * (angle - 2.44)) + 1.57079633;
+			}
+			else if(angle > 0) angle = -9.4 / ((angle + 2.44) * (angle + 2.44)) + 1.57079633;
+			else angle = 9.4 / ((angle - 2.44) * (angle - 2.44)) - 1.57079633;
+			
+			rotation = 180 - ((180 - angle * 57.2957795 + angleOffset) % 360);
+		}
 		/** @private **/
 		internal static function flushGlobal() : void
 		{
@@ -103,6 +218,11 @@ package com.battalion.flashpoint.core
 		internal function flush() : void
 		{
 			var redo : int = 0;
+			if (_cosSinCalculated)
+			{
+				_cosSinCalculated = false;
+				redo = 15;
+			}
 			if (rotation != _rotation)
 			{
 				redo = 15;

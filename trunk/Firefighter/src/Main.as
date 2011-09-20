@@ -32,7 +32,7 @@ package
 			stage.quality = "low";
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			FlashPoint.fixedInterval = 130;
-			stage.addEventListener(Event.ENTER_FRAME, FlashPoint.updateHandler);
+			FlashPoint.init(stage);
 			GameObject.world.addComponent(GameCore);
 			addChild(new com.battalion.flashpoint.display.View(new Rectangle(0, 0, stage.stageWidth, stage.stageHeight)));
 		}
