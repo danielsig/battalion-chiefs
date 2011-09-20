@@ -22,6 +22,7 @@ package com.battalion.flashpoint.display
 	{
 		
 		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
+		private static var _viewCounter : int = 0;
 		
 		private var _sprites : Vector.<Sprite> =  new Vector.<Sprite>();
 		private var _bounds : Rectangle;
@@ -29,6 +30,7 @@ package com.battalion.flashpoint.display
 		private var _content : Sprite = new Sprite();//to center things
 		private var _layers : Sprite = new Sprite();//to perferm transformation on all layers
 		private var _dynamicLayer : Sprite = new Sprite();
+		private var _name : String;
 		
 		/** @private **/
 		public static function addToView(renderer : Renderer) : void
@@ -58,6 +60,7 @@ package com.battalion.flashpoint.display
 					throw new Error("You can not instantiate a view before you initilize the flashpoint engine.");
 				}
 			}
+			_name = "view" + _viewCounter;
 			_bounds = bounds || new Rectangle;
 			_layers.addChild(_dynamicLayer);
 			_content.addChild(_layers);
@@ -66,6 +69,7 @@ package com.battalion.flashpoint.display
 			addChild(_content);
 			addEventListener(Event.ENTER_FRAME, onEveryFrame);
 			_cam = new GameObject(camName || "cam", Camera).camera;
+			_cam.setBounds(_bounds);
 		}
 		private function onEveryFrame(e : Event) : void
 		{
@@ -101,6 +105,21 @@ package com.battalion.flashpoint.display
 							bitmap.y = -bitmap.height * 0.5;
 							_sprites[i].addChild(bitmap);
 							_dynamicLayer.addChild(_sprites[i]);
+							renderer.sprites[_name] = _sprites[i];
+							
+							if (renderer.rendererInFrontOfThis)
+							{
+								var onFront : Sprite = renderer.rendererInFrontOfThis.sprites[_name];
+								if (onFront)
+								{
+									var back : int = _dynamicLayer.getChildIndex(_sprites[i]);
+									var front : int = _dynamicLayer.getChildIndex(onFront);
+									if (back > front)
+									{
+										_dynamicLayer.swapChildren(_sprites[i], onFront);
+									}
+								}
+							}
 						}
 						else
 						{
@@ -122,6 +141,7 @@ package com.battalion.flashpoint.display
 				else if(_sprites[i])
 				{
 					_sprites[i].parent.removeChild(_sprites[i]);
+					delete renderer.sprites[_name];
 					_sprites[i] = null;
 				}
 			}

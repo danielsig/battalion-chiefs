@@ -168,6 +168,7 @@ myObj.animation.play("myAnimation");
 		internal var _animationName : String = null;
 		private var _cloned : Boolean = false;//see the reverse() method
 		private var _renderer : Renderer;//just for convenience
+		private var _reversed : Boolean = false;
 		
 		/**
 		 * Basically the same thing as the static counterpart <a href="../comp/Animation.html#load()"><code>load()</code></a> except that this method does not require a name.
@@ -185,6 +186,33 @@ myObj.animation.play("myAnimation");
 		public function awake() : void
 		{
 			_renderer = requireComponent(Renderer) as Renderer;
+		}
+		
+		/**
+		 * The direction of the animation relative to the original direction of the animation.
+		 * A value of:
+		 * <ul>
+		 * <li>
+		 * <code>true</code> means that the animation is a reversed version of the original animation.
+		 * </li>
+		 * <li>
+		 * <code>false</code> means that the animation is the same as the original animation.
+		 * </li>
+		 * </ul>
+		 * <b>Note:</b> The only overhead of setting this property is if the new value is different from the current value.
+		 */
+		public function get reversed() : Boolean
+		{
+			return _reversed;
+		}
+		public function set reversed(value : Boolean) : void
+		{
+			if (_reversed != value)
+			{
+				_reversed = value;
+				_frames = (_cloned ? _frames : _frames.concat()).reverse();
+				_p = _length + _p - 1;
+			}
 		}
 		
 		/**
@@ -264,6 +292,12 @@ myObj.animation.play("myAnimation");
 			}
 			_p = frame < 0 ? _length + frame - 1 : frame;
 			_playing = false;
+			_renderer.bitmapData = _frames[_p];
+			_renderer.updateBitmap = _renderer.bitmapData != null;
+			if (_messages[_p])
+			{
+				sendMessage.apply(this, _messages[_p]);
+			}
 		}
 		/**
 		 * jumps to a specific frame and plays from there.
@@ -309,6 +343,7 @@ When selecting another animation, set the <code>animationName</code> to the desi
 		 */
 		public function reverse() : void
 		{
+			_reversed = !_reversed;
 			_frames = (_cloned ? _frames : _frames.concat()).reverse();
 			_p = _length + _p - 1;
 		}

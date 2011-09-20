@@ -22,7 +22,7 @@ package com.battalion.audio
 		
 		public static const SAMPLES_PER_CALLBACK:int = 2048; // Should be >= 2048 && <= 8192
 		
-		private static var _headPhones : Boolean = true;//if true, the panning effect will be a delay in left-right output.
+		private static var _headPhones : Boolean = false;//if true, the panning effect will be a delay in left-right output.
 		/**
 		 * The stereo effect of the headphones setting.
 		 */
@@ -226,9 +226,12 @@ package com.battalion.audio
 		 */
 		public function stop() : void
 		{
-			_channel.stop();
-			_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
-			_channel = null;
+			if (_channel)
+			{
+				_channel.stop();
+				_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
+				_channel = null;
+			}
 		}
 		private function audioFeed(e:SampleDataEvent) : void
 		{
@@ -244,6 +247,8 @@ package com.battalion.audio
 					_data._bytes.position = _start;
 					if (_loops > 0 && !--_loops)
 					{
+						_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
+						_channel = null;
 						return;
 					}
 				}

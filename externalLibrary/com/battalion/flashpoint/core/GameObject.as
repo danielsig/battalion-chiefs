@@ -354,14 +354,55 @@ trace(myChild);//WORLD.foo.bar
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (type == null) throw new Error("Type must be non-null.");
 			}
-			for each(var component : Component in _components)
+			var name : String = type + "";
+			name = name.charAt(8).toLowerCase() + name.slice(8, name.length-1);
+			return this.hasOwnProperty(name);
+		}
+		public function findComponentUpwards(type : Class) : *
+		{
+			CONFIG::debug
 			{
-				if (component is type)
-				{
-					return true;
-				}
+				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (type == null) throw new Error("Type must be non-null.");
 			}
-			return false;
+			var name : String = type + "";
+			name = name.charAt(8).toLowerCase() + name.slice(8, name.length - 1);
+			return findComponentUpwardsRecursive(name);
+		}
+		private function findComponentUpwardsRecursive(type : String) : *
+		{
+			if (this.hasOwnProperty(type) && this[type] is Component)
+				return this[type];
+			if (this != WORLD)
+				return _parent.findComponentUpwardsRecursive(type);
+			return null;
+		}
+		public function findComponentDownwards(type : Class) : *
+		{
+			CONFIG::debug
+			{
+				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (type == null) throw new Error("Type must be non-null.");
+			}
+			var name : String = type + "";
+			name = name.charAt(8).toLowerCase() + name.slice(8, name.length - 1);
+			if (this.hasOwnProperty(name) && this[name] is Component)
+				return this[name];
+			return findComponentDownwardsRecursive(name);
+		}
+		private function findComponentDownwardsRecursive(type : String) : *
+		{
+			for each(var obj : GameObject in _children)
+			{
+				if (obj.hasOwnProperty(type) && obj[type] is Component)
+					return obj[type];
+			}
+			for each(obj in _children)
+			{
+				var results : * = obj.findComponentDownwardsRecursive(type);
+				if (results) return results;
+			}
+			return null;
 		}
 		public function getComponent(type : Class) : Component
 		{
@@ -370,12 +411,11 @@ trace(myChild);//WORLD.foo.bar
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (type == null) throw new Error("Type must be non-null.");
 			}
-			for each(var component : Component in _components)
+			var name : String = type + "";
+			name = name.charAt(8).toLowerCase() + name.slice(8, name.length-1);
+			if (this.hasOwnProperty(name))
 			{
-				if (component is type)
-				{
-					return component;
-				}
+				return this[name];
 			}
 			return null;
 		}

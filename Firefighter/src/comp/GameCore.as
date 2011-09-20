@@ -2,8 +2,10 @@ package comp
 {
 	import com.battalion.flashpoint.core.*;
 	import com.danielsig.MP3Player;
+	import flash.display.Shape;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
 	import flash.net.URLRequest;
-	//import com.greensock.loading.MP3Loader;
 	import flash.display.PixelSnapping;
 	import com.greensock.TweenMax;
 	import factory.BoxFactory;
@@ -68,24 +70,24 @@ package comp
 			//world.cam.transform.scale = 0.005;
 			//TweenMax.to(world.cam.transform, 95.6, { x:1480, y:830, delay:5, scale:3.8, ease:Strong.easeIn } );
 			
-			var samusObj : GameObject = new GameObject("samus", Animation, Dummy);
-			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
-			//Animation.addLabel("samusRunning", "Animation_stop", -1);
+			Renderer.draw("box",
+				"fill", { color:"0x555555" },
+				-15, -20,
+				15, -20,
+				15, 20,
+				-15, 20
+			);
 			
+			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, DummyController);
 			Audio.load("samusSound", "assets/sound/samus.mp3~00-2000~");
-			samusObj.addComponent(Audio);
-			//samusObj.audio.play("samusSound");
+			Animation.addLabel("samusRunning", "Audio_play", 0, "samusSound", 1);
+			Animation.addLabel("samusRunning", "Audio_play", 5, "samusSound", 1);
 			
-			Animation.addLabel("samusRunning", "Audio_play", 0, "samusSound", 0);
-			//Animation.addLabel("samusRunning", "Audio_play", 5, "samusSound", 1);
-			
-			//the folowing two lines of code do the exact same thing.
-			samusObj.animation.play("samusRunning");
-			
-			//samusObj.sendMessage("Animation_play", "samusRunning");
-			
-			//var player : MP3Player = new MP3Player();
-			//player.loadAndPlay(new URLRequest("assets/sound/samus.mp3"));
+			var head : GameObject = new GameObject("test", samusObj, Renderer, LookAtMouse);
+			head.renderer.setBitmapByName("box");
+			head.transform.y = -15;
+			head.renderer.offset = new Matrix(1, 0, 0, 1, 7.5, 0);
+			head.renderer.putInFrontOf(samusObj.renderer);
 		}
 		public function complete() : void
 		{
