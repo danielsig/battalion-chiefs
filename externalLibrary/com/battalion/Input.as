@@ -2,10 +2,13 @@ package com.battalion
 {
 	import flash.display.Stage;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
+	import flash.utils.Timer;
 	import net.onthewings.utils.KeyCodeUtil;
 	import com.danielsig.StringUtilPro;
 	
@@ -34,12 +37,23 @@ package com.battalion
 		
 		private static var _stage : Stage;
 		
-		public static function init(stage : Stage) : void
+		/**
+		 * Use this to initialize. If your game logic loops does not happen on every frame,
+		 * then it's recommended that you pass a <code>tickDispatcher</code> and a <code>tickEvent</code>.
+		 * An example of such would be a <code>Timer</code> object as the <code>tickDispatcher</code> and a
+		 * <code>TimerEvent.TIMER</code> as the <code>tickEvent</code>.
+		 * @param	stage, you must pass the Stage object to this.
+		 * @param	tickDispatcher, use this if your game logic loops are not performed on every frame (optional)
+		 * @param	tickEvent, use this if your game logic loops are not performed on every frame (optional)
+		 */
+		public static function init(stage : Stage, tickDispatcher : EventDispatcher = null, tickEvent : String = "") : void
 		{
 			_stage = stage;
+			if (!tickDispatcher) stage.addEventListener(Event.ENTER_FRAME, onNewFrame);
+			else tickDispatcher.addEventListener(tickEvent, onNewFrame);
+			
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
-			stage.addEventListener(Event.ENTER_FRAME, onNewFrame);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 			stage.addEventListener(MouseEvent.CLICK, onClick);
@@ -73,7 +87,7 @@ package com.battalion
 		}
 		private static function onKeyDown(e : KeyboardEvent) : void
 		{
-			_press[e.keyCode] = true;
+			_press[e.keyCode] = !_hold[e.keyCode];
 			_hold[e.keyCode] = true;
 			_prevKeys[_prevKeyCounter++] = e.keyCode;
 		}

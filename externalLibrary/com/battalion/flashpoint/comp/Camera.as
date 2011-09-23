@@ -8,7 +8,9 @@ package com.battalion.flashpoint.comp
 	
 	/**
 	 * A camera component. There's one camera for every View instance.
-	 * @see View
+	 * @see com.battalion.flashpoint.display.View
+	 * @see com.battalion.flashpoint.comp.Renderer
+	 * @see com.battalion.flashpoint.comp.Animation
 	 * @author Battalion Chiefs
 	 */
 	public final class Camera extends Component implements IExclusiveComponent

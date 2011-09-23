@@ -15,7 +15,11 @@ package com.battalion.flashpoint.display
 	/**
 	 * View, FlashPoint's display object manager.<br/>
 	 * For every View instance there's a GameObject with a Camera component.
-	 * @see Camera
+	 * Every frame has only one bitmap.
+	 * Can be both individual image urls and/or spritesheet urls. Can also read spritesheet ranges.
+	 * @see com.battalion.flashpoint.comp.Camera
+	 * @see com.battalion.flashpoint.comp.Renderer
+	 * @see com.battalion.flashpoint.comp.Animation
 	 * @author Battalion Chiefs
 	 */
 	public final class View extends Sprite 

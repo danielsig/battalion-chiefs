@@ -14,6 +14,7 @@ package com.battalion.flashpoint.comp.misc
 		
 		public var angleOffset : Number = 0;
 		
+		/** @private **/
 		public function update() : void 
 		{
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);

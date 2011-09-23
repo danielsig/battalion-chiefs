@@ -28,11 +28,21 @@ package com.battalion.flashpoint.core
 		private var _y : Number = y;
 		private var _rotation : Number = rotation;
 		
+		/** @private **/
+		internal var _physicsX : Number = x;
+		/** @private **/
+		internal var _physicsY : Number = y;
+		/** @private **/
+		internal var _physicsRotation : Number = rotation;
+		
 		private var _shearXTan : Number = 0;
 		private var _shearYTan : Number = 0;
 		private var _cos : Number = 1;
 		private var _sin : Number = 0;
 		private var _cosSinCalculated : Boolean = false;
+		
+		/** @private **/
+		internal var _changed : int = 0;
 		
 		CONFIG::debug
 		{
@@ -72,6 +82,34 @@ package com.battalion.flashpoint.core
 		{
 			x = value.x;
 			y = value.y;
+		}
+		/**
+		 * The x position in global coordinates. If you're assigning both gx and gy,
+		 * it's recommended that you use the <code>globalPosition</code> property instead (faster).
+		 */
+		public function get gx() : Number
+		{	
+			return globalMatrix.tx;
+		}
+		public function set gx(value : Number) : void
+		{
+			var p : Point = (globalMatrix as Matrix).transformPoint(new Point(value, globalMatrix.ty));
+			x = p.x;
+			y = p.y;
+		}
+		/**
+		 * The y position in global coordinates. If you're assigning both gx and gy,
+		 * it's recommended that you use the <code>globalPosition</code> property instead (faster).
+		 */
+		public function get gy() : Number
+		{	
+			return globalMatrix.ty;
+		}
+		public function set gy(value : Number) : void
+		{
+			var p : Point = (globalMatrix as Matrix).transformPoint(new Point(globalMatrix.tx, value));
+			x = p.x;
+			y = p.y;
 		}
 		/**
 		 * The position in global coordinates.
@@ -222,12 +260,14 @@ package com.battalion.flashpoint.core
 			{
 				_cosSinCalculated = false;
 				redo = 15;
+				_changed |= 1;
 			}
 			if (rotation != _rotation)
 			{
-				redo = 15;
-				_rotation = rotation;
 				
+				redo = 15;
+				if (_physicsRotation != rotation) _changed |= 1;
+				_rotation = rotation = ((rotation + 180) % 360) - 180;
 				var angle : Number = (180 - ((180 - rotation) % 360)) * 0.0174532925;
 				
 				if(angle < 0.7854){
@@ -285,9 +325,17 @@ package com.battalion.flashpoint.core
 					_matrix.c = -_sin * scaleY + _cos * _shearXTan;
 				if(redo & 8)
 					_matrix.d = _cos * scaleY + _sin * _shearXTan;
-					
-				if (x != _x) _x = _matrix.tx = x;
-				if (y != _y) _y = _matrix.ty = y;
+				
+				if (x != _x)
+				{
+					_x = _matrix.tx = x;
+					if(_physicsX != _matrix.tx) _changed |= 2;
+				}
+				if (y != _y)
+				{
+					_y = _matrix.ty = y;
+					if(_physicsY != _matrix.ty) _changed |= 4;
+				}
 			}
 			CONFIG::release
 			{
@@ -300,8 +348,16 @@ package com.battalion.flashpoint.core
 				if(redo & 8)
 					matrix.d = _cos * scaleY + _sin * _shearXTan;
 					
-				if (x != _x) _x = matrix.tx = x;
-				if (y != _y) _y = matrix.ty = y;
+				if (x != _x)
+				{
+					_x = matrix.tx = x;
+					if(_physicsX != matrix.tx) _changed |= 2;
+				}
+				if (y != _y)
+				{
+					_y = matrix.ty = y;
+					if(_physicsY != matrix.ty) _changed |= 4;
+				}
 			}
 		}
 		

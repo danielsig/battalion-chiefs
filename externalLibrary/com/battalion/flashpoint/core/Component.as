@@ -1,5 +1,7 @@
 package com.battalion.flashpoint.core 
 {
+	import Box2D.Common.Math.b2Vec2;
+	import flash.geom.Point;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
@@ -24,6 +26,7 @@ package com.battalion.flashpoint.core
 	 */
 	public class Component 
 	{
+		
 		/** @private **/
 		internal var _gameObject : GameObject;
 		
@@ -33,11 +36,17 @@ package com.battalion.flashpoint.core
 			internal var _requiredBy : Vector.<Component> = new Vector.<Component>();
 			/** @private **/
 			internal var _require : Vector.<Component> = new Vector.<Component>();
+			/**
+			 * The world GameObject.
+			 */
 			public static function get world() : GameObject
 			{
 				return GameObject.WORLD;
 			}
 		}
+		/**
+		 * The world GameObject.
+		 */
 		CONFIG::release
 		public static var world : GameObject;
 		
@@ -399,6 +408,20 @@ package com.battalion.flashpoint.core
 			return _gameObject ? (_gameObject + "." + name) : ("null." + name);
 		}
 		/**
+		 * Just like log, except that this will only log if the gameObject's name property matches the <code>gameObjectName</code> parameter.
+		 * @param gameObjectName, the name of the GameObject to log on.
+		 * @param	...args, if no arguments, the Component will list all it's properties and variables.
+		 */
+		public function logOn(gameObjectName : String, ...args) : Boolean
+		{
+			if (gameObject.name == gameObjectName)
+			{
+				log.apply(this, args);
+				return true;
+			}
+			return false;
+		}
+		/**
 		 * Use this instead of trace when possible.
 		 * @param	...args, if no arguments, the Component will list all it's properties and variables.
 		 */
@@ -412,7 +435,27 @@ package com.battalion.flashpoint.core
 					
 				if (args.length > 0)
 				{
-					trace(_gameObject._name + "." + name + ": " + args.join(", "));
+					var string : String = _gameObject._name + "." + name + ": ";
+					if (args[0] is Point || args[0] is b2Vec2)
+					{
+						string += "{ x:" + args[0].x.toFixed(2) + ", y:" + args[0].y.toFixed(2) + " }";
+					}
+					else
+					{
+						string += args[0];
+					}
+					for (var i : int = 1; i < args.length; i++ )
+					{
+						if (args[i] is Point || args[i] is b2Vec2)
+						{
+							string += ", { x:" + args[i].x.toFixed(2) + ", y:" + args[i].y.toFixed(2) + " }";
+						}
+						else
+						{
+							string += ", " + args[i];
+						}
+					}
+					trace(string);
 				}
 				else
 				{
