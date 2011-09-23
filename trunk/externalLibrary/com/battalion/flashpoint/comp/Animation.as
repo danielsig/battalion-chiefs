@@ -9,12 +9,15 @@ package com.battalion.flashpoint.comp
 	import flash.events.Event;
 	
 	/**
-	 * Animation component. Iterates through bitmaps, one iteration per frame.
+	 * Animation component. Makes a Renderer component iterate through bitmaps, one iteration per fixedUpdate frame.
 	 * Use the static method <a href="../comp/Animation.html#load()"><code>load()</code></a> to load an animation and assign a name to it.
 	 * Use the <a href="../comp/Animation.html#play()"><code>play()</code></a> method to play an animation.
 	 * <p>
 	 * <strong>Requires:</strong><ul><li><a href="Renderer.html">Renderer</a></li></ul>
 	 * </p>
+	 * @see com.battalion.flashpoint.comp.Renderer
+	 * @see com.battalion.flashpoint.comp.Camera
+	 * @see com.battalion.flashpoint.display.View
 	 * @author Battalion Chiefs
 	 */
 	public final class Animation extends Component implements IExclusiveComponent
@@ -50,13 +53,13 @@ myObj.animation.play("myAnimation");
 		 */
 		public static function addLabel(animationName : String, label : String, frame : int, ...params) : void
 		{
+			var labels : Vector.<Array> = _animationLabels[animationName];
 			CONFIG::debug
 			{
 				if (!_animationLabels.hasOwnProperty(animationName))
 				{
 					throw new Error("Either the animationName you specified is not correct or you're trying to assign labels to an animation before starting loading it.");
 				}
-				var labels : Vector.<Array> = _animationLabels[animationName];
 				if (!(frame is int || frame is uint || frame is Number))
 				{
 					throw new Error(frame + " is not a valid label index.");

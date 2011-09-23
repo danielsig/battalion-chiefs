@@ -30,6 +30,9 @@ trace(myChild);//WORLD.foo.bar
 		/** @private **/
 		internal static var WORLD : GameObject;
 		
+		/**
+		 * The world GameObject.
+		 */
 		CONFIG::debug
 		public static function get world() : GameObject
 		{
@@ -44,6 +47,9 @@ trace(myChild);//WORLD.foo.bar
 		CONFIG::debug
 		internal var _transform : Transform;
 		
+		/**
+		 * The world GameObject.
+		 */
 		CONFIG::release
 		public static var world : GameObject;
 		CONFIG::release
@@ -69,6 +75,8 @@ trace(myChild);//WORLD.foo.bar
 		internal var _fixedUpdate : Vector.<Function> = new Vector.<Function>();
 		/** @private **/
 		internal var _start : Vector.<Function> = new Vector.<Function>();
+		/** @private **/
+		internal var _physicsComponents : Object;
 		
 		/**
 		 * This is clearly obvious.
@@ -231,7 +239,8 @@ trace(myChild);//WORLD.foo.bar
 				}
 			}
 		}
-		
+		/** Add multiple children.
+		 * @see #addChild()
 		public function addChildren(...children) : void
 		{
 			CONFIG::debug
@@ -254,6 +263,11 @@ trace(myChild);//WORLD.foo.bar
 				this[child._name] = child;
 			}
 		}
+		/**
+		 * Remove multiple children.
+		 * @see #removeChild()
+		 * @param	...children
+		 */
 		public function removeChildren(...children) : void
 		{
 			CONFIG::debug
@@ -280,7 +294,11 @@ trace(myChild);//WORLD.foo.bar
 				WORLD.addChild(child);
 			}
 		}
-		
+		/**
+		 * Add a GameObject as a child. If the child already has a parent,
+		 * then that parent will automatically lose the child before this one adds it.
+		 * @param	child
+		 */
 		public function addChild(child : GameObject) : void
 		{
 			CONFIG::debug
@@ -293,6 +311,10 @@ trace(myChild);//WORLD.foo.bar
 			child._parent = this;
 			this[child._name] = child;
 		}
+		/**
+		 * Remove a GameObject from this GameObject's children.
+		 * @param	child, the child GameObject to remove.
+		 */
 		public function removeChild(child : GameObject) : void
 		{
 			CONFIG::debug
@@ -319,7 +341,10 @@ trace(myChild);//WORLD.foo.bar
 				delete this[child._name];
 			}
 		}
-		
+		/**
+		 * Names of all the child GameObjects in this GameObject.
+		 * @return	A vector of the names of all the child GameObjects in this GameObject.
+		 */
 		public function getChildrenNames() : Vector.<String>
 		{
 			var names : Vector.<String> = new Vector.<String>(_children.length);
@@ -330,6 +355,11 @@ trace(myChild);//WORLD.foo.bar
 			}
 			return names;
 		}
+		/**
+		 * Gets all components of s spcific type.
+		 * @param	type, the type of the Components to get.
+		 * @return	All components of s spcific type.
+		 */
 		public function getComponents(type : Class) : Vector.<Component>
 		{
 			CONFIG::debug
@@ -347,6 +377,11 @@ trace(myChild);//WORLD.foo.bar
 			}
 			return results;
 		}
+		/**
+		 * Does this GameObject have a component of type <code>type</code>?
+		 * @param	type, the type of the component to search for.
+		 * @return	true if a component of type <code>type</code> was found, otherwise false.
+		 */
 		public function haveComponent(type : Class) : Boolean
 		{
 			CONFIG::debug
@@ -358,6 +393,11 @@ trace(myChild);//WORLD.foo.bar
 			name = name.charAt(8).toLowerCase() + name.slice(8, name.length-1);
 			return this.hasOwnProperty(name);
 		}
+		/**
+		 * Find a component, upwards, untill a component is found or the world GameObject is reached.
+		 * @param	type, the type of the Component to look for.
+		 * @return	If the component was found, it returns that component, otherwise null.
+		 */
 		public function findComponentUpwards(type : Class) : *
 		{
 			CONFIG::debug
@@ -377,6 +417,11 @@ trace(myChild);//WORLD.foo.bar
 				return _parent.findComponentUpwardsRecursive(type);
 			return null;
 		}
+		/**
+		 * Find a Component of a specific <code>type</code> in this and all the children, and children's children, etc.
+		 * @param	type, the type of the Component to look for.
+		 * @return	If the component was found, it returns that component, otherwise null.
+		 */
 		public function findComponentDownwards(type : Class) : *
 		{
 			CONFIG::debug
@@ -404,6 +449,15 @@ trace(myChild);//WORLD.foo.bar
 			}
 			return null;
 		}
+		
+		/**
+		 * It's recommended that you use the dot operator to access components, not this method. It's only here for consistency.
+		 * @example Here's an example of how to use the dot operator:<listing version="3.0">
+var myGameObject : GameObject = new GameObject(Rigidbody, BoxCollider);
+myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
+		 * @param	type, The type of the Component to get.
+		 * @return	If the Component exists, then it returns that Component, otherwise null.
+		 */
 		public function getComponent(type : Class) : Component
 		{
 			CONFIG::debug
@@ -444,7 +498,7 @@ trace(myChild);//WORLD.foo.bar
 		 * 
 		 * @see IConciseComponent
 		 * @see IExclusiveComponent
-		 * @see addComponent()
+		 * @see #addComponent()
 		 * 
 		 * @param	comp, the Component type to add.
 		 * @param	lowerCaseName, (optional) mentioning the name of the class but starting with a lowercase letter is only to increase performance.
@@ -513,7 +567,7 @@ trace(myChild);//WORLD.foo.bar
 		 * If so, use the addConcise method instead.
 		 * 
 		 * @see IExclusiveComponent
-		 * @see addConcise()
+		 * @see #addConcise()
 		 * 
 		 * @param	comp, the Component type to add.
 		 */
@@ -594,7 +648,12 @@ trace(myChild);//WORLD.foo.bar
 			}
 			return instance;
 		}
-		
+		/**
+		 * Remove a Component instance from this GameObject. Essentially the same as to call the destroy method on the Component itself.
+		 * Do not remove Components that are required by other Components.
+		 * When this method is called, the <code>onDestroy()</code> method is called on the Component that is about to be removed. If that method returns true, the removal is cancelled.
+		 * @param	instance, the Component on the GameObject that should be removed.
+		 */
 		public function removeComponent(instance : Component) : void
 		{
 			CONFIG::debug
@@ -755,7 +814,7 @@ trace(myChild);//WORLD.foo.bar
 		 * Use this to communicate with Components in this GameObject.
 		 * Like sendMessage() except it differs the call until the target message has been sent.
 		 * 
-		 * @see sendMessage()
+		 * @see #sendMessage()
 		 * @param	message, the function name to call on every Component in this GameObject.
 		 * @param	target, the message that triggers this message, evidently preceding this message.
 		 * @param	...args, the parameters to pass along with the function call.
@@ -779,7 +838,7 @@ trace(myChild);//WORLD.foo.bar
 		 * Use this to communicate with Components in this GameObject.
 		 * Like sendMessage() except it differs the call until right before the target message will been sent.
 		 * 
-		 * @see sendMessage()
+		 * @see #sendMessage()
 		 * @param	message, the function name to call on every Component in this GameObject.
 		 * @param	target, the message that should succeed this message.
 		 * @param	...args, the parameters to pass along with the function call.
@@ -803,7 +862,7 @@ trace(myChild);//WORLD.foo.bar
 		 * Use this to communicate with Components in this GameObject.
 		 * Chains together messages to be sent after the invoker message is sent.
 		 * 
-		 * @see sendMessage()
+		 * @see #sendMessage()
 		 * @param	invoker, the meessage name that triggers this chain of messages.
 		 * @param	...messages, the messages to be chained.
 		 */
@@ -824,8 +883,8 @@ trace(myChild);//WORLD.foo.bar
 		 * Use this to communicate with Components in this GameObject.
 		 * Like chain() except that the first parameter is the invoker, and it is called right after the chain has been made.
 		 * 
-		 * @see chain()
-		 * @see sendMessage()
+		 * @see #chain()
+		 * @see #sendMessage()
 		 * @param	...messages, the messages to be chained and called.
 		 */
 		public function sequence(...messages) : void
@@ -888,6 +947,7 @@ trace(myChild);//WORLD.foo.bar
 				}
 			}
 		}
+		/** @private **/
 		internal function update() : void
 		{
 			//START
@@ -936,6 +996,7 @@ trace(myChild);//WORLD.foo.bar
 				transform.flush();
 			}
 		}
+		/** @private **/
 		internal function fixedUpdate() : void
 		{
 			//BEFORE FIXED UPDATE

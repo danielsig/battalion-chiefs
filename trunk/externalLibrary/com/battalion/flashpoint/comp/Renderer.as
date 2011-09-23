@@ -20,9 +20,12 @@ package com.battalion.flashpoint.comp
 	
 	/**
 	 * Basic Renderer component. Renders a Bitmap image.<br/>
-	 * Use the <code>url</code> property to load an image from an url.
-	 * Interacts with the <code>View</code> class.
-	 * @see View
+	 * Use the <code>url</code> property to load an image from an url
+	 * or the static <code>load()</code> method, in case you want to use the bitmap more than once.
+	 * Interacts with the <code><a href="../display/View.html">View</a></code> class.
+	 * @see com.battalion.flashpoint.comp.Animation
+	 * @see com.battalion.flashpoint.comp.Camera
+	 * @see com.battalion.flashpoint.display.View
 	 * @author Battalion Chiefs
 	 */
 	public final class Renderer extends Component implements IExclusiveComponent
@@ -42,14 +45,18 @@ package com.battalion.flashpoint.comp
 		 * @example Here's an example of how to turn on smoothing (the last parameter of the <code>BitmapData.draw()</code> method):<listing version="3.0">
 		 * Renderer.bake("myBakeName", myBitmapDrawable, {smoothing:true});
 		 * </listing>
+		 * @see #setBitmapByName()
+		 * @see #load()
+		 * @see #draw()
 		 * @see BitmapData.draw()
-		 * @param	bitmapName
-		 * @param	bitmapDrawable
+		 * @param	bitmapName, the name of the bitmap.
+		 * @param	bitmapDrawable, the IBitmapDrawable to draw into a bitmap.
 		 * @param	params, the optional parameters to be passed with the BitmapData.draw().
 		 */
 		public static function bake(bitmapName : String, bitmapDrawable : IBitmapDrawable, params : Object = null) : void
 		{
 			params = params || { };
+			var matrix : Matrix = new Matrix();
 			if (bitmapDrawable is BitmapData)
 			{
 				var dimensions : Point = new Point((bitmapDrawable as BitmapData).width, (bitmapDrawable as BitmapData).height);
@@ -57,11 +64,100 @@ package com.battalion.flashpoint.comp
 			else
 			{
 				dimensions = new Point((bitmapDrawable as DisplayObject).width, (bitmapDrawable as DisplayObject).height);
+				var offset : Rectangle = (bitmapDrawable as DisplayObject).getBounds(null);
+				matrix.translate(-offset.x, -offset.y);
 			}
+			if (params.matrix) matrix.concat(params.matrix);
 			var data : BitmapData = new BitmapData(dimensions.x, dimensions.y, true, 0);
-			data.draw(bitmapDrawable, null || params.matrix, null || params.colorTransform, null || params.blendMode, null || params.clipRect, null || params.smoothing);
+			data.draw(bitmapDrawable, matrix, null || params.colorTransform, null || params.blendMode, null || params.clipRect, null || params.smoothing);
 			_bitmaps[bitmapName] = data;
 		}
+		/**
+		 * Use this to draw bitmaps, works similearly to the native drawing API of flash.
+		 * Firstly, it takes a name <code>bitmapName</code> parameter to use as a reference to the drawn bitmap.
+		 * After that, comes all the drawing instructions.
+		 * The instructions map almost directly to methods of the 
+		 * <a href="http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/Graphics.html"><code>Graphics</code></a>
+		 * class. So if you're not familiar with them, it's recommended that you take a look at them first.
+		 * <p>
+		 * Instructions are either Strings, Objects, Points or Numbers.
+		 * Every Point or every two Numbers represent drawing coordinates,
+		 * such as those passed with the <code>moveTo()</code>, <code>lineTo()</code> and <code>curveTo()</code> methods.
+		 * Strings tells the Renderer what to do with the next instruction(s).
+		 * Here are valid instructions and their effect:
+		 * <ul>
+		 * <li><b>"circle"</b>, must be followed by an Object containing the properties to be used as parameters
+		 * for a <code>drawCircle()</code> or a <code>drawEllipse()</code> call.
+		 * Specifying either width or height makes it an ellipse.</li>
+		 * <li><b>"line"</b>, must be followed by an Object containing the properties to be used as parameters
+		 * for a <code>lineStyle()</code> call.</li>
+		 * <li><b>"fill"</b>, must be followed by an Object containing the properties to be used as parameters
+		 * for a <code>beginFill()</code>, <code>beginBitmapFill()</code> or <code>beginGradientFill()</code> call.
+		 * If you specify a <code>bitmap</code> property, <code>beginBitmapFill()</code> will be used.
+		 * If you specify a <code>type</code> property, <code>beginGradientFill()</code> will be used.
+		 * Else <code>beginFill()</code> will be used.</li>
+		 * <li><b>"end"</b>, maps directly to the <code>endFill()</code> method.</li>
+		 * <li><b>"move"</b>, must be followed by a drawing coordinate for a <code>moveTo()</code> call.</li>
+		 * <li><b>"curve"</b>, must be followed by 2 drawing coordinates to use for a <code>curveTo()</code> call.</li>
+		 * <li><b>Point</b>, a single drawing coordinate.</li>
+		 * <li><b>Number</b>, either the x or y coordinate of a drawing coordinate, depending on which came first.</li>
+		 * <li><b>Object</b>, see the "fill", "line" and "circle" instructions.</li>
+		 * </ul>
+		 * </p>
+		 * <p>
+		 * <b>Note:</b> You do not have to begin with a "move" instruction.
+		 * The first drawing coordinate always represent coordinates for a <code>moveTo()</code> call.
+		 * Do not put "curve", "end" or "move" before your first drawing coordinates.
+		 * </p>
+		 * 
+		 * @example here's how to draw a simple gray box:<listing version="3.0">
+Renderer.draw("myBox",
+	"fill", { color:"0x555555" },
+	-15, -20,
+	15, -20,
+	15, 20,
+	-15, 20
+);
+		 * </listing>
+		 * @example here's how to draw a simple red circle:<listing version="3.0">
+Renderer.draw("myCircle",
+	"fill", { color:"0xFF0000" },
+	"circle", { x:10, y:10, radius:10}
+);
+		 * </listing>
+		 * @example The same circle can be drawn like this:<listing version="3.0">
+Renderer.draw("myCircle",
+	"circle", { x:10, y:10, radius:10, fill:{ color:"0xFF0000" } }
+);
+		 * </listing>
+		 * 
+		 * @example The default position of a circle is the last drawing coordinate.
+		 * Here's an example that shows what happens if you omit the x and y:<listing version="3.0">
+Renderer.draw("myWeirdArrow",
+	"line", {thickness:2},
+	
+	-20, 10,
+	"circle", { radius:5, fill:{ color:"0xFF0000" } },
+	
+	0, 10,
+	"circle", { radius:5, fill:{ color:"0xFF0000" } },
+	
+	20, 0,
+	"circle", { radius:5, fill:{ color:"0x0000FF" } },
+	
+	0, -10,
+	"circle", { radius:5, fill:{ color:"0xFF0000" } },
+	
+	-20, -10,
+	"circle", { radius:5, fill:{ color:"0xFF0000" } }
+);
+		 * </listing>
+		 * @see #setBitmapByName()
+		 * @see #load()
+		 * @see #bake()
+		 * @param	bitmapName, the name of the drawn bitmap.
+		 * @param	...instructions,  the drawing instructions to use.
+		 */
 		public static function draw(bitmapName : String, ...instructions) : void
 		{
 			var shape : Shape = new Shape();
@@ -69,9 +165,13 @@ package com.battalion.flashpoint.comp
 			var moveTo : Boolean = true;
 			var fill : Boolean = false;
 			var line : Boolean = false;
+			var circle : Boolean = false
 			var curve : Boolean = false
 			var curveAnchor : Point = null;
 			var prevNumber : Number = NaN;
+			var prevPoint : Point = new Point(0, 0);
+			var prevFill : Object = null;
+			var prevLine : Object = {};
 			for each(var instruction : * in instructions)
 			{
 				if (instruction is Number)
@@ -100,12 +200,16 @@ package com.battalion.flashpoint.comp
 							break;
 						case "end":
 							graphics.endFill();
+							prevFill = null;
 							break;
 						case "line":
 							line = true;
 							break;
 						case "curve":
 							curve = true;
+							break;
+						case "circle":
+							circle = true;
 							break;
 					}
 				}
@@ -133,11 +237,13 @@ package com.battalion.flashpoint.comp
 					{
 						graphics.lineTo(point.x, point.y);
 					}
+					prevPoint = point;
 				}
 				else if (line)
 				{
 					line = false;
 					graphics.lineStyle(null || instruction.thickness, 0 || instruction.color, instruction.alpha || 1, false || instruction.pixelHinting, instruction.scaleMode || "normal", null || instruction.caps, null || instruction.joints, instruction.miterLimit || 3)
+					prevLine = instruction;
 				}
 				else if (fill)
 				{
@@ -154,11 +260,77 @@ package com.battalion.flashpoint.comp
 					{
 						graphics.beginFill(0 || instruction.color, instruction.alpha || 1);
 					}
+					prevFill = instruction;
+				}
+				else if (circle)
+				{
+					circle = false;
+					if (instruction.fill)
+					{
+						var temp : Object = instruction;
+						instruction = instruction.fill;
+						if (instruction.bitmap)
+							graphics.beginBitmapFill(instruction.bitmap, null || instruction.matrix, instruction.repeat as Boolean, false || instruction.smooth);
+						else if (instruction.type)
+							graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], null || instruction.matrix, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", 0 || instruction.focalPointRatio);
+						else
+							graphics.beginFill(0 || instruction.color, instruction.alpha || 1);
+						instruction = temp;
+					}
+					if (instruction.line)
+					{
+						temp = instruction;
+						instruction = instruction.line;
+						graphics.lineStyle(null || instruction.thickness, 0 || instruction.color, instruction.alpha || 1, false || instruction.pixelHinting, instruction.scaleMode || "normal", null || instruction.caps, null || instruction.joints, instruction.miterLimit || 3)
+						instruction = temp;
+					}
+					if (instruction.width || instruction.height)
+					{
+						graphics.drawEllipse(instruction.x || prevPoint.x, instruction.y || prevPoint.y, instruction.width || instruction.radius || 1, instruction.height || instruction.radius || 1);
+					}
+					else
+					{
+						graphics.drawCircle(instruction.x || prevPoint.x, instruction.y || prevPoint.y, instruction.radius || 1);
+					}
+					if (instruction.line)
+					{
+						temp = instruction;
+						instruction = prevLine;
+						graphics.lineStyle(null || instruction.thickness, 0 || instruction.color, instruction.alpha || 1, false || instruction.pixelHinting, instruction.scaleMode || "normal", null || instruction.caps, null || instruction.joints, instruction.miterLimit || 3)
+						instruction = temp;
+					}
+					if (instruction.color || instruction.alpha)
+					{
+						if (!prevFill)
+						{
+							graphics.endFill();
+						}
+						else
+						{
+							instruction = prevFill;
+							if (instruction.bitmap)
+								graphics.beginBitmapFill(instruction.bitmap, null || instruction.matrix, instruction.repeat as Boolean, false || instruction.smooth);
+							else if (instruction.type)
+								graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], null || instruction.matrix, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", 0 || instruction.focalPointRatio);
+							else
+								graphics.beginFill(0 || instruction.color, instruction.alpha || 1);
+						}
+					}
 				}
 			}
 			bake(bitmapName, shape, { smoothing:true } );
 		}
-		
+		/**
+		 * Call this method in order to load a bitmap and use it multiple times in your game
+		 * by simply giving it a name, and referencing that name.
+		 * After you have called this method, it's safe to call the <code>setBitmapByName()</code> method on a Renderer instance.
+		 * It will wait for the bitmap to load and then display it as soon as it's loaded.
+		 * @see #setBitmapByName()
+		 * @see #bake()
+		 * @see #draw()
+		 * @param	bitmapName, the name that you will use for the bitmap. If a bitmap already has this name, it will be overridden.
+		 * @param	url, the url of the bitmap to load.
+		 */
 		public static function load(bitmapName : String, url : String) : void
 		{
 			var imageLoader : ImageLoader = new ImageLoader();
@@ -254,18 +426,25 @@ package com.battalion.flashpoint.comp
 				_bitmaps[bitmapName].subscribe(this);
 			}
 		}
-		
-		public function putInFrontOf(renderer : Renderer) : void
+		/**
+		 * Puts this Renderer in front of the <code>other</code> Renderer.
+		 * @param	other, the Renderer that should be behind this.
+		 */
+		public function putInFrontOf(other : Renderer) : void
 		{
-			renderer.putBehind(this);
+			other.putBehind(this);
 		}
-		public function putBehind(renderer : Renderer) : void
+		/**
+		 * Puts this Renderer behind the <code>other</code> Renderer.
+		 * @param	other, the Renderer that should be in front of this.
+		 */
+		public function putBehind(other : Renderer) : void
 		{
 			if (rendererInFrontOfThis)
 			{
-				renderer.putBehind(rendererInFrontOfThis);
+				other.putBehind(rendererInFrontOfThis);
 			}
-			rendererInFrontOfThis = renderer;
+			rendererInFrontOfThis = other;
 		}
 		
 		private function startLoading() : void 

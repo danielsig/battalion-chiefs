@@ -72,22 +72,75 @@ package comp
 			
 			Renderer.draw("box",
 				"fill", { color:"0x555555" },
-				-15, -20,
-				15, -20,
-				15, 20,
-				-15, 20
+				-7, -10,
+				7, -10,
+				7, 10,
+				-7, 10
 			);
 			
-			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, DummyController);
+			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, DummyController, Rigidbody, BoxCollider);
 			Audio.load("samusSound", "assets/sound/samus.mp3~00-2000~");
+			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
+			samusObj.animation.play("samusRunning");
 			Animation.addLabel("samusRunning", "Audio_play", 0, "samusSound", 1);
 			Animation.addLabel("samusRunning", "Audio_play", 5, "samusSound", 1);
+			samusObj.boxCollider.dimensions = new Point(22, 44);
+			
 			
 			var head : GameObject = new GameObject("test", samusObj, Renderer, LookAtMouse);
 			head.renderer.setBitmapByName("box");
-			head.transform.y = -15;
-			head.renderer.offset = new Matrix(1, 0, 0, 1, 7.5, 0);
+			head.transform.y = -14;
+			head.renderer.offset = new Matrix(1, 0, 0, 1, 1, -7);
 			head.renderer.putInFrontOf(samusObj.renderer);
+			
+			var floor : GameObject = new GameObject("floor", Renderer, BoxCollider);
+			Renderer.draw("floorGraphics",
+			"fill", { color:"0x555555" },
+				-700, -100,
+				700, -100,
+				700, 100,
+				-700, 100
+			);
+			floor.renderer.offset = new Matrix(1, 0, 0, 1, 0, -100);
+			floor.renderer.setBitmapByName("floorGraphics");
+			floor.transform.y = 250;
+			floor.boxCollider.width = 2800;
+			floor.boxCollider.height = 400;
+			floor.boxCollider.material = new PhysicMaterial(5);
+			
+			samusObj.boxCollider.material = new PhysicMaterial(1, 0, 1);
+			samusObj.rigidbody.drag = 0.0;
+			samusObj.rigidbody.mass = 1;
+			samusObj.rigidbody.freezeRotation = true;
+			//samusObj.rigidbody.interpolate = false;
+			
+			
+			var i : int = 5;
+			while (i--)
+			{
+				var c : int = 5;
+				while (c--)
+				{
+					var abox : GameObject = new GameObject("abox" + c, Rigidbody, BoxCollider, Renderer);
+					Renderer.draw("aboxGraph",
+					"fill", { color:"0xBB0000" },
+						0, 0,
+						20, 0,
+						20, 20,
+						0, 20
+					);
+					abox.boxCollider.material = new PhysicMaterial(0.5, 0.1, 1);
+					abox.rigidbody.mass = 0.2;
+					abox.renderer.setBitmapByName("aboxGraph");
+					
+					abox.boxCollider.dimensions = new Point(20, 20);
+					abox.transform.x = (c * 25) - 300;
+					abox.transform.y = -(i * 25);
+					//abox.transform.rotation = 20;
+					abox.rigidbody.addTorque(10);
+					abox.rigidbody.interpolate = false;
+				}
+			}
 		}
 		public function complete() : void
 		{

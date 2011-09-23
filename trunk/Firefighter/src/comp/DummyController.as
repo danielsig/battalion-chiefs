@@ -17,45 +17,56 @@ package comp
 	public class DummyController extends Component implements IExclusiveComponent
 	{
 		
-		public var speed : Number = 10;
-		public var backSpeed : Number = 7;
-		public var runSpeed : Number = 20;
+		public var speed : Number = 50;
+		public var backSpeed : Number = 30;
+		public var runSpeed : Number = 100;
+		public var jumpSpeed : Number = 100;
 		
 		public function awake() : void 
 		{
 			requireComponent(TimeMachine);
+			requireComponent(Zoomer);
+			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.08);
+			//gameObject.zoomer.zoom(10);
 			
 			Input.assignDirectional("samusDirection", "d", "a", Keyboard.RIGHT, Keyboard.LEFT);
 			Input.assignButton("shift", Keyboard.SHIFT);
-			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
-			gameObject.animation.play("samusRunning");
+			Input.assignButton("jump", Keyboard.SPACE);
 		}
-		
+			
 		public function fixedUpdate() : void 
 		{
-			
 			var thisPos : Point = (gameObject.transform as Transform).globalPosition;
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
 			var isMouseOnTheLeft : Boolean = mousePos.x < thisPos.x;
 			
-			if (Input.directional("samusDirection") > 0)
+			var points : Vector.<ContactPoint> = gameObject.rigidbody.touchingInDirection(new Point(0, 1), 0.1);
+			if (points)
 			{
-				gameObject.transform.x += isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed;
-				gameObject.transform.scaleX = 1;
-				gameObject.animation.reversed = isMouseOnTheLeft;
-				gameObject.animation.play();
-			}
-			else if (Input.directional("samusDirection") < 0)
-			{
-				gameObject.transform.x -= !isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed;
-				gameObject.transform.scaleX = -1;
-				gameObject.animation.reversed = !isMouseOnTheLeft;
-				gameObject.animation.play();
-			}
-			else
-			{
-				gameObject.animation.gotoAndStop(4);
-				gameObject.sendMessage("Audio_stop");
+				if (Input.directional("samusDirection") > 0)
+				{
+					gameObject.rigidbody.addForceX((isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed));
+					gameObject.transform.scaleX = 1;
+					gameObject.animation.reversed = isMouseOnTheLeft;
+					gameObject.animation.play();
+				}
+				else if (Input.directional("samusDirection") < 0)
+				{
+					gameObject.rigidbody.addForceX(-(!isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed));
+					gameObject.transform.scaleX = -1;
+					gameObject.animation.reversed = !isMouseOnTheLeft;
+					gameObject.animation.play();
+				}
+				else
+				{
+					gameObject.animation.gotoAndStop(4);
+					gameObject.sendMessage("Audio_stop");
+				}
+				if (Input.pressButton("jump"))
+				{
+					trace("jump");
+					gameObject.rigidbody.addForce(new Point(0, -jumpSpeed), ForceMode.FORCE);
+				}
 			}
 			if (gameObject.transform.x > 600)
 			{
