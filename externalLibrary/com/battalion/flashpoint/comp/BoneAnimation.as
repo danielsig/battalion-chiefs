@@ -1,0 +1,130 @@
+package com.battalion.flashpoint.comp 
+{
+	import com.battalion.flashpoint.core.Component;
+	import com.battalion.flashpoint.core.GameObject;
+	import com.battalion.flashpoint.core.IExclusiveComponent;
+	import flash.xml.XMLNode;
+	/**
+	 *	A BoneANimation component, AHA!
+	 * @author Battalion Chiefs
+	 */
+	public final class BoneAnimation extends Component implements IExclusiveComponent
+	{
+		private static var _animations: Object = { };
+		
+		public var localTimeScale : Number = 1;
+		
+		private var _p : Number = 0;//playhead
+		private var _length : Number;
+		private var _animation : Object;
+		
+		/**boneAnimName = Tekur inn nafn á animation
+		*frameInterval = hversu fljótt animationið fer á milli ramma
+		*definition = dynamic object fyrir animationið
+		*/
+		public static function define(boneAnimName: String, frameInterval: Number, definition: Object) : void
+		{
+			CONFIG::debug
+			{
+				var length : uint = 0;
+			}
+			
+			for (var gameObjectName : String in definition)
+			{
+				var values : Array = definition[gameObjectName];//[0, 90, 180}
+				var prop : String = gameObjectName.charAt(gameObjectName.length - 1);//A
+				gameObjectName = gameObjectName.slice(0, gameObjectName.length - 1);//t
+				
+				delete definition[gameObjectName + prop];//tA
+				
+				if(!definition[gameObjectName]) definition[gameObjectName] = new GoFrame(values.length);
+				
+				var frames : GoFrame = definition[gameObjectName];
+					
+				var c : uint = 0;
+				var value : Number;
+				
+				CONFIG::debug
+				{
+					if(!length) length = values.length;
+					if (values.length != length)
+					{
+						throw new Error("Please do not have a varying number of frames. "
+						+ "In " + boneAnimName + " the length of " + gameObjectName + prop + " is " + values.length + ", was excpeting a length of " + length + ".");
+					}
+				}
+				
+				if (prop == 'A')
+				{	
+					for each(value in values)
+					{
+						frames.angles[c++] = value;
+					}
+				}
+				else if (prop == 'X')
+				{	
+					for each(value in values)
+					{
+						frames.xPos[c++] = value;
+					}
+				}
+				else if (prop == 'Y')
+				{	
+					for each(value in values)
+					{
+						frames.yPos[c++] = value;
+					}
+				}
+				
+			}
+			
+			definition.frameInterval = frameInterval;
+			definition.length = values.length;
+			
+			_animations[boneAnimName] = definition;
+		}
+		
+		/**
+		 * current animation's name. Set this to change the current animation.
+		 * @see #play()
+		 */
+		public function get currentAnimation() : String
+		{
+			return _animationName;
+		}
+		public function set currentAnimation(value : String) : void
+		{
+			CONFIG::debug
+			{
+				if (!_animations.hasOwnProperty(value)) throw new Error("The animation you are trying to play has not been defined.");
+			}
+			_animation = _animations[value];
+			_length = _animation.length;
+			_p = 0;
+		}
+		
+		/**
+		 * Resume playback/select an animation to play.
+		 * <p>
+<pre>When resuming playback, leave the <code>boneAnimName</code> parameter blank.
+When selecting another animation, set the <code>boneAnimName</code> to the desired animation. The animation will play starting from the first frame of that animation.</pre>
+		 * </p>
+		 * @see #currentAnimation
+		 */
+		public function play(boneAnimName : String = null) : void
+		{
+			
+		}
+		
+		
+		
+		
+		
+		public function update() : void
+		{
+			
+		}
+		
+	}
+
+}

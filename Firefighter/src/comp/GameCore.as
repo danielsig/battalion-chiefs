@@ -1,7 +1,6 @@
 package comp
 {
 	import com.battalion.flashpoint.core.*;
-	import com.danielsig.MP3Player;
 	import flash.display.Shape;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
@@ -141,6 +140,8 @@ package comp
 					abox.rigidbody.interpolate = false;
 				}
 			}
+			
+			BoneAnimation.define("foo", 0.1, { tA:[0,90,180], tX:[-5, 0, 5, 3]} );
 		}
 		public function complete() : void
 		{
