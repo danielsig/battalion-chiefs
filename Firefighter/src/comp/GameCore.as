@@ -141,7 +141,7 @@ package comp
 				}
 			}
 			
-			BoneAnimation.define("foo", 0.1, { tA:[0,90,180], tX:[-5, 0, 5, 3]} );
+			BoneAnimation.define("foo", 0.1, { tA:[0,90,180], tX:[-5, 0, 5]} );
 		}
 		public function complete() : void
 		{
