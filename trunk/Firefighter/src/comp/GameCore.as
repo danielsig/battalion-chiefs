@@ -80,6 +80,7 @@ package comp
 			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, DummyController, Rigidbody, BoxCollider);
 			Audio.load("samusSound", "assets/sound/samus.mp3~00-2000~");
 			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
+			//Animation.filterWhite("samusRunning");
 			samusObj.animation.play("samusRunning");
 			Animation.addLabel("samusRunning", "Audio_play", 0, "samusSound", 1);
 			Animation.addLabel("samusRunning", "Audio_play", 5, "samusSound", 1);
@@ -113,6 +114,32 @@ package comp
 			samusObj.rigidbody.freezeRotation = true;
 			//samusObj.rigidbody.interpolate = false;
 			
+			
+			
+			//door - bara test
+			
+			Renderer.draw("doorGraphics",
+			"fill", { color:"0x885555" },
+				-15, -30,
+				15, -30,
+				15, 30,
+				-15, 30
+			);
+			
+			var door : GameObject = new GameObject("door", Renderer);
+			door.transform.x = 400;
+			door.transform.y = 20;
+			door.renderer.setBitmapByName("doorGraphics");
+			door.renderer.putInFrontOf(floor.renderer);
+			
+			
+			var door2 : GameObject = new GameObject("door2", Renderer);
+			door2.transform.x = 200;
+			door2.transform.y = 20;
+			door2.renderer.setBitmapByName("doorGraphics");
+			door2.renderer.putInFrontOf(floor.renderer);
+			
+			Portal.addPortal(door, door2, 40, 60, samusObj.transform);
 			
 			var i : int = 5;
 			while (i--)
