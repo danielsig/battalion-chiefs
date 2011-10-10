@@ -18,6 +18,8 @@ package com.battalion.flashpoint.comp
 		private var _length : Number;
 		private var _animation : Object;
 		private var _playing : Boolean;
+		private var _boneAnimName : String = null;
+		private var _bones : Object = { };
 		
 		/**boneAnimName = Tekur inn nafn á animation
 		*frameInterval = hversu fljótt animationið fer á milli ramma
@@ -29,7 +31,6 @@ package com.battalion.flashpoint.comp
 			{
 				var length : uint = 0;
 			}
-			
 			for (var gameObjectName : String in definition)
 			{
 				var values : Array = definition[gameObjectName];//[0, 90, 180}
@@ -91,8 +92,9 @@ package com.battalion.flashpoint.comp
 		 */
 		public function get currentAnimation() : String
 		{
-			return _animationName;
+			return _boneAnimName;
 		}
+		
 		public function set currentAnimation(value : String) : void
 		{
 			CONFIG::debug
@@ -102,6 +104,7 @@ package com.battalion.flashpoint.comp
 			_animation = _animations[value];
 			_length = _animation.length;
 			_p = 0;
+			_boneAnimName = value;
 		}
 		
 		/**
