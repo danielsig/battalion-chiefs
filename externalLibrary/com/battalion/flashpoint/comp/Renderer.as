@@ -34,6 +34,18 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		internal static var _bitmaps : Object = { };
 		
+		public static function filterWhite(bitmapName : String) : void
+		{
+			filter(bitmapName, 0xFFFFFFFF, 0x00000000);
+		}
+		
+		public static function filter(bitmapName : String, targetColor : uint, replacementColor : uint ) : void
+		{
+			var bitmap : BitmapData = _bitmaps[bitmapName];
+			bitmap.threshold(bitmap, bitmap.rect, new Point(), "==", targetColor, replacementColor);
+		}
+		
+		
 		/**
 		 * Use this to bake a <code>DisplayObject</code> or a <code>BitmapData</code> object to a <code>BitmapData</code> with the name <code>bitmapName</code>.
 		 * The results can be rendererd by a <code>Renderer</code> instance by calling the <code>setBitmapByName()</code> method
