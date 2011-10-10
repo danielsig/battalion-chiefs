@@ -450,6 +450,33 @@ trace(myChild);//WORLD.foo.bar
 			return null;
 		}
 		
+		public function findGameObjectDownwards(goName : String): GameObject
+		{
+			CONFIG::debug
+			{
+				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (goName == null) throw new Error("goName must be non-null.");
+			}
+			if (name == goName) return this;
+			return findGameObjectDownwardsRecursive(goName, this);
+			
+		}
+		
+		private static function findGameObjectDownwardsRecursive(goName : String, currentTarget : GameObject) : GameObject
+		{
+			for each (var child : GameObject in currentTarget._children)
+			{
+				if (child.name == goName)
+					return child;
+			}
+			for each (child in currentTarget._children)
+			{
+				var results : GameObject = findGameObjectDownwardsRecursive(goName, child);
+				if (results) return results;
+			}
+			return null;
+		}
+		
 		/**
 		 * It's recommended that you use the dot operator to access components, not this method. It's only here for consistency.
 		 * @example Here's an example of how to use the dot operator:<listing version="3.0">
@@ -473,6 +500,9 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			return null;
 		}
+		
+		
+		
 		/**
 		 * Destroys the GameObject and all of it's components and child GameObjects.
 		 */
