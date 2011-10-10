@@ -17,6 +17,7 @@ package com.battalion.flashpoint.comp
 		private var _p : Number = 0;//playhead
 		private var _length : Number;
 		private var _animation : Object;
+		private var _playing : Boolean;
 		
 		/**boneAnimName = Tekur inn nafn á animation
 		*frameInterval = hversu fljótt animationið fer á milli ramma
@@ -113,16 +114,43 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		 */
 		public function play(boneAnimName : String = null) : void
 		{
+			if (boneAnimName)
+			{
+				CONFIG::debug
+				{
+					if (!_animations.hasOwnProperty(boneAnimName)) throw new Error("The bone animation you are trying to play has not been loaded.");
+				}
+				if (++_p >= _length) _p = 0;
+				
+				_animation = _animations[boneAnimName];
+				_length = _animation[boneAnimName].
+				_p = 0;
+				
+				for (var boneName : String in _animation)
+				{
+					_bones[boneName] = gameObject.findGameObjectDownwards(boneName);
+				}
+				
+				
+			}
+			_playing = true;
 			
 		}
 		
-		
-		
-		
-		
+		public function stop(): void
+		{
+			_playing = false;
+		}
+
 		public function update() : void
 		{
-			
+			if (_playing)
+			{
+				if (++_p >= _length) _p = 0;
+				
+				
+				
+			}
 		}
 		
 	}
