@@ -30,19 +30,22 @@ package com.battalion.flashpoint.comp
 			CONFIG::debug
 			{
 				var length : uint = 0;
+				if (_animations[boneAnimName])
+				{
+					trace("BoneAnimation: Trying to create object that already exists")
+				}
 			}
+			var definedAnimation : Object = { };
 			for (var gameObjectName : String in definition)
 			{
 				var values : Array = definition[gameObjectName];//[0, 90, 180}
 				var prop : String = gameObjectName.charAt(gameObjectName.length - 1);//A
 				gameObjectName = gameObjectName.slice(0, gameObjectName.length - 1);//t
 				
-				delete definition[gameObjectName + prop];//tA
+				if(!definition[gameObjectName]) definedAnimation[gameObjectName] = new GoFrame(values.length);
 				
-				if(!definition[gameObjectName]) definition[gameObjectName] = new GoFrame(values.length);
+				var frames : GoFrame = definedAnimation[gameObjectName];
 				
-				var frames : GoFrame = definition[gameObjectName];
-					
 				var c : uint = 0;
 				var value : Number;
 				
@@ -80,10 +83,10 @@ package com.battalion.flashpoint.comp
 				
 			}
 			
-			definition.frameInterval = frameInterval;
-			definition.length = values.length;
+			definedAnimation.frameInterval = frameInterval;
+			definedAnimation.length = values.length;
 			
-			_animations[boneAnimName] = definition;
+			_animations[boneAnimName] = definedAnimation;
 		}
 		
 		/**

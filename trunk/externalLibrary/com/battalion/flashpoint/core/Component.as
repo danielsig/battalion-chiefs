@@ -470,7 +470,7 @@ package com.battalion.flashpoint.core
 					}
 				}
 			}
-		}
+		}	
 	}
 
 }
