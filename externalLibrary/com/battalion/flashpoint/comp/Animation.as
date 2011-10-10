@@ -7,6 +7,7 @@ package com.battalion.flashpoint.comp
 	import com.danielsig.StringUtilPro;
 	import flash.display.BitmapData;
 	import flash.events.Event;
+	import flash.geom.Point;
 	
 	/**
 	 * Animation component. Makes a Renderer component iterate through bitmaps, one iteration per fixedUpdate frame.
@@ -24,6 +25,20 @@ package com.battalion.flashpoint.comp
 	{
 		private static var _animations : Object = { };
 		private static var _animationLabels : Object = { };
+		
+		public static function filterWhite(animationName : String) : void
+		{
+			filter(animationName, 0xFFFFFFFF, 0x00000000);
+		}
+		
+		public static function filter(animationName : String, targetColor : uint, replacementColor : uint ) : void
+		{
+			var frames : Vector.<BitmapData> = _animations[animationName];
+			for each(var frame : BitmapData in frames)
+			{
+				frame.threshold(frame, frame.rect, new Point(), "==", targetColor, replacementColor);
+			}
+		}
 		
 		/**
 		 * This comes in handy when you want something to happen at a specific frame.
