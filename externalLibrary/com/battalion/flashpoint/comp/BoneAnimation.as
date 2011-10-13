@@ -2,6 +2,7 @@ package com.battalion.flashpoint.comp
 {
 	import com.battalion.flashpoint.core.Component;
 	import com.battalion.flashpoint.core.GameObject;
+	import com.battalion.flashpoint.core.FlashPoint;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
 	import flash.xml.XMLNode;
 	/**
@@ -14,18 +15,20 @@ package com.battalion.flashpoint.comp
 		
 		public var localTimeScale : Number = 1;
 		
+		private var _pFixed : Number = 0;
 		private var _p : Number = 0;//playhead
-		private var _length : Number;
-		private var _animation : Object;
-		private var _playing : Boolean;
+		private var _length : uint;
+		private var _framesPerSecond : Number = 30;
+		private var _animation : Object;// GoFrames
+		private var _bones : Object = { };// Transforms
 		private var _boneAnimName : String = null;
-		private var _bones : Object = { };
+		private var _playing : Boolean;
 		
 		/**boneAnimName = Tekur inn nafn á animation
 		*frameInterval = hversu fljótt animationið fer á milli ramma
 		*definition = dynamic object fyrir animationið
 		*/
-		public static function define(boneAnimName: String, frameInterval: Number, definition: Object) : void
+		public static function define(boneAnimName: String, framesPerSecond: Number, definition: Object) : void
 		{
 			CONFIG::debug
 			{
@@ -42,7 +45,7 @@ package com.battalion.flashpoint.comp
 				var prop : String = gameObjectName.charAt(gameObjectName.length - 1);//A
 				gameObjectName = gameObjectName.slice(0, gameObjectName.length - 1);//t
 				
-				if(!definition[gameObjectName]) definedAnimation[gameObjectName] = new GoFrame(values.length);
+				if(!definedAnimation[gameObjectName]) definedAnimation[gameObjectName] = new GoFrame(values.length);
 				
 				var frames : GoFrame = definedAnimation[gameObjectName];
 				
@@ -83,7 +86,7 @@ package com.battalion.flashpoint.comp
 				
 			}
 			
-			definedAnimation.frameInterval = frameInterval;
+			definedAnimation.framesPerSecond = framesPerSecond;
 			definedAnimation.length = values.length;
 			
 			_animations[boneAnimName] = definedAnimation;
@@ -106,7 +109,13 @@ package com.battalion.flashpoint.comp
 			}
 			_animation = _animations[value];
 			_length = _animation.length;
-			_p = 0;
+			_framesPerSecond = _animation.framesPerSecond;
+			_p = _pFixed = 0;
+			
+			for (var boneName : String in _animation)
+			{
+				if (boneName != "length" && boneName != "framesPerSecond") _bones[boneName] = gameObject.findGameObjectDownwards(boneName).transform;
+			}
 			_boneAnimName = value;
 		}
 		
@@ -120,27 +129,8 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		 */
 		public function play(boneAnimName : String = null) : void
 		{
-			if (boneAnimName)
-			{
-				CONFIG::debug
-				{
-					if (!_animations.hasOwnProperty(boneAnimName)) throw new Error("The bone animation you are trying to play has not been loaded.");
-				}
-				if (++_p >= _length) _p = 0;
-				
-				_animation = _animations[boneAnimName];
-				_length = _animation[boneAnimName].
-				_p = 0;
-				
-				for (var boneName : String in _animation)
-				{
-					_bones[boneName] = gameObject.findGameObjectDownwards(boneName);
-				}
-				
-				
-			}
+			if (boneAnimName != _boneAnimName) currentAnimation = boneAnimName;
 			_playing = true;
-			
 		}
 		
 		public function stop(): void
@@ -152,10 +142,43 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		{
 			if (_playing)
 			{
-				if (++_p >= _length) _p = 0;
+				// UPDATE PLAYHEAD
+				if (_p >= 1) _p = _pFixed = 0;
+				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
+				var frameLength : Number = (localTimeScale * FlashPoint.timeScale) / _length;
+				_p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame;
 				
+				if (_p > 1) _p %= 1;
+				else if (_p < 0) _p = 0;
 				
+				if (!FlashPoint.frameInterpolationRatio)
+				{
+					_pFixed = _p;
+				}
 				
+				// UPDATE BONES
+				
+				var currentFrame : Number = _p * (_length - 1);
+				var floorFrame : int = currentFrame;//will be rounded down
+				var ceilFrame : int = floorFrame + 1;
+				if (ceilFrame >= _length) ceilFrame--;
+				
+				var ceilRatio : Number = currentFrame - floorFrame;
+				var floorRatio : Number = 1 - ceilRatio;
+				
+				for (var boneName : String in _bones)
+				{
+					_bones[boneName].x =  _animation[boneName].xPos[floorFrame] * floorRatio
+										+ _animation[boneName].xPos[ceilFrame]  * ceilRatio;
+					_bones[boneName].y =  _animation[boneName].yPos[floorFrame] * floorRatio
+										+ _animation[boneName].yPos[ceilFrame]  * ceilRatio;
+					var a1 : Number = _animation[boneName].angles[floorFrame];
+					var a2 : Number = _animation[boneName].angles[ceilFrame];
+					if (a2 - a1 > 180) a1 += 360;
+					if (a2 - a1 < -180) a1 -= 360;
+					_bones[boneName].rotation = a1 * floorRatio
+											  + a2  * ceilRatio;
+				}
 			}
 		}
 		
