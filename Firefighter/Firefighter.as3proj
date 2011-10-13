@@ -48,8 +48,9 @@
   </includeLibraries>
   <!-- SWC Libraries -->
   <libraryPaths>
-    <element path="C:\Users\DanielSig\Documents\AS3\externalLibrary\MonsterDebugger.swc" />
-    <element path="C:\Users\DanielSig\Documents\AS3\externalLibrary\greensock.swc" />
+    <element path="C:\Users\Notandi\Fire\externalLibrary\Box2D_2.0.2.swc" />
+    <element path="C:\Users\Notandi\Fire\externalLibrary\greensock.swc" />
+    <element path="C:\Users\Notandi\Fire\externalLibrary\MonsterDebugger.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

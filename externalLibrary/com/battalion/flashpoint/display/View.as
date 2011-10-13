@@ -8,7 +8,9 @@ package com.battalion.flashpoint.display
 	import flash.events.Event;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	import flash.text.TextField;
 	import com.battalion.flashpoint.comp.Renderer;
+	import com.battalion.flashpoint.comp.Text;
 	import com.battalion.flashpoint.comp.Camera;
 	import com.battalion.flashpoint.core.GameObject;
 	
@@ -26,9 +28,11 @@ package com.battalion.flashpoint.display
 	{
 		
 		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
+		private static var _texts : Vector.<Text> =  new Vector.<Text>();
 		private static var _viewCounter : int = 0;
 		
 		private var _sprites : Vector.<Sprite> =  new Vector.<Sprite>();
+		private var _textFields : Vector.<TextField> =  new Vector.<TextField>();
 		private var _bounds : Rectangle;
 		private var _cam : Camera;
 		private var _content : Sprite = new Sprite();//to center things
@@ -45,7 +49,7 @@ package com.battalion.flashpoint.display
 		public static function removeFromView(renderer : Renderer) : void
 		{
 			var index : int = _renderers.indexOf(renderer);
-			if (index < _renderers.length - 1)
+			if (index < _renderers.length - 1 && index > 0)
 			{
 				_renderers[index] = _renderers.pop();
 			}
@@ -54,6 +58,34 @@ package com.battalion.flashpoint.display
 				_renderers.length--;
 			}
 			renderer.bitmapData = null;
+		}
+		public static function addTextToView(text : Text) : void
+		{
+			_texts.push(text);
+			_textFields.push(null);
+		}
+		/** @private **/
+		public static function removeTextFromView(text : Text) : void
+		{
+			var index : int = _texts.indexOf(text);
+			if (index < _texts.length - 1 && index > 0)//not the last element
+			{
+				_texts[index] = _texts.pop();
+				if (_dynamicLayer.contains(_textFields[index]))
+				{
+					_dynamicLayer.removeChild(_textFields[index]);
+				}
+				_textFields[index] = _textFields.pop();
+			}
+			else if (_texts.length > 0)//not the last element
+			{
+				_texts.length--;
+				if (_dynamicLayer.contains(_textFields[index]))
+				{
+					_dynamicLayer.removeChild(_textFields[index]);
+				}
+				_textFields.length--;
+			}
 		}
 		public function View(bounds : Rectangle, camName : String = "cam")
 		{
@@ -147,6 +179,30 @@ package com.battalion.flashpoint.display
 					_sprites[i].parent.removeChild(_sprites[i]);
 					delete renderer.sprites[_name];
 					_sprites[i] = null;
+				}
+			}
+			i = _texts.length;
+			while (i--)
+			{
+				var text : Text = _texts[i];
+				if (text.text)
+				{
+					if (!_textFields[i])
+					{
+						_textFields[i] = new TextField();
+						_textFields[i].replaceText(0, _textFields[i].getLineLength(), text.text);
+						if (text.offset)
+						{
+							var matrix : Matrix = text.offset.clone();
+							matrix.concat(renderer.gameObject.transform.globalMatrix);
+							_textFields[i].transform.matrix = matrix;
+						}
+						else
+						{
+							_textFields[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
+						}
+						_dynamicLayer.addChild(_textFields[i]);
+					}
 				}
 			}
 		}
