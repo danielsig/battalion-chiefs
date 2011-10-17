@@ -76,6 +76,10 @@ package com.battalion.flashpoint.display
 		public static function addTextToView(text : Text) : void
 		{
 			_texts.push(text);
+			for each(var view : View in _views)
+			{
+				view._textFields.push(null);
+			}
 		}
 		/** @private **/
 		public static function removeTextFromView(text : Text) : void
