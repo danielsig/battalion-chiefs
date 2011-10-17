@@ -74,7 +74,7 @@ package com.battalion
 				_press[_prevKeys[--_prevKeyCounter]] = false;
 				_release[_prevKeys[_prevKeyCounter]] = false;
 			}
-			if (_mouseButton > 0) _mouseButton = 1;
+			if (_mouseButton > 0 && _mouseButton < 3) _mouseButton = 1;
 			else _mouseButton = 0;
 			
 			_mouseXPrev = _mouseX;
@@ -107,6 +107,10 @@ package com.battalion
 		
 		public static function get mouseX() : Number 			{ return _mouseX; }
 		public static function get mouseY() : Number 			{ return _mouseY; }
+		
+		public static function get stageWidth() : Number 			{ return _stage.stageWidth; }
+		public static function get stageHeight() : Number 			{ return _stage.stageHeight; }
+		
 		public static function get mouseXPrevious() : Number 	{ return _mouseXPrev; }
 		public static function get mouseYPrevious() : Number 	{ return _mouseYPrev; }
 		public static function get mouseXMove() : Number 	{ return _mouseX - _mouseXPrev; }

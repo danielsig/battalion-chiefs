@@ -122,6 +122,7 @@ package com.battalion.flashpoint.display
 			_cam = new GameObject(camName || "cam", Camera).camera;
 			_cam.setBounds(_bounds);
 			_views.push(this);
+			mouseChildren = mouseEnabled = false;
 		}
 		private function onEveryFrame(e : Event) : void
 		{

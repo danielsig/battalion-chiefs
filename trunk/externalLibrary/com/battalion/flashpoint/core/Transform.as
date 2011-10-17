@@ -3,6 +3,7 @@ package com.battalion.flashpoint.core
 	
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import com.battalion.Input;
 	
 	/**
 	 * Every GameObject always has exactly one Transform component.<br>
@@ -40,6 +41,9 @@ package com.battalion.flashpoint.core
 		private var _cos : Number = 1;
 		private var _sin : Number = 0;
 		private var _cosSinCalculated : Boolean = false;
+		
+		public function get mouseRelativeX():Number { return Input.mouseX - Input.stageWidth * 0.5 - globalMatrix.tx + world.cam.transform.gx}
+		public function get mouseRelativeY():Number { return Input.mouseY - Input.stageHeight * 0.5 - globalMatrix.ty + world.cam.transform.gy}
 		
 		/** @private **/
 		internal var _changed : int = 0;

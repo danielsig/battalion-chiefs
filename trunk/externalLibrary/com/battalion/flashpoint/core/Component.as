@@ -5,6 +5,7 @@ package com.battalion.flashpoint.core
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
+	import com.battalion.Input;
 	
 	/**
 	 * Extend this class in order to make new components.
@@ -29,6 +30,7 @@ package com.battalion.flashpoint.core
 		
 		/** @private **/
 		internal var _gameObject : GameObject;
+		
 		
 		CONFIG::debug
 		{
