@@ -2,6 +2,7 @@ package com.battalion.flashpoint.comp
 {
 	import com.battalion.flashpoint.core.Component;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
+	import com.battalion.flashpoint.display.View;
 	import flash.geom.Matrix;
 	/**
 	 * ...
@@ -21,6 +22,7 @@ package com.battalion.flashpoint.comp
 		public function onDestroy() : Boolean
 		{
 			View.removeTextFromView(this);
+			return false;
 		}
 	}
 
