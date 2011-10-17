@@ -29,10 +29,11 @@ package com.battalion.flashpoint.display
 		
 		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
 		private static var _texts : Vector.<Text> =  new Vector.<Text>();
+		private static var _views : Vector.<View> =  new Vector.<View>();
 		private static var _viewCounter : int = 0;
 		
 		private var _sprites : Vector.<Sprite> =  new Vector.<Sprite>();
-		private var _textFields : Vector.<TextField> =  new Vector.<TextField>();
+		private var _textFields : Vector.<TextField> = new Vector.<TextField>();
 		private var _bounds : Rectangle;
 		private var _cam : Camera;
 		private var _content : Sprite = new Sprite();//to center things
@@ -58,11 +59,23 @@ package com.battalion.flashpoint.display
 				_renderers.length--;
 			}
 			renderer.bitmapData = null;
+			
+			for each(var view : View in _views)
+			{
+				if(view._sprites[index] && view._sprites[index].parent.contains(view._sprites[index])) view._sprites[index].parent.removeChild(view._sprites[index]);
+				if (index < view._sprites.length - 1 && index > 0)
+				{
+					view._sprites[index] = view._sprites.pop();
+				}
+				else if (view._sprites.length > 0)
+				{
+					view._sprites.length--;
+				}
+			}
 		}
 		public static function addTextToView(text : Text) : void
 		{
 			_texts.push(text);
-			_textFields.push(null);
 		}
 		/** @private **/
 		public static function removeTextFromView(text : Text) : void
@@ -71,20 +84,22 @@ package com.battalion.flashpoint.display
 			if (index < _texts.length - 1 && index > 0)//not the last element
 			{
 				_texts[index] = _texts.pop();
-				if (_dynamicLayer.contains(_textFields[index]))
-				{
-					_dynamicLayer.removeChild(_textFields[index]);
-				}
-				_textFields[index] = _textFields.pop();
 			}
 			else if (_texts.length > 0)//not the last element
 			{
 				_texts.length--;
-				if (_dynamicLayer.contains(_textFields[index]))
+			}
+			for each(var view : View in _views)
+			{
+				if(view._textFields[index] && view._textFields[index].parent.contains(view._textFields[index])) view._textFields[index].parent.removeChild(view._textFields[index]);
+				if (index < view._textFields.length - 1 && index > 0)
 				{
-					_dynamicLayer.removeChild(_textFields[index]);
+					view._textFields[index] = view._textFields.pop();
 				}
-				_textFields.length--;
+				else if (view._textFields.length > 0)
+				{
+					view._textFields.length--;
+				}
 			}
 		}
 		public function View(bounds : Rectangle, camName : String = "cam")
@@ -106,6 +121,7 @@ package com.battalion.flashpoint.display
 			addEventListener(Event.ENTER_FRAME, onEveryFrame);
 			_cam = new GameObject(camName || "cam", Camera).camera;
 			_cam.setBounds(_bounds);
+			_views.push(this);
 		}
 		private function onEveryFrame(e : Event) : void
 		{
@@ -187,22 +203,24 @@ package com.battalion.flashpoint.display
 				var text : Text = _texts[i];
 				if (text.text)
 				{
-					if (!_textFields[i])
+					if (!_textFields[i]) _textFields[i] = new TextField();
+					_textFields[i].text = text.text;
+					if (text.offset)
 					{
-						_textFields[i] = new TextField();
-						_textFields[i].replaceText(0, _textFields[i].getLineLength(), text.text);
-						if (text.offset)
-						{
-							var matrix : Matrix = text.offset.clone();
-							matrix.concat(renderer.gameObject.transform.globalMatrix);
-							_textFields[i].transform.matrix = matrix;
-						}
-						else
-						{
-							_textFields[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
-						}
-						_dynamicLayer.addChild(_textFields[i]);
+						matrix = text.offset.clone();
+						matrix.concat(renderer.gameObject.transform.globalMatrix);
+						_textFields[i].transform.matrix = matrix;
 					}
+					else
+					{
+						_textFields[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
+					}
+					_dynamicLayer.addChild(_textFields[i]);
+				}
+				else if (_textFields[i])
+				{
+					_dynamicLayer.removeChild(_textFields[i]);
+					_textFields[i] = null;
 				}
 			}
 		}
