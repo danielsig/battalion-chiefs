@@ -126,20 +126,21 @@ package comp
 				-15, 30
 			);
 			
-			var door : GameObject = new GameObject("door", Renderer);
+			var door : GameObject = new GameObject("door", Renderer, PortalStatusNotifier);
 			door.transform.x = 400;
 			door.transform.y = 20;
 			door.renderer.setBitmapByName("doorGraphics");
 			door.renderer.putInFrontOf(floor.renderer);
 			
 			
-			var door2 : GameObject = new GameObject("door2", Renderer);
+			
+			var door2 : GameObject = new GameObject("door2", Renderer, PortalStatusNotifier);
 			door2.transform.x = 200;
 			door2.transform.y = 20;
 			door2.renderer.setBitmapByName("doorGraphics");
 			door2.renderer.putInFrontOf(floor.renderer);
 			
-			Portal.addPortal(door, door2, 40, 60, samusObj.transform);
+			Portal.addPortal(door, door2, 40, 60, samusObj.transform, true, 100);
 			
 			var i : int = 5;
 			while (i--)
