@@ -10,110 +10,145 @@ package com.aw.utils
 	/**
 	 * 
 	 * @author Galaburda Oleg http://actualwave.com
+	 * @author DanielSig
 	 * 
 	 */
-	public class AccurateTimer extends Timer{
-		protected var _delay:Number = 0;
-		protected var _paused:Boolean;
-		private var _startTime:Number = 0;
-		private var _position:Number = 0;
-		private var _missedIterations:uint = 0;
-		private var _currentlyMissedIterations:uint = 0;
-		private var _lastUsedDelay:Number = 0;
-		private var _willRestartByTimer:Boolean;
-		public function AccurateTimer(delay:Number, repeatCount:int=0):void{
+	public class AccurateTimer extends Timer
+	{
+		
+		protected var _delay : Number = 0;
+		protected var _paused : Boolean;
+		private var _startTime : Number = 0;
+		private var _position : Number = 0;
+		private var _missedIterations : uint = 0;
+		private var _currentlyMissedIterations : uint = 0;
+		private var _lastUsedDelay : Number = 0;
+		private var _willRestartByTimer : Boolean;
+		
+		public function AccurateTimer(delay : Number, repeatCount : int = 0) : void
+		{
 			super(delay, repeatCount);
 			addEventListener(TimerEvent.TIMER, timerHandler, false, int.MAX_VALUE);
 			addEventListener(TimerEvent.TIMER_COMPLETE, timerCompleteHandler, false, int.MAX_VALUE);
 			_delay = delay;
 		}
-		override public function get delay():Number{
-			return this._delay;
+		/**
+		 * The current delay
+		 */
+		public function get currentDelay() : Number
+		{
+			return super.delay;
 		}
-		override public function set delay(value:Number):void{
-			this._delay = value;
+		override public function get delay() : Number
+		{
+			return _delay;
 		}
-		public function get missedIterations():uint{
-			return this._missedIterations;
+		override public function set delay(value : Number) : void
+		{
+			_delay = value;
 		}
-		public function get position():Number{
-			if(this._paused) return this._position;
-			else{
-				return this.running ? getTimer()-this._startTime : 0;
+		public function get missedIterations() : uint
+		{
+			return _missedIterations;
+		}
+		public function get position() : Number
+		{
+			if(_paused) return _position;
+			else
+			{
+				return running ? getTimer() - _startTime : 0;
 			}
 			
 		}
-		public function set position(value:Number):void{
-			if(this._paused) this._position = value;
-			else{
-				if(this.running){
+		public function set position(value : Number) : void
+		{
+			if(_paused) _position = value;
+			else
+			{
+				if (running)
+				{
 					super.stop();
-					this._startTime = getTimer()-value;
-					super.delay = this._lastUsedDelay-value;
+					_startTime = getTimer() - value;
+					super.delay = _lastUsedDelay - value;
 					super.start();
 				}
 			}
 		}
-		override public function start():void{
-			this._currentlyMissedIterations = 0;
-			if(this._willRestartByTimer){
-				var difference:Number = getTimer()-this._startTime-this._lastUsedDelay;
-				if(difference>this._delay){
-					this._currentlyMissedIterations = difference/this._delay;
-					difference = difference%this._delay;
-					this._lastUsedDelay = this._delay-difference;
-				}else{
-					this._lastUsedDelay = this._delay-difference;
+		override public function start() : void
+		{
+			_currentlyMissedIterations = 0;
+			if (_willRestartByTimer)
+			{
+				var difference : Number = getTimer() - _startTime - _lastUsedDelay;
+				if (difference > _delay)
+				{
+					_currentlyMissedIterations = difference / _delay;
+					difference = difference % _delay;
+					_lastUsedDelay = _delay - difference;
 				}
-				super.delay = this._lastUsedDelay;
-			}else{
-				this._missedIterations = 0;
-				this._currentlyMissedIterations = 0;
-				this._lastUsedDelay = this._delay;
-				super.delay = this._delay;
+				else
+				{
+					_lastUsedDelay = _delay - difference;
+				}
+				super.delay = _lastUsedDelay;
 			}
-			this._missedIterations += this._currentlyMissedIterations;
-			this._willRestartByTimer = false;
-			this._startTime = getTimer();
+			else
+			{
+				_missedIterations = 0;
+				_currentlyMissedIterations = 0;
+				super.delay = _lastUsedDelay = _delay;
+			}
+			_missedIterations += _currentlyMissedIterations;
+			_willRestartByTimer = false;
+			_startTime = getTimer();
 			super.start();
 		}
-		protected function timerHandler(event:TimerEvent):void{
+		protected function timerHandler(event : TimerEvent) : void
+		{
 			if(event is AccurateTimerEvent) return;
 			event.stopImmediatePropagation();
-			super.delay = this._delay;
-			this._willRestartByTimer = true;
-			this.dispatchEvent(new AccurateTimerEvent(event.type, event.bubbles, event.cancelable, this._currentlyMissedIterations));
+			dispatchEvent(new AccurateTimerEvent(event.type, event.bubbles, event.cancelable, _currentlyMissedIterations));
+			super.delay = _delay;
+			_willRestartByTimer = true;
 		}
-		protected function timerCompleteHandler(event:TimerEvent):void{
+		protected function timerCompleteHandler(event : TimerEvent) : void
+		{
 			if(event is AccurateTimerEvent) return;
 			event.stopImmediatePropagation();
-			this.dispatchEvent(new AccurateTimerEvent(event.type, event.bubbles, event.cancelable, this._missedIterations));
+			dispatchEvent(new AccurateTimerEvent(event.type, event.bubbles, event.cancelable, _missedIterations));
 		}
-		public function resume():void{
-			if(this._paused){
-				this._lastUsedDelay = this._delay;
-				super.delay = this._delay-this._position;
-				this._startTime = getTimer()-this._position;
-				this._paused = false;
-				this._position = 0;
+		public function resume() : void
+		{
+			if (_paused)
+			{
+				_lastUsedDelay = _delay;
+				super.delay = _delay - _position;
+				_startTime = getTimer() - _position;
+				_paused = false;
+				_position = 0;
 				super.start();
-			}else this.start();
+			}
+			else this.start();
 		}
-		public function pause():void{
-			this._paused = true;
-			this._position = getTimer()-this._startTime;
+		public function pause() : void
+		{
+			_paused = true;
+			_position = getTimer() - _startTime;
 			super.stop();
 		}
-		override public function stop():void{
-			this._paused = false;
-			this._position = 0;
-			if(!this._willRestartByTimer){
-				this._startTime = 0;
+		override public function stop() : void
+		{
+			_paused = false;
+			_position = 0;
+			if (!_willRestartByTimer)
+			{
+				_startTime = 0;
 			}
 			super.stop();
 		}
-		public function get paused():Boolean{
-			return this._paused;
+		public function get paused() : Boolean
+		{
+			return _paused;
 		}
 	}
 }

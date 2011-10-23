@@ -1,7 +1,5 @@
 package com.battalion.flashpoint.core 
 {
-	import Box2D.Dynamics.b2DebugDraw;
-	import Box2D.Dynamics.b2World;
 	import com.aw.utils.AccurateTimer;
 	import com.aw.events.AccurateTimerEvent;
 	import com.battalion.audio.AudioPlayer;
@@ -10,8 +8,6 @@ package com.battalion.flashpoint.core
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.display.Stage;
-	import Box2D.Collision.b2AABB;
-	import Box2D.Common.Math.b2Vec2;
 	import flash.geom.Rectangle;
 	
 	
@@ -27,8 +23,24 @@ package com.battalion.flashpoint.core
 		 */
 		public static var timeScale : Number = 1;
 		/**
+		 * Setting the fixedFPS (fixed frames per second) will take effect on the next fixed update.
+		 * This is the number of FixedUpdate() calls per second.
+		 * This effects the <code>fixedInterval</code> property.
+		 * @see fixedInterval
+		 */
+		public static function get fixedFPS() : Number
+		{
+			return 1000.0 / fixedInterval;
+		}
+		public static function set fixedFPS(value : Number) : void
+		{
+			fixedInterval = 1000.0 / value;
+		}
+		/**
 		 * Setting the fixedInterval will take effect on the next fixed update.
-		 * This interval is the amount of milliseconds between FixedUpdate() calls on Components.
+		 * This interval is the amount of milliseconds between FixedUpdate() calls
+		 * on Components with respect to timeScale.
+		 * @see fixedFPS
 		 */
 		public static var fixedInterval : Number = 20;
 		/**
@@ -49,6 +61,7 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		
 		private static var _timer : AccurateTimer = new AccurateTimer(fixedInterval / timeScale);
 		private static var _prevTime : Number = new Date().time;
+		private static var _dynamicInterval : Number = fixedInterval / timeScale;
 		private static var _stage : Stage;
 		
 		/**
@@ -56,29 +69,8 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		 * @param	stage, the Stage object.
 		 * @param	physicsBounds, omit this to exclude physics.
 		 */
-		public static function init(stage : Stage, physicsBounds : Rectangle = null) : void
+		public static function init(stage : Stage) : void
 		{
-			if (physicsBounds)
-			{
-				Physics.init(physicsBounds);
-				
-				var debugSprite : Sprite = new Sprite();
-				debugSprite.x = 400;
-				debugSprite.y = 225;
-				stage.addChild(debugSprite);
-				
-				CONFIG::debug
-				{
-					var dbgDraw : b2DebugDraw = new b2DebugDraw();
-					dbgDraw.m_sprite = debugSprite;
-					dbgDraw.m_drawScale = Physics._pixelsPerMeter;
-					dbgDraw.m_fillAlpha = 0.4;
-					dbgDraw.m_lineThickness = 1.0;
-					dbgDraw.m_drawFlags = b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit;
-					Physics._physicsWorld.SetDebugDraw(dbgDraw);
-				}
-				
-			}
 			
 			GameObject.WORLD = new GameObject("WORLD");
 			GameObject.WORLD._parent = GameObject.WORLD;
@@ -97,19 +89,19 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		
 		private static function update(event : Event = null) : void
 		{
-			//trace("update:" + frameInterpolationRatio);
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
 			
 			GameObject.WORLD.update();
 			Transform.flushGlobal();
 			var now : Number = new Date().time;
-			frameInterpolationRatio = ((now - _prevTime) * timeScale / fixedInterval);
+			frameInterpolationRatio = (now - _prevTime) / _dynamicInterval;
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
+			//trace(frameInterpolationRatio);
 		}
 		private static function fixedUpdate(event : Event = null) : void
 		{
-			_prevTime = new Date().time;
-			frameInterpolationRatio = 0;
+			//_dynamicInterval = new Date().time - _prevTime;
+			//frameInterpolationRatio = 0;
 			
 			var interval : Number = fixedInterval / timeScale;
 			Physics.step(interval * 0.001 * timeScale);
@@ -122,6 +114,10 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 				_timer.delay = fixedInterval / timeScale;
 				_timer.start();
 			}
+			_dynamicInterval = new Date().time - _prevTime;
+			frameInterpolationRatio = 0;
+			_prevTime = new Date().time;
+			//trace("------------ " + _dynamicInterval + " / " + fixedInterval + " -------------");
 		}
 		
 	}

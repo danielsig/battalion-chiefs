@@ -1,110 +1,114 @@
 package com.battalion.flashpoint.core 
 {
 	
-	import Box2D.Collision.Shapes.b2MassData;
-	import Box2D.Common.Math.b2Vec2;
-	import Box2D.Common.Math.b2XForm;
-	import Box2D.Dynamics.b2BodyDef;
-	import com.battalion.flashpoint.core.*;
-	import flash.geom.Matrix;
+	import com.battalion.powergrid.*;
+	import flash.filters.ConvolutionFilter;
 	import flash.geom.Point;
 	
 	/**
-	 * A Rigidbody, add this and a Collider to a GameObject to make it react to collisions.
+	 * A Rigidbody, add this alone with a Collider to a GameObject to make it react to collisions.
 	 * @author Battalion Chiefs
 	 */
-	public final class Rigidbody extends PhysicsSyncable implements IExclusiveComponent
+	public final class Rigidbody extends Component implements IExclusiveComponent, IPhysicsSyncable
 	{
-		/**
-		 * Should the rigidbody interpolate between fixedUpdate frames?
-		 */
-		public var interpolate : Boolean = true;
+		/** @private */
+		internal var _next : IPhysicsSyncable;
+		/** @private */
+		internal var _prev : IPhysicsSyncable;
 		
-		/** @private **/
-		internal var _center : b2Vec2 = new b2Vec2();
-		/** @private **/
-		internal var _mass : Number = 1;
-		/** @private **/
-		internal var _drag : Number = 0.05;
-		/** @private **/
-		internal var _freezeRotation : Boolean = false;
+		/** @private */
+		internal var body : AbstractRigidbody;
+		private var _transform : Transform;//for speed;
+		private var _this : Object;//for speed;
 		
-		private var _torqueToAdd : Number = 0;
-		private var _prevInertia : Number;
-		
-		private var _interpolateNow : Boolean = true;
-		private var _interpolationMatrix : Matrix;
-		private var _transform : Transform;
-		private var _xPos : Number = 0;
-		private var _yPos : Number = 0;
-		private var _rotation : Number = 0;
-		private var _angleStep : Number = 0;
-		private var _xScale : Number = 1;
-		private var _yScale : Number = 1;
+		private var _angularDrag : Number = 0;
+		private var _drag : Number = 0;
+		private var _mass : Number = 1;
+		private var _inertia : Number = 1;
+		private var _vanDerWaals : Number = 1;
+		private var _freeze : Boolean = false;
+		private var _afffectedByGravity : Boolean = true;
+		private var _vx : Number = 0;
+		private var _vy : Number = 0;
 		
 		/**
-		 * The rigidbody's center of mass.
+		 * Determines if this rigidbody is affected by gravity or not, default is true.
 		 */
-		public function get centerOfMass() : Point
+		public function get affectedByGravity() : Boolean { return _afffectedByGravity; }
+		public function set affectedByGravity(value : Boolean) : void
 		{
-			return new Point(_center.x * Physics._pixelsPerMeter, _center.y * Physics._pixelsPerMeter);
+			_afffectedByGravity = value;
+			if (body) body.affectedByGravity = _afffectedByGravity;
 		}
-		public function set centerOfMass(value : Point) : void
+		
+		/**
+		 * Determines how hard is it to move the Rigidbody.
+		 * This value is not the same as the mass.
+		 * The density can be found using the formula: density = mass / volume.
+		 */
+		public function get density() : Number { return _mass / body.volume; }
+		public function set density(value : Number) : void
 		{
-			_center = new b2Vec2(value.x * Physics._pixelsPerMeterInverse, value.y * Physics._pixelsPerMeterInverse);
-			if (_body)
+			_mass = value * body.volume;
+			if (body) body.mass = _mass;
+		}
+		
+		/**
+		 * Determines how hard is it to rotate the Rigidbody.
+		 * This is similar to inertia but not the same thing.
+		 * The difference between this and the actual inertia
+		 * is the similar to the difference between density and mass.
+		 * In other words: massDistribution = inertia / volume.
+		 * for comparison: density = mass / volume.
+		 */
+		public function get massDistribution() : Number { return _inertia / body.volume; }
+		public function set massDistribution(value : Number) : void
+		{
+			_inertia = value * body.volume;
+			if (body) body.inertia = _inertia;
+		}
+		
+		/**
+		 * Must be 0 or more, works only when there's only one Circle collider.
+		 * Read about this force <a href="http://en.wikipedia.org/wiki/Van_der_Waals_force">here</a>.
+		 * Basicly, this is the "mini-gravity" between molecules found in e.g. water.
+		 * Good for foam effects.
+		 */
+		public function get vanDerWaals() : Number { return _vanDerWaals; }
+		public function set vanDerWaals(value : Number) : void
+		{
+			_vanDerWaals = value;
+			if (body) body.vanDerWaals = value;
+		}
+		/**
+		 * The velocity of the rigidbody in pixels per fixedUpdate.
+		 */
+		public function get velocity() : Point
+		{
+			if(body) return new Point(body.vx, body.vy);
+			return new Point(_vx, _vy);
+		}
+		public function set velocity(value : Point) : void
+		{
+			_vx = value.x;
+			_vy = value.y;
+			if (body)
 			{
-				var massData : b2MassData = new b2MassData();
-				massData.mass = _mass;
-				massData.center = _center;
-				_body.SetMass(massData);
+				body.vx = _vx;
+				body.vy = _vy;
 			}
 		}
-		/**
-		 * Set this to true, in order to freeze rotation.
-		 */
-		public function get freezeRotation() : Boolean
-		{
-			return _freezeRotation;
-		}
-		public function set freezeRotation(value : Boolean) : void
-		{
-			if (_body)
-			{
-				if (value && !_freezeRotation)
-				{
-					_prevInertia = _body.m_I;
-					_body.m_I = Number.POSITIVE_INFINITY;
-					_body.m_invI = 0;
-				}
-				else if(!value && _freezeRotation)
-				{
-					_body.m_I = _prevInertia;
-					_body.m_invI = 1 / _prevInertia;
-				}
-			}
-			_freezeRotation = value;
-		}
-		/**
-		 * The rigidbody's mass.
-		 */
-		public function get mass() : Number
-		{
-			return _mass;
-		}
-		public function set mass(value : Number) : void
-		{
-			_mass = value;
-			if (_body)
-			{
-				_body.m_mass = _mass;
-				_body.m_invMass = 1 / _mass;
-			}
-		}
 		
-		/**
-		 * The rigidbody's drag.
-		 */
+		
+		public function get angularDrag() : Number
+		{
+			return _angularDrag;
+		}
+		public function set angularDrag(value : Number) : void
+		{
+			_angularDrag = value;
+			if (body) body.angularDrag = value;
+		}
 		public function get drag() : Number
 		{
 			return _drag;
@@ -112,137 +116,180 @@ package com.battalion.flashpoint.core
 		public function set drag(value : Number) : void
 		{
 			_drag = value;
-			if (_body) _body.m_linearDamping = _drag;
+			if (body) body.drag = value;
+		}
+		public function get mass() : Number
+		{
+			return _mass;
+		}
+		public function set mass(value : Number) : void
+		{
+			_mass = value;
+			if (body) body.mass = value;
 		}
 		
-		/** @private **/
-		public function fixedUpdate() : void
+		public function get inertia() : Number
 		{
-			_interpolateNow = interpolate && !_body.IsSleeping();
-			if (_interpolateNow)
+			return _inertia;
+		}
+		public function set inertia(value : Number) : void
+		{
+			_inertia = value;
+			if (body && !_freeze) body.inertia = value;
+		}
+		public function get freezeRotation() : Boolean
+		{
+			return _freeze;
+		}
+		public function set freezeRotation(value : Boolean) : void
+		{
+			_freeze = value;
+			if (body) body.inertia = value ? Infinity : _inertia;
+		}
+		public function addTorque(torque : Number, mode : uint = ForceMode.FORCE) : void
+		{
+			switch(mode)
 			{
-				var pos : b2Vec2 = _body.GetPosition();
-				_xPos = (pos.x * Physics._pixelsPerMeter - _transform.x);
-				_yPos = (pos.y * Physics._pixelsPerMeter - _transform.y);
-				_rotation = _transform.rotation * 0.0174532925;
-				_angleStep = _body.GetAngle() - _transform.rotation * 0.0174532925;
-				_xScale = _transform.scaleX;
-				_yScale = _transform.scaleY;
+				case ForceMode.VELOCITY_CHANGE:
+					body.va += torque;
+				case ForceMode.IMPULSE:
+					body.va += torque / _inertia;
+				case ForceMode.ACCELLERATION:
+					body.va += torque * FlashPoint.fixedInterval * 0.001;
+				case ForceMode.FORCE:
+				default:
+					body.va += torque * FlashPoint.fixedInterval * 0.001 / _inertia;
 			}
-		}
-		/** @private **/
-		public function update() : void 
-		{
-			if (_interpolateNow && !_transform._changed)
-			{
-				_interpolationMatrix.identity();
-				_interpolationMatrix.rotate(_rotation + _angleStep * FlashPoint.frameInterpolationRatio)
-				_interpolationMatrix.a *= _xScale;
-				_interpolationMatrix.d *= _yScale;
-				_interpolationMatrix.tx = _transform.x + _xPos * FlashPoint.frameInterpolationRatio;
-				_interpolationMatrix.ty = _transform.y + _yPos * FlashPoint.frameInterpolationRatio;
-			}
-		}
-		
-		/** @private **/
-		public override function start() : void 
-		{
-			_transform = gameObject.transform;
-			_interpolationMatrix = _transform.matrix;
-			super.start();
-			updateRigidbody();
-		}
-		public function addTorque(torque : Number) : void
-		{
-			if (_body) _body.ApplyTorque(torque);
-			else _torqueToAdd = torque;
 		}
 		public function addForceX(force : Number, mode : uint = ForceMode.FORCE) : void
 		{
-			addForce(new Point(force, 0));
+			switch(mode)
+			{
+				case ForceMode.VELOCITY_CHANGE:
+					body.vx += force;
+				case ForceMode.IMPULSE:
+					body.vx += force / _mass;
+				case ForceMode.ACCELLERATION:
+					body.vx += force * FlashPoint.fixedInterval * 0.001;
+				case ForceMode.FORCE:
+				default:
+					body.vx += force * FlashPoint.fixedInterval * 0.001 / _mass;
+			}
 		}
 		public function addForceY(force : Number, mode : uint = ForceMode.FORCE) : void
 		{
-			addForce(new Point(0, force));
+			switch(mode)
+			{
+				case ForceMode.VELOCITY_CHANGE:
+					body.vy += force;
+				case ForceMode.IMPULSE:
+					body.vy += force / _mass;
+				case ForceMode.ACCELLERATION:
+					body.vy += force * FlashPoint.fixedInterval * 0.001;
+				case ForceMode.FORCE:
+				default:
+					body.vy += force * FlashPoint.fixedInterval * 0.001 / _mass;
+			}
 		}
 		public function addForce(force : Point, mode : uint = ForceMode.FORCE) : void
 		{
-			var forceVector : b2Vec2 = new b2Vec2(force.x, force.y);
 			switch(mode)
 			{
-				case ForceMode.FORCE:
-					_body.ApplyForce(forceVector, _center);
-					break;
-				case ForceMode.ACCELLERATION:
-					forceVector.x *= _body.m_invMass;
-					forceVector.y *= _body.m_invMass;
-					_body.ApplyForce(forceVector, _center);
-					break;
-				case ForceMode.IMPULSE:
-					_body.ApplyImpulse(forceVector, _center);
-					break;
 				case ForceMode.VELOCITY_CHANGE:
-					forceVector.x *= _body.m_invMass;
-					forceVector.y *= _body.m_invMass;
-					_body.ApplyImpulse(forceVector, _center);
-					break;
+					body.vx += force.x;
+					body.vy += force.y;
+				case ForceMode.IMPULSE:
+					var invMass : Number = 1.0 / _mass;
+					body.vx += force.x * invMass;
+					body.vy += force.y * invMass;
+				case ForceMode.ACCELLERATION:
+					body.vx += force.x * FlashPoint.fixedInterval * 0.001;
+					body.vy += force.y * FlashPoint.fixedInterval * 0.001;
+				case ForceMode.FORCE:
+				default:
+					invMass = 1.0 / _mass;
+					body.vx += force.x * invMass * FlashPoint.fixedInterval * 0.001;
+					body.vy += force.y * invMass * FlashPoint.fixedInterval * 0.001;
 			}
 		}
-		public function addForceAtPosition(force : Point, position : Point, mode : uint = ForceMode.FORCE) : void
+		
+		/** @private */
+		public function awake() : void 
 		{
-			var forceVector : b2Vec2 = new b2Vec2(force.x, force.y);
-			var pointVector : b2Vec2 = new b2Vec2(position.x * Physics._pixelsPerMeterInverse, position.y * Physics._pixelsPerMeterInverse);
-			switch(mode)
+			CONFIG::debug
 			{
-				case ForceMode.FORCE:
-					_body.ApplyForce(forceVector, pointVector);
-					break;
-				case ForceMode.ACCELLERATION:
-					forceVector.x *= _body.m_invMass;
-					forceVector.y *= _body.m_invMass;
-					_body.ApplyForce(forceVector, pointVector);
-					break;
-				case ForceMode.IMPULSE:
-					_body.ApplyImpulse(forceVector, pointVector);
-					break;
-				case ForceMode.VELOCITY_CHANGE:
-					forceVector.x *= _body.m_invMass;
-					forceVector.y *= _body.m_invMass;
-					_body.ApplyImpulse(forceVector, pointVector);
-					break;
+				if (_gameObject.parent) throw new Error("Rigidbodies can only be added to GameObjects with no parent.");
+			}
+			
+			_transform = _gameObject.transform;
+			
+			if (_gameObject._physicsComponents) _this = _gameObject._physicsComponents;
+			else _this = _gameObject._physicsComponents = { length:0, hasBox:false, added:null, updated:false, originalX:_transform.x, originalY:_transform.y, originalA:_transform.rotation};
+			
+			_this.rigidbody = this;
+			
+			if (!_this.updated)
+			{
+				_this.updated = true;
+				addConcise(UpdatePhysics, "updatePhysics");
+				sendBefore("updatePhysics", "update");
 			}
 		}
-		/** @private **/
-		protected override function constructBodyDef() : b2BodyDef
+		/** @private */
+		public final function onDestroy() : Boolean
 		{
-			var def : b2BodyDef = super.constructBodyDef();
-			def.massData.mass = _mass;
-			def.massData.center = _center;
-			def.fixedRotation = _freezeRotation;
-			return def;
+			if (_this && _this.added == this) removePhysics();
+			if(body.added) PowerGrid.removeBody(body);
+			if (!_this.updated)
+			{
+				_this.updated = true;
+				addConcise(UpdatePhysics, "updatePhysics");
+				sendBefore("updatePhysics", "update");
+			}
+			return false;
 		}
-		/** @private **/
-		internal function updateRigidbody() : void
+		
+		/** @private */
+		internal final function addPhysics() : void 
 		{
-			_center = _body.GetLocalCenter();
-			var massData : b2MassData = new b2MassData();
-			massData.mass = _mass;
-			massData.center = _center;
-			_body.SetMass(massData);
-			_body.m_linearDamping = _drag;
-			_body.ApplyTorque(_torqueToAdd);
-			_torqueToAdd = 0;
-			_prevInertia = _body.m_I;
+			_this.added = this;
+			if (Collider._head)
+			{
+				(Collider._head as Collider || Collider._head as Rigidbody)._next = this;
+				_prev = Collider._head;
+			}
+			Collider._head = this;
 		}
-		/** @private **/
-		public override function onDestroy() : Boolean 
+		/** @private */
+		internal final function removePhysics() : void 
 		{
-			var massData : b2MassData = new b2MassData();
-			massData.mass = 0;
-			massData.center = _center;
-			_body.SetMass(massData);
-			return super.onDestroy();
+			_this.added = null;
+			if (Collider._head == this) Collider._head = _prev;
+			if (_prev) (_prev as Collider || _prev as Rigidbody)._next = _next;
+			if (_next) (_prev as Collider || _prev as Rigidbody)._prev = _prev;
+		}
+		/** @private */
+		internal final function syncPhysics() : IPhysicsSyncable 
+		{
+			var bod : AbstractRigidbody = _this.body;
+			var changed : int = _transform._changed;
+			
+			if (changed & 1) bod.a = _transform.rotation;
+			else _transform.rotation = bod.a;
+			if (changed & 2) bod.x = _transform.x - Physics._offsetX;
+			else _transform.x = bod.x + Physics._offsetX;
+			if (changed & 4) bod.y = _transform.y - Physics._offsetY;
+			else _transform.y = bod.y + Physics._offsetY;
+			
+			_transform._physicsX = bod.x + Physics._offsetX;
+			_transform._physicsY = bod.y + Physics._offsetY;
+			_transform._physicsRotation = bod.a;
+			_transform._changed = 0;
+			
+			if (changed && bod.isSleeping()) bod.wakeUp();
+			
+			return _prev;
 		}
 	}
-	
+
 }

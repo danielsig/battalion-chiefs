@@ -145,7 +145,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				// UPDATE PLAYHEAD
 				if (_p >= 1) _p = _pFixed = 0;
 				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
-				var frameLength : Number = (localTimeScale * FlashPoint.timeScale) / _length;
+				var frameLength : Number = localTimeScale / _length;
 				_p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame;
 				
 				if (_p > 1) _p %= 1;

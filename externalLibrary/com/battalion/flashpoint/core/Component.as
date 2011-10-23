@@ -1,6 +1,5 @@
 package com.battalion.flashpoint.core 
 {
-	import Box2D.Common.Math.b2Vec2;
 	import flash.geom.Point;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.describeType;
@@ -111,7 +110,12 @@ package com.battalion.flashpoint.core
 				_gameObject._components.length--;
 			}
 		}
-		public final function addConcise(comp : Class, message : String) : void
+		/**
+		 * @see GameObject.addConcise()
+		 * @param	comp
+		 * @param	lowerCaseName
+		 */
+		public final function addConcise(comp : Class, lowerCaseName : String) : void
 		{
 			//TODO: Optimize
 			CONFIG::unoptimized{ throw new Error("This function can be optimized further by copy pasting code hence avoiding function calls"); }
@@ -120,8 +124,13 @@ package com.battalion.flashpoint.core
 				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
 				if (comp == null) throw new Error("Comp must be non null.");
 			}
-			_gameObject.addConcise(comp, message);
+			_gameObject.addConcise(comp, lowerCaseName);
 		}
+		/**
+		 * @see GameObject.addComponent()
+		 * @param	comp
+		 * @return
+		 */
 		public final function addComponent(comp : Class) : Component
 		{
 			//TODO: Optimize
@@ -438,7 +447,7 @@ package com.battalion.flashpoint.core
 				if (args.length > 0)
 				{
 					var string : String = _gameObject._name + "." + name + ": ";
-					if (args[0] is Point || args[0] is b2Vec2)
+					if (args[0] is Point)
 					{
 						string += "{ x:" + args[0].x.toFixed(2) + ", y:" + args[0].y.toFixed(2) + " }";
 					}
@@ -448,7 +457,7 @@ package com.battalion.flashpoint.core
 					}
 					for (var i : int = 1; i < args.length; i++ )
 					{
-						if (args[i] is Point || args[i] is b2Vec2)
+						if (args[i] is Point)
 						{
 							string += ", { x:" + args[i].x.toFixed(2) + ", y:" + args[i].y.toFixed(2) + " }";
 						}

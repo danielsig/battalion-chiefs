@@ -16,16 +16,15 @@ package com.battalion.flashpoint.comp.misc
 		{
 			Input.assignButton("slower", Keyboard.DOWN);
 			Input.assignButton("faster", Keyboard.UP);
-			Input.listButtons();
 		}
 		/** @private **/
-		public function update() : void 
+		public function fixedUpdate() : void 
 		{
-			if (FlashPoint.timeScale > 0.1 && Input.pressButton("slower"))
+			if (FlashPoint.timeScale > 0.15 && Input.pressButton("slower"))
 			{
 				FlashPoint.timeScale -= 0.1;
 			}
-			if (FlashPoint.timeScale < 4 && Input.pressButton("faster"))
+			if (FlashPoint.timeScale < 10 && Input.pressButton("faster"))
 			{
 				FlashPoint.timeScale += 0.1;
 			}

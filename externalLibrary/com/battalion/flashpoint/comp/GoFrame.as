@@ -1,6 +1,7 @@
 package com.battalion.flashpoint.comp 
 {
 	/**
+	 * @private
 	 * If you're reading this, go away! LEAVE ME ALONE!!!
 	 * @author Battalion Chiefs
 	 */
