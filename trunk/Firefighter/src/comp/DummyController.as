@@ -40,19 +40,19 @@ package comp
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
 			var isMouseOnTheLeft : Boolean = mousePos.x < thisPos.x;
 			
-			var points : Vector.<ContactPoint> = gameObject.rigidbody.touchingInDirection(new Point(0, 1), 0.1);
-			if (points)
+			//var points : Vector.<ContactPoint> = gameObject.rigidbody.touchingInDirection(new Point(0, 1), 0.1);
+			//if (points)
 			{
 				if (Input.directional("samusDirection") > 0)
 				{
-					gameObject.rigidbody.addForceX((isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed));
+					gameObject.rigidbody.addForceX((isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed), ForceMode.ACCELLERATION);
 					gameObject.transform.scaleX = 1;
 					gameObject.animation.reversed = isMouseOnTheLeft;
 					gameObject.animation.play();
 				}
 				else if (Input.directional("samusDirection") < 0)
 				{
-					gameObject.rigidbody.addForceX(-(!isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed));
+					gameObject.rigidbody.addForceX(-(!isMouseOnTheLeft ? backSpeed : Input.holdButton("shift") ? runSpeed : speed), ForceMode.ACCELLERATION);
 					gameObject.transform.scaleX = -1;
 					gameObject.animation.reversed = !isMouseOnTheLeft;
 					gameObject.animation.play();
@@ -65,17 +65,17 @@ package comp
 				if (Input.pressButton("jump"))
 				{
 					trace("jump");
-					gameObject.rigidbody.addForce(new Point(0, -jumpSpeed), ForceMode.FORCE);
+					gameObject.rigidbody.addForce(new Point(0, -jumpSpeed), ForceMode.ACCELLERATION);
 				}
 			}
-			if (gameObject.transform.x > 600)
+			/*if (gameObject.transform.x > 600)
 			{
 				gameObject.transform.x = -600;
 			}
 			else if (gameObject.transform.x < -600)
 			{
 				gameObject.transform.x = 600;
-			}
+			}*/
 			
 			if (isMouseOnTheLeft)
 			{

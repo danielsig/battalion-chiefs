@@ -8,6 +8,14 @@ package com.battalion.flashpoint.core
 	/**
 	 * Every GameObject always has exactly one Transform component.<br>
 	 * The Transform component determines the GameObject's position, rotation, scale and shearing.
+	 * If you're used to work with <a href="http://unity3d.com/">Unity3D</a> then note that unlike Unity, all properties
+	 * are in local space not world space. World space properties are:
+	 * <ul>
+	 * <li><a href="#gx">gx</a></li>
+	 * <li><a href="#gy">gx</a></li>
+	 * <li><a href="#globalRotation">globalRotation</a></li>
+	 * <li><a href="#globalPosition">globalPosition</a></li>
+	 * </ul>
 	 * @see GameObject
 	 * @author Battalion Chiefs
 	 */
@@ -35,9 +43,11 @@ package com.battalion.flashpoint.core
 		internal var _physicsY : Number = y;
 		/** @private **/
 		internal var _physicsRotation : Number = rotation;
+		/** @private **/
+		internal var _shearXTan : Number = 0;
+		/** @private **/
+		internal var _shearYTan : Number = 0;
 		
-		private var _shearXTan : Number = 0;
-		private var _shearYTan : Number = 0;
 		private var _cos : Number = 1;
 		private var _sin : Number = 0;
 		private var _cosSinCalculated : Boolean = false;
@@ -88,7 +98,18 @@ package com.battalion.flashpoint.core
 			y = value.y;
 		}
 		/**
-		 * The x position in global coordinates. If you're assigning both gx and gy,
+		 * The rotation in world space.
+		 */
+		public function get globalRotation() : Number
+		{	
+			return Math.atan2(-globalMatrix.c, globalMatrix.a) * 57.2957795;
+		}
+		public function set globalRotation(value : Number) : void
+		{
+			rotation = (_gameObject.parent ? _gameObject.parent.transform.globalRotation : 0) + value;
+		}
+		/**
+		 * The x position in world space. If you're assigning both gx and gy,
 		 * it's recommended that you use the <code>globalPosition</code> property instead (faster).
 		 */
 		public function get gx() : Number
@@ -97,12 +118,20 @@ package com.battalion.flashpoint.core
 		}
 		public function set gx(value : Number) : void
 		{
-			var p : Point = (globalMatrix as Matrix).transformPoint(new Point(value, globalMatrix.ty));
-			x = p.x;
-			y = p.y;
+			if (_gameObject.parent)
+			{
+				var matrix : Matrix = _gameObject.parent.transform.globalMatrix;
+				var p : Point = matrix.transformPoint(new Point(value, globalMatrix.ty));
+				x = p.x;
+				y = p.y;
+			}
+			else
+			{
+				x = value;
+			}
 		}
 		/**
-		 * The y position in global coordinates. If you're assigning both gx and gy,
+		 * The y position in world space. If you're assigning both gx and gy,
 		 * it's recommended that you use the <code>globalPosition</code> property instead (faster).
 		 */
 		public function get gy() : Number
@@ -111,9 +140,17 @@ package com.battalion.flashpoint.core
 		}
 		public function set gy(value : Number) : void
 		{
-			var p : Point = (globalMatrix as Matrix).transformPoint(new Point(globalMatrix.tx, value));
-			x = p.x;
-			y = p.y;
+			if (_gameObject.parent)
+			{
+				var matrix : Matrix = _gameObject.parent.transform.globalMatrix;
+				var p : Point = matrix.transformPoint(new Point(globalMatrix.tx, value));
+				x = p.x;
+				y = p.y;
+			}
+			else
+			{
+				y = value;
+			}
 		}
 		/**
 		 * The position in global coordinates.
@@ -125,7 +162,11 @@ package com.battalion.flashpoint.core
 		}
 		public function set globalPosition(value : Point) : void
 		{
-			value = (globalMatrix as Matrix).transformPoint(value);
+			if (_gameObject.parent)
+			{
+				var matrix : Matrix = _gameObject.parent.transform.globalMatrix;
+				value = matrix.transformPoint(value);
+			}
 			x = value.x;
 			y = value.y;
 		}
@@ -185,7 +226,8 @@ package com.battalion.flashpoint.core
 		}
 		public function set forward(value : Point) : void
 		{
-			var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			if (gameObject.parent) var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			else matrix = new Matrix();
 			matrix.invert();
 			value = matrix.deltaTransformPoint(value);
 			var xPos : Number = value.x - x;
@@ -214,7 +256,8 @@ package com.battalion.flashpoint.core
 				if (!globalPoint.hasOwnProperty("y")) throw new Error("globalPoint does not have an y property.");
 			}
 			var localPoint : Point = new Point(globalPoint.x, globalPoint.y);
-			var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			if (gameObject.parent) var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			else matrix = new Matrix();
 			matrix.invert();
 			localPoint = matrix.transformPoint(localPoint);
 			var xPos : Number = localPoint.x - x;
@@ -229,6 +272,16 @@ package com.battalion.flashpoint.core
 			
 			rotation = 180 - ((180 - angle * 57.2957795 + angleOffset) % 360);
 		}
+		public function setMatrix(a : Number = 1, b : Number = 0, c : Number = 0, d : Number = 1, tx : Number = 0, ty : Number = 0) : void
+		{
+			rotation = Math.atan2(b, a) * 57.2957795;
+			scaleX = a * a + b * b;
+			if (scaleX != 1) scaleX = Math.sqrt(scaleX);
+			scaleY = c * c + d * d;
+			if (scaleY != 1) scaleY = Math.sqrt(scaleY);
+			x = tx;
+			y = ty;
+		}
 		/** @private **/
 		internal static function flushGlobal() : void
 		{
@@ -237,7 +290,14 @@ package com.battalion.flashpoint.core
 		CONFIG::debug
 		private function flushGlobalRecursive(parent : Matrix) : void
 		{
-			_globalMatrix = _matrix.clone();
+			//_globalMatrix = _matrix.clone();
+			_globalMatrix.a = _matrix.a;
+			_globalMatrix.b = _matrix.b;
+			_globalMatrix.c = _matrix.c;
+			_globalMatrix.d = _matrix.d;
+			_globalMatrix.tx = _matrix.tx;
+			_globalMatrix.ty = _matrix.ty;
+			
 			_globalMatrix.concat(parent);
 			
 			for each(var child : GameObject in _gameObject._children)
@@ -248,7 +308,14 @@ package com.battalion.flashpoint.core
 		CONFIG::release
 		private function flushGlobalRecursive(parent : Matrix) : void
 		{
-			globalMatrix = matrix.clone();
+			//globalMatrix = matrix.clone();
+			globalMatrix.a = matrix.a;
+			globalMatrix.b = matrix.b;
+			globalMatrix.c = matrix.c;
+			globalMatrix.d = matrix.d;
+			globalMatrix.tx = matrix.tx;
+			globalMatrix.ty = matrix.ty;
+			
 			globalMatrix.concat(parent);
 			
 			for each(var child : GameObject in _gameObject._children)
@@ -333,12 +400,12 @@ package com.battalion.flashpoint.core
 				if (x != _x)
 				{
 					_x = _matrix.tx = x;
-					if(_physicsX != _matrix.tx) _changed |= 2;
+					if(_physicsX != x) _changed |= 2;
 				}
 				if (y != _y)
 				{
 					_y = _matrix.ty = y;
-					if(_physicsY != _matrix.ty) _changed |= 4;
+					if(_physicsY != y) _changed |= 4;
 				}
 			}
 			CONFIG::release

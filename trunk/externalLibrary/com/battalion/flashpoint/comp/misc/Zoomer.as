@@ -18,7 +18,7 @@ package com.battalion.flashpoint.comp.misc
 		{
 			if (_zoom > Input.scroll * 0.1 && Input.scroll > 0 || _zoom < 10 + Input.scroll * 0.1 && Input.scroll < 0)
 			{
-				_zoom -= Input.scroll * 0.1;
+				_zoom -= Input.scroll * 0.05;
 				TweenMax.to(world.cam.transform, 0.3, { scale:_zoom } );
 			}
 		}

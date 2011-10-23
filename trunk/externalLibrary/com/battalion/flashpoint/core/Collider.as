@@ -1,81 +1,193 @@
 package com.battalion.flashpoint.core 
 {
-	
-	import Box2D.Collision.Shapes.b2ShapeDef;
-	import com.battalion.flashpoint.core.*;
-	import Box2D.Dynamics.b2Body;
-	import Box2D.Dynamics.b2BodyDef;
-	import Box2D.Common.Math.b2Vec2;
-	import Box2D.Collision.Shapes.b2Shape;
+	import com.battalion.powergrid.*;
 	
 	/**
-	 * A Base Collider, do not extend or instantiate this Component. Instead use any of the other Colliders, the Components extending this Component.
-	 * @see BoxCollider
 	 * @author Battalion Chiefs
 	 */
-	public class Collider extends PhysicsSyncable
+	public class Collider extends Component implements IPhysicsSyncable
 	{
-		
-		private var _material : PhysicMaterial = new PhysicMaterial();
-		
-		private var _shape : b2Shape;
-		/** @private **/
-		protected var _def : b2ShapeDef;
-		
-		/** @private **/
+		CONFIG::debug
 		public function Collider()
+		{
+			if (!(this is BoxCollider || this is CircleCollider))
+			{
+				throw new Error("You can not instantiate a Component directly nor extend it. Please use the BoxCollider or the CircleCollider");
+			}
+		}
+		
+		public function get material() : PhysicMaterial { return _material; }
+		public function set material(value : PhysicMaterial) : void
+		{
+			if (body && !(this is BoxCollider))
+			{
+				body.friction = value._friction;
+				body.bounciness = value._bounciness;
+			}
+			
+			_material = value;
+		}
+		
+		private var _material : PhysicMaterial = PhysicMaterial.DEFAULT_MATERIAL;
+		
+		/** @private */
+		internal static var _head : IPhysicsSyncable;
+		/** @private */
+		internal var _next : IPhysicsSyncable;
+		/** @private */
+		internal var _prev : IPhysicsSyncable;
+		
+		/** @private */
+		internal var body : AbstractRigidbody;
+		private var _transform : Transform;//for speed;
+		private var _this : Object;//for speed;
+		private var _name : String;//for speed;
+		
+		/**
+		 * Applies movement to this GameObject and friction to all the colliders
+		 * attached to it but only if there's no rigidbody attached.
+		 * This lets you simulate moving platforms with rigidbodies sitting on top of it.
+		 * After adding a collider to a GameObject, a dynamic function with the
+		 * same name and functionality as this one is applied to that GameObject.
+		 * @param	x, new global position along the x axis.
+		 * @param	y, new global position along the y axis.
+		 */
+		public function beginMovement() : void
+		{
+			if (!_this.rigidbody)
+			{
+				_this.prevX = _transform.x;
+				_this.prevY = _transform.y;
+				_this.prevA = _transform.rotation;
+			}
+		}
+		public function endMovement() : void 
+		{
+			if (!_this.rigidbody)
+			{
+				if (!_this.body.moved)
+				{
+					_this.body.vx = _this.body.vy = _this.body.va = 0;
+				}
+				_this.body.vx += (_transform.x - _this.prevX);
+				_this.body.vy += (_transform.y - _this.prevY);
+				_this.body.va += (_transform.rotation - _this.prevA);
+				_this.body.moved = true;
+			}
+		}
+		
+		/** @private */
+		internal static function processPhysics() : void 
+		{
+			var target : IPhysicsSyncable = _head;
+			while (target)
+			{
+				target = (target as Collider || target as Rigidbody).syncPhysics();
+			}
+		}
+		
+		/** @private */
+		public function awake() : void 
 		{
 			CONFIG::debug
 			{
-				if (!(this is BoxCollider))
-				{
-					throw new Error("Do not extend the Collider component!");
-				}
+				if (_gameObject.parent) throw new Error("Colliders can only be added to GameObjects with no parent.");
 			}
+			
+			_transform = _gameObject.transform;
+			
+			if (_gameObject._physicsComponents) _this = _gameObject._physicsComponents;
+			else _this = _gameObject._physicsComponents = { length:0, hasBox:false, added:null, updated:false, originalX:_transform.x, originalY:_transform.y, originalA:_transform.rotation};
+			
+			if (this is BoxCollider) _this.hasBox = true;
+			_name = "collider" + _this.length++;
+			_this[_name] = this;
+			
+			makeCollider(_material);
+			if (!(this is BoxCollider))
+			{
+				body.friction = _material._friction;
+				body.bounciness = _material._bounciness;
+			}
+			
+			if (!_this.updated)
+			{
+				_this.updated = true;
+				addConcise(UpdatePhysics, "updatePhysics");
+				sendBefore("updatePhysics", "update");
+			}
+		}
+		/** @private */
+		public final function onDestroy() : Boolean
+		{
+			var end : String = "collider" + (--_this.length);
+			_this[_name] = _this[end];
+			_this[_name]._name = _name;
+			_name = end;
+			delete _this[_name];
+			
+			if (_this && _this.added == this) removePhysics();
+			destroyCollider();
+			if(body.added) PowerGrid.removeBody(body);
+			if (!_this.updated)
+			{
+				_this.updated = true;
+				addConcise(UpdatePhysics, "updatePhysics");
+				sendBefore("updatePhysics", "update");
+			}
+			return false;
 		}
 		
-		public function get material() : PhysicMaterial
+		/** @private */
+		internal final function addPhysics() : void 
 		{
-			return _material;
-		}
-		public function set material(value : PhysicMaterial) : void
-		{
-			_material = value;
-			if (_shape)
+			_this.added = true;
+			if (_head)
 			{
-				_shape.m_friction = _material.friction;
-				_shape.m_restitution = _material.bounciness;
-				if (!isNaN(_material.density))
-				{
-					_shape.m_density = _material.density;
-				}
+				(_head as Collider || _head as Rigidbody)._next = this;
+				_prev = _head;
 			}
+			_head = this;
 		}
-		/** @private **/
-		internal final function updateCollider() : void
+		/** @private */
+		internal final function removePhysics() : void 
 		{
-			if (_shape)
-			{
-				_body.DestroyShape(_shape);
-			}
-			_shape = _body.CreateShape(_def);
-			_shape.SetUserData( { collider:this } );
-			_shape.m_friction = _material.friction;
-			_shape.m_restitution = _material.bounciness;
-			if (!isNaN(_material.density))
-			{
-				_shape.m_density = _material.density;
-			}
-			else _shape.m_density = 0;
-			_body.SetMassFromShapes();
+			_this.added = false;
+			if (_head == this) _head = _prev;
+			if (_prev) (_prev as Collider || _prev as Rigidbody)._next = _next;
+			if (_next) (_prev as Collider || _prev as Rigidbody)._prev = _prev;
 		}
-		/** @private **/
-		public final override function onDestroy() : Boolean 
+		/** @private */
+		internal final function syncPhysics() : IPhysicsSyncable 
 		{
-			_body.DestroyShape(_shape);
-			return super.onDestroy();
+			var bod : AbstractRigidbody = _this.body;
+			var changed : int = _transform._changed;
+			
+			if (changed & 1) bod.a = _transform.rotation;
+			else _transform.rotation = bod.a;
+			if (changed & 2) bod.x = _transform.x - Physics._offsetX;
+			else _transform.x = bod.x + Physics._offsetX;
+			if (changed & 4) bod.y = _transform.y - Physics._offsetY;
+			else _transform.y = bod.y + Physics._offsetY;
+			
+			_transform._physicsX = bod.x + Physics._offsetX;
+			_transform._physicsY = bod.y + Physics._offsetY;
+			_transform._physicsRotation = bod.a;
+			_transform._changed = 0;
+			
+			if (changed && bod.isSleeping()) bod.wakeUp();
+			
+			return _prev;
 		}
-		
+		/** @private */
+		protected function makeCollider(material : PhysicMaterial) : void 
+		{
+			body = new Group();
+		}
+		protected function destroyCollider() : void 
+		{
+			
+		}
 	}
-	
+
 }
