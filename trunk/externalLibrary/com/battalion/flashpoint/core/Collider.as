@@ -10,11 +10,18 @@ package com.battalion.flashpoint.core
 		CONFIG::debug
 		public function Collider()
 		{
-			if (!(this is BoxCollider || this is CircleCollider))
+			if (!(this is BoxCollider || this is CircleCollider || this is TriangleCollider))
 			{
-				throw new Error("You can not instantiate a Component directly nor extend it. Please use the BoxCollider or the CircleCollider");
+				throw new Error("You can not instantiate a Component directly nor extend it. Please use the BoxCollider, TriangleCollider or the CircleCollider");
 			}
 		}
+		
+		/**
+		 * A bitmask indicating what layers this collider can collide with.
+		 * Each bit is a single layer.
+		 */
+		public function get layers() : uint { return body.layers; }
+		public function set layers(value : uint) : void { body.layers = value; }
 		
 		public function get material() : PhysicMaterial { return _material; }
 		public function set material(value : PhysicMaterial) : void

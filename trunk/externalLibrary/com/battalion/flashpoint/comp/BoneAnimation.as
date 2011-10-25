@@ -9,7 +9,7 @@ package com.battalion.flashpoint.comp
 	 *	A BoneANimation component, AHA!
 	 * @author Battalion Chiefs
 	 */
-	public final class BoneAnimation extends Component implements IExclusiveComponent
+	public final class BoneAnimation extends Component implements IExclusiveComponent, IPlayableComponent
 	{
 		private static var _animations: Object = { };
 		
@@ -23,6 +23,9 @@ package com.battalion.flashpoint.comp
 		private var _bones : Object = { };// Transforms
 		private var _boneAnimName : String = null;
 		private var _playing : Boolean;
+		private var _loops : uint = 0;
+		private var _playback : Number = 1;
+		private var _pingPongPlayback : Boolean = false;
 		
 		/**boneAnimName = Tekur inn nafn á animation
 		*frameInterval = hversu fljótt animationið fer á milli ramma
@@ -93,20 +96,46 @@ package com.battalion.flashpoint.comp
 		}
 		
 		/**
+		 * Determines if playback should reverse every time it reaches an end.
+		 */
+		public function get pingPongPlayback() : Boolean
+		{
+			return _pingPongPlayback;
+		}
+		public function set pingPongPlayback(value : Boolean) : void
+		{
+			_pingPongPlayback = value;
+		}
+		
+		public function get playhead() : Number
+		{
+			return _p * _length;
+		}
+		public function set playhead(value : Number) : void
+		{
+			CONFIG::debug
+			{
+				if (value <= -_length || value >= _length) throw new Error("Can not set the playhead to " + value + " for it is out of range [" + -_length + " - " + _length + "]");
+			}
+			_p = value < 0 ? _length + value / _length : value / _length;
+		}
+		
+		/**
 		 * current animation's name. Set this to change the current animation.
 		 * @see #play()
 		 */
-		public function get currentAnimation() : String
+		public function get currentName() : String
 		{
 			return _boneAnimName;
 		}
 		
-		public function set currentAnimation(value : String) : void
+		public function set currentName(value : String) : void
 		{
 			CONFIG::debug
 			{
 				if (!_animations.hasOwnProperty(value)) throw new Error("The animation you are trying to play has not been defined.");
 			}
+			_boneAnimName = value;
 			_animation = _animations[value];
 			_length = _animation.length;
 			_framesPerSecond = _animation.framesPerSecond;
@@ -116,7 +145,6 @@ package com.battalion.flashpoint.comp
 			{
 				if (boneName != "length" && boneName != "framesPerSecond") _bones[boneName] = gameObject.findGameObjectDownwards(boneName).transform;
 			}
-			_boneAnimName = value;
 		}
 		
 		/**
@@ -127,15 +155,41 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		 * </p>
 		 * @see #currentAnimation
 		 */
-		public function play(boneAnimName : String = null) : void
+		public function play(boneAnimName : String = null, loops : uint = 0) : void
 		{
-			if (boneAnimName != _boneAnimName) currentAnimation = boneAnimName;
+			if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
 			_playing = true;
+			_loops = loops;
 		}
 		
 		public function stop(): void
 		{
 			_playing = false;
+			_p = 0;
+		}
+		public function pause(): void
+		{
+			_playing = false;
+		}
+		public function gotoAndPause(frame : Number, boneAnimName : String = null): void
+		{
+			if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
+			CONFIG::debug
+			{
+				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
+			}
+			_p = frame < 0 ? _length + frame / _length : frame / _length;
+			_playing = false;
+		}
+		public function gotoAndPlay(frame : Number, boneAnimName : String = null): void
+		{
+			if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
+			CONFIG::debug
+			{
+				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
+			}
+			_p = frame < 0 ? _length + frame / _length : frame / _length;
+			_playing = true;
 		}
 
 		public function update() : void
@@ -143,10 +197,19 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 			if (_playing)
 			{
 				// UPDATE PLAYHEAD
-				if (_p >= 1) _p = _pFixed = 0;
+				if (_p >= 1 || _p < 0)
+				{
+					if (_loops > 0 && _loops-- == 1)
+					{
+						_playing = false;
+						return;
+					}
+					if (_pingPongPlayback) _playback = -_playback;
+					else _p = _pFixed = (_p < 0 ? 1 : 0);
+				}
 				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
 				var frameLength : Number = localTimeScale / _length;
-				_p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame;
+				_p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
 				
 				if (_p > 1) _p %= 1;
 				else if (_p < 0) _p = 0;
@@ -181,7 +244,10 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				}
 			}
 		}
-		
+		public function reverse() : void
+		{
+			_playback = -_playback;
+		}
 	}
 
 }

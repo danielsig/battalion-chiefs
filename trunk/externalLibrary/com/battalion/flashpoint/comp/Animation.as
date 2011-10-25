@@ -21,7 +21,7 @@ package com.battalion.flashpoint.comp
 	 * @see com.battalion.flashpoint.display.View
 	 * @author Battalion Chiefs
 	 */
-	public final class Animation extends Component implements IExclusiveComponent
+	public final class Animation extends Component implements IExclusiveComponent, IPlayableComponent
 	{
 		private static var _animations : Object = { };
 		private static var _animationLabels : Object = { };
@@ -187,6 +187,20 @@ myObj.animation.play("myAnimation");
 		private var _cloned : Boolean = false;//see the reverse() method
 		private var _renderer : Renderer;//just for convenience
 		private var _reversed : Boolean = false;
+		private var _loops : uint = 0;
+		private var _pingPongPlayback : Boolean = false;
+		
+		/**
+		 * Determines if audio playback should reverse every time it reaches an end.
+		 */
+		public function get pingPongPlayback() : Boolean
+		{
+			return _pingPongPlayback;
+		}
+		public function set pingPongPlayback(value : Boolean) : void
+		{
+			_pingPongPlayback = value;
+		}
 		
 		/**
 		 * Basically the same thing as the static counterpart <a href="../comp/Animation.html#load()"><code>load()</code></a> except that this method does not require a name.
@@ -232,22 +246,22 @@ myObj.animation.play("myAnimation");
 				_p = _length + _p - 1;
 			}
 		}
-		
 		/**
 		 * The current playhead position in the current animation, can be used for jumping to a specific frame.
 		 * Setting this to a negative number will make it jump to a frame counting backwards from the end of the animation.
 		 */
-		public function get currentFrame() : int
+		public function get playhead() : Number
 		{
 			return _p;
 		}
-		public function set currentFrame(frame : int) : void
+		public function set playhead(value : Number) : void
 		{
+			value = int(value);
 			CONFIG::debug
 			{
-				if (frame <= -_length || frame >= _length) throw new Error("frame " + frame + " is out of range [" + -_length + "-" + _length + "]");
+				if (value <= -_length || value >= _length) throw new Error("Can not set playhead to " + value + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
-			_p = frame < 0 ? _length + frame - 1 : frame;
+			_p = value < 0 ? _length + value : value;
 		}
 		/**
 		 * Number of frames in the current animation.
@@ -260,16 +274,17 @@ myObj.animation.play("myAnimation");
 		 * current animation's name. Set this to change the current animation.
 		 * @see #play()
 		 */
-		public function get currentAnimation() : String
+		public function get currentName() : String
 		{
 			return _animationName;
 		}
-		public function set currentAnimation(value : String) : void
+		public function set currentName(value : String) : void
 		{
 			CONFIG::debug
 			{
 				if (!_animations.hasOwnProperty(value)) throw new Error("The animation you are trying to play has not been loaded.");
 			}
+			_animationName = value;
 			_frames = _animations[value];
 			_messages = _animationLabels[value];
 			_length = _frames.length;
@@ -281,7 +296,17 @@ myObj.animation.play("myAnimation");
 		{
 			if (_playing)
 			{
-				if (++_p >= _length) _p = 0;
+				if (++_p >= _length || _p < 0)
+				{
+					if (_loops > 0 && _loops-- == 1)
+					{
+						_playing = false;
+						_renderer.bitmapData = null;
+						return;
+					}
+					if (_pingPongPlayback) reverse();
+					else _p = _p < 0 ? 1 : 0;
+				}
 				_renderer.bitmapData = _frames[_p];
 				_renderer.updateBitmap = _renderer.bitmapData != null;
 				if (_messages[_p])
@@ -292,18 +317,40 @@ myObj.animation.play("myAnimation");
 		}
 		
 		/**
-		 * Stop playback.
+		 * Pause playback.
 		 */
-		public function stop() : void
+		public function pause() : void
 		{
 			_playing = false;
 		}
 		/**
-		 * jumps to a specific frame and stops there.
+		 * Stop playback, technically it's the same as <code>gotoAndPause(0);</code> except that it stops rendering.
+		 */
+		public function stop() : void
+		{
+			_playing = false;
+			_p = 0;
+			_renderer.bitmapData = null;
+		}
+		/**
+		 * jumps to a specific frame and pauses there.
 		 * Setting this to a negative number will make it jump to a frame counting backwards from the end of the animation.
 		 */
-		public function gotoAndStop(frame : int) : void
+		public function gotoAndPause(frame : Number, animationName : String = null) : void
 		{
+			if (animationName && animationName != _animationName)
+			{
+				CONFIG::debug
+				{
+					if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
+				}
+				_animationName = animationName;
+				_frames = _animations[animationName];
+				_messages = _animationLabels[animationName];
+				_length = _frames.length;
+			}
+			
+			frame = int(frame);
 			CONFIG::debug
 			{
 				if (frame <= -_length || frame > _length) throw new Error("frame " + frame + " is out of range [" + -_length + "-" + _length + "]");
@@ -321,8 +368,21 @@ myObj.animation.play("myAnimation");
 		 * jumps to a specific frame and plays from there.
 		 * Setting this to a negative number will make it jump to a frame counting backwards from the end of the animation.
 		 */
-		public function gotoAndPlay(frame : int) : void
+		public function gotoAndPlay(frame : Number, animationName : String = null) : void
 		{
+			if (animationName && animationName != _animationName)
+			{
+				CONFIG::debug
+				{
+					if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
+				}
+				_animationName = animationName;
+				_frames = _animations[animationName];
+				_messages = _animationLabels[animationName];
+				_length = _frames.length;
+			}
+			
+			frame = int(frame);
 			CONFIG::debug
 			{
 				if (frame <= -_length || frame > _length) throw new Error("frame " + frame + " is out of range [" + -_length + "-" + _length + "]");
@@ -338,7 +398,7 @@ When selecting another animation, set the <code>animationName</code> to the desi
 		 * </p>
 		 * @see #currentAnimation
 		 */
-		public function play(animationName : String = null) : void
+		public function play(animationName : String = null, loops : uint = 0) : void
 		{
 			if (animationName)
 			{
@@ -346,11 +406,13 @@ When selecting another animation, set the <code>animationName</code> to the desi
 				{
 					if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
 				}
+				_animationName = animationName;
 				_frames = _animations[animationName];
 				_messages = _animationLabels[animationName];
 				_length = _frames.length;
 				_p = 0;
 			}
+			_loops = loops;
 			_playing = true;
 		}
 		/**

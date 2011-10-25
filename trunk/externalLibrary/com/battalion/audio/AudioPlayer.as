@@ -22,11 +22,15 @@ package com.battalion.audio
 		
 		public static const SAMPLES_PER_CALLBACK:int = 2048; // Should be >= 2048 && <= 8192
 		
-		private static var _headPhones : Boolean = false;//if true, the panning effect will be a delay in left-right output.
+		/**
+		 * If true, the panning effect will be a delay between the left and right channels.
+		 * If false, the panning effect will be a difference in volume between the left and right channels.
+		 */
+		private static var _headphones : Boolean = false;
 		/**
 		 * The stereo effect of the headphones setting.
 		 */
-		public static var headPhonesEffect : Number = 512;
+		public static var headphonesEffect : Number = 512;
 		private static var _players : Vector.<AudioPlayer> = new Vector.<AudioPlayer>();
 		/**
 		 * TimeScale to apply to all AudioPlayers.
@@ -38,6 +42,11 @@ package com.battalion.audio
 		 */
 		public var timeScale : Number;
 		
+		/**
+		 * Determines if audio playback should reverse every time it reaches an end.
+		 */
+		public var pingPongPlayback : Boolean = false;
+		
 		private var _data : AudioData;
 		
 		private var _transform : SoundTransform;
@@ -46,6 +55,7 @@ package com.battalion.audio
 		private var _p : uint;
 		private var _start : uint;
 		private var _end : uint;
+		private var _reverse : Boolean = false;
 		
 		private var _loops : int;
 		
@@ -55,6 +65,26 @@ package com.battalion.audio
 		public function get isPlaying() : Boolean
 		{
 			return _channel != null;
+		}
+		
+		/**
+		 * Determines if audio playback is reversed (played backwards).
+		 */
+		public function get reverse() : Boolean
+		{
+			return _reverse;
+		}
+		public function set reverse(value : Boolean) : void
+		{
+			_reverse = value;
+			/*if (_reverse && _p == _start)
+			{
+				_p = _end;
+			}
+			else if (!_reverse && _p == _end)
+			{
+				_p = _start;
+			}*/
 		}
 		
 		/**
@@ -115,14 +145,14 @@ package com.battalion.audio
 		 */
 		public function get panning() : Number
 		{
-			return _headPhones ? _pan : _transform.pan;
+			return _headphones ? _pan : _transform.pan;
 		}
 		public function set panning(value : Number) : void
 		{
 			if (value > 1) value = 1;
 			else if (value < -1) value = -1;
 			
-			if (_headPhones)
+			if (_headphones)
 			{
 				_pan = value;
 				_transform.pan = value * value * 0.15;//falloff
@@ -145,13 +175,13 @@ package com.battalion.audio
 		 * </ul>
 		 * @see panning
 		 */
-		public static function get headPhones() : Boolean
+		public static function get headphones() : Boolean
 		{
-			return _headPhones;
+			return _headphones;
 		}
-		public static function set headPhones(value : Boolean) : void
+		public static function set headphones(value : Boolean) : void
 		{
-			if (_headPhones != value)//if changing...
+			if (_headphones != value)//if changing...
 			{
 				if (value)//... to headphones
 				{
@@ -170,7 +200,7 @@ package com.battalion.audio
 					}
 				}
 			}
-			_headPhones = value;
+			_headphones = value;
 		}
 		
 		
@@ -194,7 +224,7 @@ package com.battalion.audio
 			_p = _start;
 			_sound = new Sound();
 			timeScale = 1;
-			if (_headPhones)
+			if (_headphones)
 			{
 				_pan = panning;
 				panning = 0;
@@ -217,6 +247,7 @@ package com.battalion.audio
 		{
 			if (!_channel)
 			{
+				if (_reverse && _loops > 0) _loops++;
 				_sound.addEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				_channel = _sound.play(0, 0, _transform);
 			}
@@ -239,13 +270,16 @@ package com.battalion.audio
 			_data._bytes.position = _p;
 			var i : int = SAMPLES_PER_CALLBACK;
 			var phase : Number = 0;
+			var direction : int = 1 - int(reverse) * 2;
+			var speed : Number = timeScale * globalTimeScale * direction;
 			
 			while (i--)
 			{
-				if (end - _data._bytes.position < 8)
+				if (!reverse && end - _data._bytes.position < 8 || reverse && _data._bytes.position - _start < 8)
 				{
-					_data._bytes.position = _start;
-					if (_loops > 0 && !--_loops)
+					if (pingPongPlayback) reverse = !reverse;
+					_data._bytes.position = reverse ? _end : _start;
+					if (_loops > 0 && _loops-- == 1)
 					{
 						_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 						_channel = null;
@@ -253,21 +287,20 @@ package com.battalion.audio
 					}
 				}
 				
-				if (end - _data._bytes.position > 7)
+				if (!reverse && end - _data._bytes.position > 7 || reverse && _data._bytes.position - _start > 7)
 				{
-					if (_headPhones)
+					if (_headphones)
 					{
 						var pos : uint = _data._bytes.position;
 						
-						_data._bytes.position = pos - (((_pan * headPhonesEffect) >>> 3) << 3);
+						_data._bytes.position = pos - (((_pan * headphonesEffect) >>> 3) << 3);
 						if (_data._bytes.position >= end - 8) _data._bytes.position -= (end - _start) - 8;
 						else if (_data._bytes.position < _start) _data._bytes.position += (end - _start) - 8;
 						e.data.writeFloat(_data._bytes.readFloat());
 						
-						_data._bytes.position = pos + (((_pan * headPhonesEffect) >>> 3) << 3);
+						_data._bytes.position = pos + (((_pan * headphonesEffect) >>> 3) << 3);
 						if (_data._bytes.position >= end - 8) _data._bytes.position -= (end - _start) - 8;
 						else if (_data._bytes.position < _start) _data._bytes.position += (end - _start) - 8;
-						
 						e.data.writeFloat(_data._bytes.readFloat());
 						
 						_data._bytes.position = pos + 8;
@@ -276,15 +309,15 @@ package com.battalion.audio
 					{
 						e.data.writeDouble(_data._bytes.readDouble());
 					}
-					phase += timeScale * globalTimeScale;
-					if (phase >= 1)
+					phase += speed;
+					if (phase >= 1 || phase <= -1)
 					{
 						_data._bytes.position += (int(phase) - 1) * 8;
 						phase -= int(phase);
 					}
 					else
 					{
-						_data._bytes.position -= 8;
+						_data._bytes.position -= 8 * direction;
 					}
 				}
 				else

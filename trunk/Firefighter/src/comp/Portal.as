@@ -3,7 +3,7 @@ package comp
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.*;
 	import com.battalion.flashpoint.comp.*;
-	import flash.net.DynamicPropertyOutput;
+	import com.battalion.flashpoint.comp.gui.*;
 	
 	/**
 	 * ...
@@ -109,8 +109,8 @@ package comp
 						if (!_bar && Input.pressButton("breakPortal"))
 						{
 							log("This is the right place");
-							_bar = new GameObject("myBar", this.gameObject , LoadingBar);
-							_bar.loadingBar.value = 0;
+							_bar = new GameObject("myBar", this.gameObject , ProgressBar);
+							_bar.progressBar.value = 0;
 							_bar.transform.y = -50;
 						}
 						else if (_bar && Input.holdButton("breakPortal"))

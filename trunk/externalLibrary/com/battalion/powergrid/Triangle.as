@@ -1,5 +1,7 @@
 package com.battalion.powergrid 
 {
+	import flash.geom.Matrix;
+	import flash.geom.Point;
 	/**
 	 * A simple triangle rigidbody.
 	 * @author Battalion Chiefs
@@ -208,9 +210,60 @@ package com.battalion.powergrid
 		/** @private **/
 		internal var gn31y : Number;
 		
+		/**
+		 * scale the vertices by <code>scalar</code>.
+		 * @param	scalar
+		 */
+		public function scale(scalar : Number) : void
+		{
+			var m : Matrix = new Matrix();
+			m.scale(scalar, scalar);
+			transform(m);
+		}
 		
+		/**
+		 * rotate the vertices by <code>degrees</code>.
+		 * @param	degrees
+		 */
+		public function rotate(degrees : Number) : void
+		{
+			var m : Matrix = new Matrix();
+			m.rotate(degrees * 0.0174532925);
+			transform(m);
+		}
+		
+		/**
+		 * Changes the shape of the Triangle by transforming the vertices using the matrix <code>m</code>.
+		 * @param	m
+		 */
+		public function transform(m : Matrix) : void
+		{
+			var point : Point = new Point(x1, y1);
+			point = m.transformPoint(point);
+			x1 = point.x; y1 = point.y;
+			
+			point.x = x2; point.y = y2;
+			point = m.transformPoint(point);
+			x2 = point.x; y2 = point.y;
+			
+			point.x = x3; point.y = y3;
+			point = m.transformPoint(point);
+			x3 = point.x; y3 = point.y;
+			
+			updateVertices();
+		}
+		
+		/**
+		 * Define the Triangle's form by specifying a size and then the position
+		 * of the first point (anchorX and anchorY) relative to the line between the other two points.
+		 * @param	size
+		 * @param	anchorX
+		 * @param	anchorY
+		 */
 		public function defineForm(size : Number, anchorX : Number, anchorY : Number) : void
 		{
+			anchorX *= size;
+			anchorY *= size;
 			x1 = -(anchorX + size) * 0.5;
 			x2 = (size - anchorX) * 0.5;
 			x3 = anchorX * 0.5;
@@ -244,6 +297,21 @@ package com.battalion.powergrid
 		 */
 		public function updateVertices() : void
 		{
+			
+			// NORMALIZING
+			var centerX : Number = (x1 + x2 + x3) * 0.33333333333333333;
+			var centerY : Number = (y1 + y2 + y3) * 0.33333333333333333;
+			
+			x1 -= centerX;
+			x2 -= centerX;
+			x3 -= centerX;
+			
+			y1 -= centerY;
+			y2 -= centerY;
+			y3 -= centerY;
+			
+			// LET THE POWERGRID UPDATE ON NEXT STEP
+			
 			_prevAngle = NaN;
 			_prevAngularVelocity = NaN;
 		}

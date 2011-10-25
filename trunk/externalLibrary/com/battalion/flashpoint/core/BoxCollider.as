@@ -16,6 +16,15 @@ package com.battalion.flashpoint.core
 		private var triangle1 : Triangle;
 		private var triangle2 : Triangle;
 		
+		public override function get layers() : uint
+		{
+			return triangle1.layers;
+		}
+		public override function set layers(value : uint) : void
+		{
+			triangle1.layers = triangle2.layers = value;
+		}
+		
 		public override function set material(value : PhysicMaterial) : void
 		{
 			triangle1.friction = value._friction;
