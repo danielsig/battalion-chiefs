@@ -24,6 +24,15 @@ package com.battalion.flashpoint.core
 		/** @private  */
 		internal static var _offsetY : Number = 0;
 		
+		public static function get sleepVelocity() : Number { return PowerGrid.sleepVelocity; }
+		public static function set sleepVelocity(value : Number) : void { PowerGrid.sleepVelocity = value; }
+		
+		public static function get sleepTime() : Number { return PowerGrid.sleepTime; }
+		public static function set sleepTime(value : Number) : void { PowerGrid.sleepTime = value; }
+		
+		public static function get restingSpeed() : Number { return PowerGrid.restingSpeed; }
+		public static function set restingSpeed(value : Number) : void { PowerGrid.restingSpeed = value; }
+		
 		/**
 		 * The number of physics iterations. The greater this value is, the more accurate the simulation will be at the cost of speed.
 		 */
@@ -115,7 +124,7 @@ package com.battalion.flashpoint.core
 			_offsetY = value.y;
 		}
 		
-		public static function setAll(grid : BitmapData, unitSize : uint, maxSize : Number) : void
+		public static function gridSetup(grid : BitmapData, unitSize : uint, maxSize : Number) : void
 		{
 			_grid = grid;
 			_unitSize = unitSize;
@@ -125,8 +134,6 @@ package com.battalion.flashpoint.core
 		public static function init() : void
 		{
 			_initialized = true;
-			PowerGrid.sleepVelocity = 0.1;
-			PowerGrid.restingSpeed = 0.03;
 			PowerGrid.init(_grid, _unitSize, _maxSize);
 			PowerGrid.setOptimalMaxVelocity();
 		}

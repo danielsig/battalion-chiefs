@@ -10,9 +10,9 @@ package com.battalion.powergrid
 		public static function createBox(width : Number, height : Number) : Group 
 		{
 			var triangle1 : Triangle = new Triangle();
-			triangle1.defineForm(width, width * 0.5, height);
+			triangle1.defineForm(width, 0.5, height / width);
 			var triangle2 : Triangle = new Triangle();
-			triangle2.defineForm(width, -width * 0.5, -height);
+			triangle2.defineForm(width, -0.5, -height / width);
 			
 			triangle1.x = width * 0.16;
 			triangle1.y = -height * 0.16;
@@ -25,9 +25,9 @@ package com.battalion.powergrid
 		public static function redefineBox(box : Group, width : Number, height : Number, triangle1 : Triangle = null, triangle2 : Triangle = null) : void 
 		{
 			var triangle1 : Triangle = triangle1 || box.getBodyAt(0) as Triangle;
-			triangle1.defineForm(width, width * 0.5, height);
+			triangle1.defineForm(width, 0.5, height / width);
 			var triangle2 : Triangle = triangle2 || box.getBodyAt(1) as Triangle;
-			triangle2.defineForm(width, -width * 0.5, -height);
+			triangle2.defineForm(width, -0.5, -height / width);
 			
 			triangle1.relativeX = width * 0.16;
 			triangle1.relativeY = -height * 0.16;

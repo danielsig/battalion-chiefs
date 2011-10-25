@@ -26,7 +26,7 @@ package comp
 		{
 			requireComponent(TimeMachine);
 			requireComponent(Zoomer);
-			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.08);
+			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.03);
 			//gameObject.zoomer.zoom(10);
 			
 			Input.assignDirectional("samusDirection", "d", "a", Keyboard.RIGHT, Keyboard.LEFT);
@@ -59,7 +59,7 @@ package comp
 				}
 				else
 				{
-					gameObject.animation.gotoAndStop(4);
+					gameObject.animation.gotoAndPause(4);
 					gameObject.sendMessage("Audio_stop");
 				}
 				if (Input.pressButton("jump"))

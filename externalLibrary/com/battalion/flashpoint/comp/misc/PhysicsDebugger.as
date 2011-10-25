@@ -39,10 +39,10 @@ package com.battalion.flashpoint.comp.misc
 					_debugGraphics.beginFill(0x22BB22, 0.3);
 					_debugGraphics.lineStyle(0);
 					PowerGrid.forEachCircle(drawCircle);
-					//PowerGrid.forEachTriangle(drawTriangle);
-					//PowerGrid.forEachGroup(drawGroup);
+					PowerGrid.forEachTriangle(drawTriangle);
+					PowerGrid.forEachGroup(drawGroup);
 					_debugGraphics.endFill();
-					//drawGrid(false);
+					drawGrid(false);
 				}
 			}
 		}

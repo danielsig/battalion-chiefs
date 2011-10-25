@@ -28,7 +28,7 @@ package comp
 			Physics.maxSize = 100;
 			Physics.gravityVector = new Point(0, 0.3);
 			Physics.gridOffset = new Point( -800, -800);
-			Physics.iterations = 1;
+			Physics.iterations = 2;
 			Physics.init();
 			
 			world.cam.transform.scale = 5;
@@ -89,12 +89,15 @@ package comp
 			);
 			
 			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, DummyController, BoxCollider, Rigidbody);
-			Audio.load("samusSound", "assets/sound/samus.mp3~00-2000~");
+			Audio.load("samusSound", "assets/sound/samus.mp3~100-2000~");
 			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
 			//Animation.filterWhite("samusRunning");
 			samusObj.animation.play("samusRunning");
-			Animation.addLabel("samusRunning", "Audio_play", 0, "samusSound", 1);
-			Animation.addLabel("samusRunning", "Audio_play", 5, "samusSound", 1);
+			Animation.addLabel("samusRunning", "Audio_gotoAndPlay", 0, 0, "samusSound");
+			//Animation.addLabel("samusRunning", "Audio_reverse", 0);
+			Animation.addLabel("samusRunning", "Audio_gotoAndPlay", 5, 0, "samusSound");
+			//Animation.addLabel("samusRunning", "Audio_reverse", 5);
+			//samusObj.audio.reverse();
 			samusObj.boxCollider.dimensions = new Point(22, 44);
 			samusObj.rigidbody.mass = 5000;
 			samusObj.rigidbody.freezeRotation = true;
@@ -169,14 +172,23 @@ package comp
 			"fill", { color:"0xBB0000" },
 			"circle", {radius:30}
 			);
+			Renderer.draw("aYellowBallGraph",
+			"fill", { color:"0xFFAA00" },
+			"circle", {radius:30}
+			);
+			Renderer.draw("anOrangeBallGraph",
+			"fill", { color:"0xFF7700" },
+			"circle", {radius:30}
+			);
 			
-			var amount : uint = 1000;
+			var amount : uint = 300;
 			var makeBox : Boolean = false;
 			
-			var i : int = Math.sqrt(amount);
+			var squareAmount : uint = Math.sqrt(amount);
+			var i : int = squareAmount;
 			while (i--)
 			{
-				var c : int = Math.sqrt(amount);
+				var c : int = squareAmount;
 				while (c--)
 				{
 					if (makeBox)
@@ -193,8 +205,10 @@ package comp
 					else
 					{
 						var aball : GameObject = new GameObject("aball" + c, Renderer, Rigidbody, RigidbodyInterpolator, CircleCollider);
-						aball.renderer.setBitmapByName("aballGraph");
+						aball.renderer.setBitmapByName(i > squareAmount * 0.3 ? (i > squareAmount * 0.6 ? "aballGraph" : "anOrangeBallGraph") : "aYellowBallGraph");
 						
+						aball.rigidbody.mass = i > squareAmount * 0.3 ? (i > squareAmount * 0.6 ? 16 : 4) : 1;
+						aball.circleCollider.layers = 2;
 						aball.circleCollider.radius = 20;
 						aball.transform.x = (c * 25) - 300;
 						aball.transform.y = -(i * 25);
@@ -217,6 +231,7 @@ package comp
 			collider.boxCollider.material = new PhysicMaterial(1, 0);
 			collider.stalker.target = bone1.transform;
 			collider.renderer.setBitmapByName("doorGraphics");
+			collider.boxCollider.layers = 3;
 			
 			//collider.boxCollider.destroy();
 			//samusObj.boxCollider.destroy();

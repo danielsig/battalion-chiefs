@@ -30,6 +30,7 @@ package com.battalion.flashpoint.core
 		private var _afffectedByGravity : Boolean = true;
 		private var _vx : Number = 0;
 		private var _vy : Number = 0;
+		private var _va : Number = 0;
 		
 		/**
 		 * Determines if this rigidbody is affected by gravity or not, default is true.
@@ -57,7 +58,7 @@ package com.battalion.flashpoint.core
 		 * Determines how hard is it to rotate the Rigidbody.
 		 * This is similar to inertia but not the same thing.
 		 * The difference between this and the actual inertia
-		 * is the similar to the difference between density and mass.
+		 * is similar to the difference between density and mass.
 		 * In other words: massDistribution = inertia / volume.
 		 * for comparison: density = mass / volume.
 		 */
@@ -98,7 +99,19 @@ package com.battalion.flashpoint.core
 				body.vy = _vy;
 			}
 		}
-		
+		/**
+		 * The angular velocity of the rigidbody in degrees per fixedUpdate.
+		 */
+		public function get angularVelocity() : Number
+		{
+			if (body) return body.va;
+			return _va;
+		}
+		public function set angularVelocity(value : Number) : void
+		{
+			_va = value;
+			if (body) body.va = _va;
+		}
 		
 		public function get angularDrag() : Number
 		{

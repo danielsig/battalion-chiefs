@@ -1,28 +1,29 @@
-package com.battalion.flashpoint.comp 
+package com.battalion.flashpoint.comp.gui 
 {
 	import com.battalion.flashpoint.core.Component;
 	import com.battalion.flashpoint.core.GameObject;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
 	import com.battalion.flashpoint.core.Transform;
+	import com.battalion.flashpoint.comp.*;
 	
 	/**
 	 * ...
 	 * @author ...
 	 */
-	public final class LoadingBar extends Component implements IExclusiveComponent 
+	public final class ProgressBar extends Component implements IExclusiveComponent 
 	{
 		
 		private static var _initializer : Boolean = init();
 		private static function init() : Boolean
 		{
-			Renderer.draw("loadingBarGraphics",
+			Renderer.draw("progressBarGraphics",
 			"fill", { color:"0x00FF00" },
 				0, 0,
 				1, 0,
 				1, 9,
 				0, 9
 			);
-			Renderer.draw("loadingBarBackground",
+			Renderer.draw("progressBarBackground",
 			"line", { thickness:1, color:"0x000000" },
 				0, 0,
 				50, 0,
@@ -39,10 +40,10 @@ package com.battalion.flashpoint.comp
 		public function awake () : void
 		{
 			var bar : GameObject = new GameObject("bar", gameObject, Renderer);
-			(bar.renderer as Renderer).setBitmapByName("loadingBarGraphics");
+			(bar.renderer as Renderer).setBitmapByName("progressBarGraphics");
 			_bar = bar.transform;
 			var renderer : Renderer = requireComponent(Renderer) as Renderer;
-			renderer.setBitmapByName("loadingBarBackground");
+			renderer.setBitmapByName("progressBarBackground");
 		}
 		public function update () : void
 		{

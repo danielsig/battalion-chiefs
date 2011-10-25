@@ -77,9 +77,7 @@ package com.battalion.flashpoint.core
 				}
 				
 				if (physics.rigidbody)
-				{
-					physics.rigidbody.body = body;
-					
+				{	
 					body.angularDrag = physics.rigidbody.angularDrag;
 					body.drag = physics.rigidbody.drag;
 					body.mass = physics.rigidbody.mass;
@@ -87,7 +85,10 @@ package com.battalion.flashpoint.core
 					var v : Point = physics.rigidbody.velocity;
 					body.vx = v.x;
 					body.vy = v.y;
+					body.va = physics.rigidbody.angularVelocity;
 					body.inertia = physics.rigidbody.freezeRotation ? Infinity : physics.rigidbody.inertia;
+					
+					physics.rigidbody.body = body;
 					
 					if (_gameObject.beginMovement)
 					{
@@ -120,11 +121,6 @@ package com.battalion.flashpoint.core
 				if (physics.group) physics.group.syncBodies();
 				
 				physics.body = body;
-				
-				if (_gameObject.name == "samus")
-				{
-					logOn("samus", physics.collider0.body.friction);
-				}
 				
 				if (!body.added) PowerGrid.addBody(body);
 				
