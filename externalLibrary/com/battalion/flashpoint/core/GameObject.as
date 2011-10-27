@@ -513,13 +513,15 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (this == WORLD) throw new Error("\r\tI was just chilling, minding my own business when suddenly you call this method:\r\t\t\"GameObject.world.destroy();\"\r\tOMG you're such a NOOB!");
 			}
-			for each(var compObj : Object in _components)
+			/*for each(var compObj : Object in _components)
 			{
 				if (compObj.hasOwnProperty("onDestroy") && compObj.onDestroy is Function)
 				{
 					compObj.onDestroy();
 				}
-			}
+			}*/
+			sendMessage("onDestroy");
+			
 			_parent.unparentChild(this);
 			_parent = null;
 		}

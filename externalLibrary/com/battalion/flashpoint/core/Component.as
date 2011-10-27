@@ -268,7 +268,7 @@ package com.battalion.flashpoint.core
 				receivers = new Vector.<Function>();
 				for each(var component : Component in _gameObject._components)
 				{
-					if (component is targetClass && component.hasOwnProperty(functionName))
+					if (component is targetClass && component.hasOwnProperty(functionName) && component[functionName] is Function)
 					{
 						receivers.push(component[functionName]);
 					}

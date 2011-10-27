@@ -3,6 +3,7 @@ package com.battalion.flashpoint.core
 	import com.aw.utils.AccurateTimer;
 	import com.aw.events.AccurateTimerEvent;
 	import com.battalion.audio.AudioPlayer;
+	import com.battalion.flashpoint.comp.misc.TimeMachine;
 	import com.battalion.Input;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -54,13 +55,28 @@ fixedInterval...|-- 0.0 --|-- 0.2 --|-- 0.4 --|-- 0.6 --|-- 0.8 --|-- 0.0 --|-- 
 fixedUpdate.....|--- x ---|---------|---------|---------|---------|--- x ---|---------|...<br/>
 update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|...
 </p>
-		 * @warning For performance reasons, this property is not a getter function but a public varible,
+		 * WARNING For performance reasons, this property is not a getter function but a public varible,
 		 * If gain nothing but bad luck from assigning a value to this.
 		 */
 		public static var frameInterpolationRatio : Number = 0;
 		
+		
+		/**
+		 * Milliseconds since the last fixedUpdate.
+		 * During a fixedUpdate frame, this is the milliseconds
+		 * since the last fixedUpdate not the current one.
+		 */
+		public static var deltaTime : Number = 0;
+		
+		/**
+		 * Milliseconds since FlashPoint initialized.
+		 */
+		public static var time : Number = 0;
+		
 		private static var _timer : AccurateTimer = new AccurateTimer(fixedInterval / timeScale);
 		private static var _prevTime : Number = new Date().time;
+		private static var _prevTime2 : Number = _prevTime;
+		private static var _initTime : Number;
 		private static var _dynamicInterval : Number = fixedInterval / timeScale;
 		private static var _stage : Stage;
 		
@@ -71,7 +87,7 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		 */
 		public static function init(stage : Stage) : void
 		{
-			
+			_initTime =  new Date().time;
 			GameObject.WORLD = new GameObject("WORLD");
 			GameObject.WORLD._parent = GameObject.WORLD;
 			CONFIG::release
@@ -90,10 +106,13 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		private static function update(event : Event = null) : void
 		{
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
+			var now : Number = new Date().time;
+			deltaTime = now - _prevTime2;
+			time = now - _initTime;
 			
 			GameObject.WORLD.update();
 			Transform.flushGlobal();
-			var now : Number = new Date().time;
+			now = new Date().time;
 			frameInterpolationRatio = (now - _prevTime) / _dynamicInterval;
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
 			//trace(frameInterpolationRatio);
@@ -105,6 +124,11 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 			
 			var interval : Number = fixedInterval / timeScale;
 			Physics.step(interval * 0.001 * timeScale);
+			
+			var now : Number = new Date().time;
+			deltaTime = now - _prevTime2;
+			time = now - _initTime;
+			_prevTime2 = now;
 			
 			AudioPlayer.globalTimeScale = timeScale;
 			GameObject.WORLD.fixedUpdate();

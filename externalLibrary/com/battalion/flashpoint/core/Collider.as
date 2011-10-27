@@ -151,8 +151,8 @@ package com.battalion.flashpoint.core
 			_this.added = true;
 			if (_head)
 			{
-				(_head as Collider || _head as Rigidbody)._next = this;
-				_prev = _head;
+				(_head as Collider || _head as Rigidbody)._prev = this;
+				_next = _head;
 			}
 			_head = this;
 		}
@@ -160,9 +160,9 @@ package com.battalion.flashpoint.core
 		internal final function removePhysics() : void 
 		{
 			_this.added = false;
-			if (_head == this) _head = _prev;
+			if (_head == this) _head = _next;
 			if (_prev) (_prev as Collider || _prev as Rigidbody)._next = _next;
-			if (_next) (_prev as Collider || _prev as Rigidbody)._prev = _prev;
+			if (_next) (_next as Collider || _next as Rigidbody)._prev = _prev;
 		}
 		/** @private */
 		internal final function syncPhysics() : IPhysicsSyncable 
@@ -184,7 +184,7 @@ package com.battalion.flashpoint.core
 			
 			if (changed && bod.isSleeping()) bod.wakeUp();
 			
-			return _prev;
+			return _next;
 		}
 		/** @private */
 		protected function makeCollider(material : PhysicMaterial) : void 

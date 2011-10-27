@@ -47,7 +47,7 @@ package com.battalion.flashpoint.core
 		 * This value is not the same as the mass.
 		 * The density can be found using the formula: density = mass / volume.
 		 */
-		public function get density() : Number { return _mass / body.volume; }
+		public function get density() : Number { return _mass / (body ? body.volume : 1); }
 		public function set density(value : Number) : void
 		{
 			_mass = value * body.volume;
@@ -62,7 +62,7 @@ package com.battalion.flashpoint.core
 		 * In other words: massDistribution = inertia / volume.
 		 * for comparison: density = mass / volume.
 		 */
-		public function get massDistribution() : Number { return _inertia / body.volume; }
+		public function get massDistribution() : Number { return _inertia / (body ? body.volume : 1); }
 		public function set massDistribution(value : Number) : void
 		{
 			_inertia = value * body.volume;
@@ -268,8 +268,8 @@ package com.battalion.flashpoint.core
 			_this.added = this;
 			if (Collider._head)
 			{
-				(Collider._head as Collider || Collider._head as Rigidbody)._next = this;
-				_prev = Collider._head;
+				(Collider._head as Collider || Collider._head as Rigidbody)._prev = this;
+				_next = Collider._head;
 			}
 			Collider._head = this;
 		}
@@ -277,9 +277,9 @@ package com.battalion.flashpoint.core
 		internal final function removePhysics() : void 
 		{
 			_this.added = null;
-			if (Collider._head == this) Collider._head = _prev;
+			if (Collider._head == this) Collider._head = _next;
 			if (_prev) (_prev as Collider || _prev as Rigidbody)._next = _next;
-			if (_next) (_prev as Collider || _prev as Rigidbody)._prev = _prev;
+			if (_next) (_next as Collider || _next as Rigidbody)._prev = _prev;
 		}
 		/** @private */
 		internal final function syncPhysics() : IPhysicsSyncable 
@@ -301,7 +301,7 @@ package com.battalion.flashpoint.core
 			
 			if (changed && bod.isSleeping()) bod.wakeUp();
 			
-			return _prev;
+			return _next;
 		}
 	}
 
