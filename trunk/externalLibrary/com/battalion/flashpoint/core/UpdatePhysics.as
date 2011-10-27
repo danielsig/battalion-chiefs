@@ -135,6 +135,7 @@ package com.battalion.flashpoint.core
 						physics.collider0.addPhysics();
 					}
 				}
+				physics.updated = false;
 			}
 		}
 		
