@@ -8,7 +8,7 @@ PowerGrid is a physics engine used by FlashPoint. It's grid based and therefor i
 
 = Details =
 
-Powergrid *can simulate up to 1000 rigidbodies at 30fps* with every single rigidbody touching at least one other rigidbody. With no rigidbodies colliding it can simulate a few thousand.
+Powergrid *can simulate up to 1000 rigidbodies at 30fps* with every single rigidbody touching at least one other rigidbody. With no rigidbodies colliding it can simulate at least a few thousands more.
 
 It can simulate as many *sleeping* rigidbodies as the computer can store in memory, not a single operation is made for sleeping rigidbodies, they're simply not processed. Still, they wake up if something collides with them (Yes, you guessed it right, it's sorcery).
 
@@ -18,15 +18,15 @@ When initializing the engine, you must specify a BitmapData object as the grid. 
 
 
 *PROS*
-Decent API and documentation.
-Supports tile-maps with tile collisions.
-Supports collision layers (collision filters).
-Has 2 primitive rigidbodies: Triangle and Circle.
-Supports groups (compound rigidbodies).
-*INSANELY FAST!!!*
+  * Decent API and documentation
+  * Supports tile-maps with tile collisions
+  * Supports collision layers (collision filters)
+  * Has 2 primitive rigidbodies: Triangle and Circle
+  * Supports groups (compound rigidbodies)
+  * *INSANELY FAST!!!*
 
 
 *CONS*
-All rigidbodies are stuck inside the grid you specify.
-Huge moving objects can slow things down.
-The source is barely readable.
+  * All rigidbodies are stuck inside the grid you specify
+  * Huge moving objects can slow things down
+  * The source is barely readable
