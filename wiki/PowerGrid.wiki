@@ -1,5 +1,5 @@
 #summary A grid based AS3 physics engine
-#labels PowerGrid
+#labels PowerGrid,Gridbased,Tilebased
 
 = Introduction =
 
