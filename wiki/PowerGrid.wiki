@@ -8,9 +8,9 @@ PowerGrid is a physics engine used by FlashPoint. It's grid based and therefor i
 
 = Details =
 
-Powergrid *can simulate up to 1000 rigidbodies at 30fps* with every single rigidbody touching at least one other rigidbody. With no rigidbodies colliding it can simulate at least a few thousands more.
+Powergrid can simulate up to 1000 rigidbodies at 30fps with every single rigidbody touching at least one other rigidbody. With no rigidbodies colliding it can simulate at least a few thousands more.
 
-It can simulate as many *sleeping* rigidbodies as the computer can store in memory, not a single operation is made for sleeping rigidbodies, they're simply not processed. Still, they wake up if something collides with them (Yes, you guessed it right, it's sorcery).
+It can simulate as many sleeping rigidbodies as the computer can store in memory, not a single operation is made for sleeping rigidbodies, they're simply not processed. Still, they wake up if something collides with them (Yes, you guessed it right, it's sorcery).
 
 Having most moving objects similar in size boosts performance. This fortunately happens to be the case with most games.
 
