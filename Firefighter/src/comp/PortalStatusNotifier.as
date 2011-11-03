@@ -14,11 +14,11 @@ package comp
 	public final class PortalStatusNotifier extends Component implements IExclusiveComponent 
 	{
 		
-		private var _text : Text;
+		private var _text : TextRenderer;
 		
 		public function awake() : void
 		{
-			_text = requireComponent(Text) as Text;
+			_text = requireComponent(TextRenderer) as TextRenderer;
 		}
 		
 		public function portalLocked( target : GameObject, portal : Portal, _strength : Number) : void
