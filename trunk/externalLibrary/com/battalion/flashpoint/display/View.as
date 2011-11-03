@@ -10,9 +10,10 @@ package com.battalion.flashpoint.display
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
 	import com.battalion.flashpoint.comp.Renderer;
-	import com.battalion.flashpoint.comp.Text;
+	import com.battalion.flashpoint.comp.TextRenderer;
 	import com.battalion.flashpoint.comp.Camera;
 	import com.battalion.flashpoint.core.GameObject;
+	import flash.text.TextFormat;
 	
 	/**
 	 * View, FlashPoint's display object manager.<br/>
@@ -28,7 +29,7 @@ package com.battalion.flashpoint.display
 	{
 		
 		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
-		private static var _texts : Vector.<Text> =  new Vector.<Text>();
+		private static var _texts : Vector.<TextRenderer> =  new Vector.<TextRenderer>();
 		private static var _views : Vector.<View> =  new Vector.<View>();
 		private static var _viewCounter : int = 0;
 		
@@ -73,7 +74,7 @@ package com.battalion.flashpoint.display
 				}
 			}
 		}
-		public static function addTextToView(text : Text) : void
+		public static function addTextToView(text : TextRenderer) : void
 		{
 			_texts.push(text);
 			for each(var view : View in _views)
@@ -82,7 +83,7 @@ package com.battalion.flashpoint.display
 			}
 		}
 		/** @private **/
-		public static function removeTextFromView(text : Text) : void
+		public static function removeTextFromView(text : TextRenderer) : void
 		{
 			var index : int = _texts.indexOf(text);
 			if (index < _texts.length - 1 && index > 0)//not the last element
@@ -205,11 +206,27 @@ package com.battalion.flashpoint.display
 			i = _texts.length;
 			while (i--)
 			{
-				var text : Text = _texts[i];
+				var text : TextRenderer = _texts[i];
 				if (text.text)
 				{
 					if (!_textFields[i]) _textFields[i] = new TextField();
+					if (text.htmlText) _textFields[i].htmlText = text.htmlText;
+					
+					//Set format for text
+					var format : TextFormat = new TextFormat();
+					format.font = text.font;
+					format.size = text.size;
+					format.color = text.color;
+					format.bold = text.bold;
+					format.italic = text.italic;
+					format.underline = text.underline;
+					_textFields[i].defaultTextFormat = format;
+					
+					_textFields[i].wordWrap = text.wordWrap;
 					_textFields[i].text = text.text;
+					_textFields[i].width = text.width;
+					_textFields[i].height = text.height;
+					
 					if (text.offset)
 					{
 						matrix = text.offset.clone();

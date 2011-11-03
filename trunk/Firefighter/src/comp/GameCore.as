@@ -161,6 +161,10 @@ package comp
 			
 			Portal.addPortal(door, door2, 40, 60, samusObj.transform, true, 100);
 			
+			var firstText : GameObject = new GameObject("texti1",TextRenderer);
+			firstText.textRenderer.text = "text";
+			firstText.textRenderer.color = "0xff00f0";
+			
 			Renderer.draw("aboxGraph",
 			"fill", { color:"0xBB0000" },
 				0, 0,
