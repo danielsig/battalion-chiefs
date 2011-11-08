@@ -17,21 +17,23 @@ package comp
 	public class DummyController extends Component implements IExclusiveComponent
 	{
 		
-		public var speed : Number = 50;
+		public var speed : Number = 60;
 		public var backSpeed : Number = 30;
-		public var runSpeed : Number = 100;
-		public var jumpSpeed : Number = 100;
+		public var runSpeed : Number = 120;
+		public var jumpSpeed : Number = 600;
 		
 		public function awake() : void 
 		{
 			requireComponent(TimeMachine);
 			requireComponent(Zoomer);
-			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.03);
-			//gameObject.zoomer.zoom(10);
+			(requireComponent(Rigidbody) as Rigidbody);
+			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.06, new Point(0, -100));
 			
 			Input.assignDirectional("samusDirection", "d", "a", Keyboard.RIGHT, Keyboard.LEFT);
 			Input.assignButton("shift", Keyboard.SHIFT);
 			Input.assignButton("jump", Keyboard.SPACE);
+			Input.assignButton("crouch", "c");
+			gameObject.transform.scaleY = 3;
 		}
 			
 		public function fixedUpdate() : void 
@@ -40,8 +42,8 @@ package comp
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
 			var isMouseOnTheLeft : Boolean = mousePos.x < thisPos.x;
 			
-			//var points : Vector.<ContactPoint> = gameObject.rigidbody.touchingInDirection(new Point(0, 1), 0.1);
-			//if (points)
+			var points : Vector.<ContactPoint> = gameObject.rigidbody.touchingInDirection(new Point(0, 1), 0.6);
+			if (points)
 			{
 				if (Input.directional("samusDirection") > 0)
 				{
@@ -64,26 +66,24 @@ package comp
 				}
 				if (Input.pressButton("jump"))
 				{
-					trace("jump");
 					gameObject.rigidbody.addForce(new Point(0, -jumpSpeed), ForceMode.ACCELLERATION);
 				}
-			}
-			/*if (gameObject.transform.x > 600)
-			{
-				gameObject.transform.x = -600;
-			}
-			else if (gameObject.transform.x < -600)
-			{
-				gameObject.transform.x = 600;
-			}*/
-			
-			if (isMouseOnTheLeft)
-			{
-				gameObject.transform.scaleX = -1;
+				if (Input.pressButton("crouch"))
+				{
+					gameObject.rigidbody.addForce(new Point(0, jumpSpeed), ForceMode.ACCELLERATION);
+				}
 			}
 			else
 			{
-				gameObject.transform.scaleX = 1;
+				gameObject.animation.gotoAndPause(4);
+			}
+			if (isMouseOnTheLeft)
+			{
+				gameObject.transform.scaleX = -3;
+			}
+			else
+			{
+				gameObject.transform.scaleX = 3;
 			}
 		}
 		

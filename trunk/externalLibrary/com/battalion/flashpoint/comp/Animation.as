@@ -25,19 +25,33 @@ package com.battalion.flashpoint.comp
 	{
 		private static var _animations : Object = { };
 		private static var _animationLabels : Object = { };
+		/** @private **/
+		internal static var _filterQueue : Object = { };
 		
 		public static function filterWhite(animationName : String) : void
 		{
-			filter(animationName, 0xFFFFFFFF, 0x00000000);
+			filter(animationName, 0xFFFEFEFE, 0x00FFFFFF);
 		}
 		
-		public static function filter(animationName : String, targetColor : uint, replacementColor : uint ) : void
+		public static function filter(animationName : String, targetColor : uint, replacementColor : uint) : void
 		{
-			var frames : Vector.<BitmapData> = _animations[animationName];
-			for each(var frame : BitmapData in frames)
+			if (_filterQueue[animationName])
 			{
-				frame.threshold(frame, frame.rect, new Point(), "==", targetColor, replacementColor);
+				_filterQueue[animationName].push( { t:targetColor, r:replacementColor} );
 			}
+			else
+			{
+				var frames : Vector.<BitmapData> = _animations[animationName];
+				for each(var frame : BitmapData in frames)
+				{
+					frame.threshold(frame, frame.rect, new Point(), "==", targetColor, replacementColor);
+				}
+			}
+		}
+		/** @private **/
+		internal static function filterFrame(frame : BitmapData, targetColor : uint, replacementColor : uint) : void
+		{
+			frame.threshold(frame, frame.rect, new Point(), "==", targetColor, replacementColor);
 		}
 		
 		/**
@@ -151,6 +165,8 @@ myObj.animation.play("myAnimation");
 			_animationLabels[animationName] = new Vector.<Array>(index);
 			var loader : BitmapLoader = new BitmapLoader(urls, frames, CONFIG::debug, null, false);
 			loader.start();
+			_filterQueue[animationName] = new Vector.<Object>();
+			new AnimationLoader(animationName, loader);
 		}
 		/**
 		 * Traces out currently loaded/loading animations and their labels.

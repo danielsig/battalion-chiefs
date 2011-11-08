@@ -63,6 +63,38 @@ package com.battalion.powergrid
 				while ((target = target.next));
 			}
 		}
+		/**
+		 * Call this in order to set the center of mass to the correct position
+		 * based on each of the children's mass and position.
+		 */
+		public function computeCenterOfMass() : void
+		{
+			var centerX : Number = 0;
+			var centerY : Number = 0;
+			var target : BodyNode = bodies;
+			if (target)
+			{
+				syncBodies();
+				_mass = 0;
+				do
+				{
+					var weight : Number = target.body.mass;
+					_mass += weight;
+					centerX += target.body.x * weight;
+					centerY += target.body.y * weight;
+				}
+				while ((target = target.next));
+				_invMass = 1 / _mass;
+				centerX = centerX * _invMass;
+				centerY = centerY * _invMass;
+			}
+			else
+			{
+				centerX = x;
+				centerY = y;
+			}
+			setCenter(centerX, centerY);
+		}
 		
 		/**
 		 * Creates a Group object. To ungroup, use the <code>ungroup</code> method.
@@ -90,6 +122,12 @@ package com.battalion.powergrid
 				if (group == this) throw new Error("Unable to comply: Can not join a group with itself.");
 
 			}
+			/*if (isNaN(group.cos * group.sin))
+			{
+				group.cos = Math.cos(group.a * 0.0174532925);
+				group.sin = Math.sin(group.a * 0.0174532925);
+			}
+			group.syncBodies();*/
 			var target : BodyNode = group.bodies;
 			if (target)
 			{
@@ -121,6 +159,7 @@ package com.battalion.powergrid
 					target.body.relativeX = dx * cos + dy * sin;
 					target.body.relativeY = dy * cos - dx * sin;
 					target.body.relativeA = target.body.a - a;
+					
 					target.body.group = this;
 				}
 				while ((target = target.next));

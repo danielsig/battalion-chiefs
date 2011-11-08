@@ -25,6 +25,7 @@ package com.battalion.flashpoint.core
 		{
 			body = new Circle();
 			(body as Circle).radius = _radius;
+			(body as Circle).userData = this;
 		}
 	}
 

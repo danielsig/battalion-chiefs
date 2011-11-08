@@ -33,18 +33,28 @@ package com.battalion.flashpoint.comp
 		
 		/** @private **/
 		internal static var _bitmaps : Object = { };
+		/** @private **/
+		internal static var _filterQueue : Object = { };
 		
 		public static function filterWhite(bitmapName : String) : void
 		{
-			filter(bitmapName, 0xFFFFFFFF, 0x00000000);
+			filter(bitmapName, 0xFFFEFEFE, 0x00000000);
 		}
 		
 		public static function filter(bitmapName : String, targetColor : uint, replacementColor : uint ) : void
 		{
 			var bitmap : BitmapData = _bitmaps[bitmapName];
-			bitmap.threshold(bitmap, bitmap.rect, new Point(), "==", targetColor, replacementColor);
+			if (bitmap) bitmap.threshold(bitmap, bitmap.rect, new Point(), "==", targetColor, replacementColor);
+			else
+			{
+				if (!_filterQueue[bitmapName]) _filterQueue[bitmapName] = new <Object>[{t:targetColor, r:replacementColor}];
+				else _filterQueue[bitmapName].push( { t:targetColor, r:replacementColor } );
+			}
 		}
-		
+		public static function getBitmap(bitmapName : String) : BitmapData
+		{
+			return _bitmaps[bitmapName];
+		}
 		
 		/**
 		 * Use this to bake a <code>DisplayObject</code> or a <code>BitmapData</code> object to a <code>BitmapData</code> with the name <code>bitmapName</code>.
@@ -254,7 +264,7 @@ Renderer.draw("myWeirdArrow",
 				else if (line)
 				{
 					line = false;
-					graphics.lineStyle(null || instruction.thickness, 0 || instruction.color, instruction.alpha || 1, false || instruction.pixelHinting, instruction.scaleMode || "normal", null || instruction.caps, null || instruction.joints, instruction.miterLimit || 3)
+					graphics.lineStyle(instruction.thickness || null, instruction.color || 0, instruction.alpha || instruction.alpha == undefined || 0, instruction.pixelHinting || false, instruction.scaleMode || "normal", instruction.caps || null, instruction.joints || null, instruction.miterLimit || 3)
 					prevLine = instruction;
 				}
 				else if (fill)
@@ -262,15 +272,15 @@ Renderer.draw("myWeirdArrow",
 					fill = false;
 					if (instruction.bitmap)
 					{
-						graphics.beginBitmapFill(instruction.bitmap, null || instruction.matrix, instruction.repeat as Boolean, false || instruction.smooth);
+						graphics.beginBitmapFill(instruction.bitmap, instruction.matrix || null, instruction.repeat as Boolean, instruction.smooth || false);
 					}
 					else if (instruction.type)
 					{
-						graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], null || instruction.matrix, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", 0 || instruction.focalPointRatio);
+						graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], instruction.matrix || null, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", instruction.focalPointRatio || 0);
 					}
 					else
 					{
-						graphics.beginFill(0 || instruction.color, instruction.alpha || 1);
+						graphics.beginFill(instruction.color || 0, instruction.alpha || instruction.alpha == undefined || 0);
 					}
 					prevFill = instruction;
 				}
@@ -282,23 +292,23 @@ Renderer.draw("myWeirdArrow",
 						var temp : Object = instruction;
 						instruction = instruction.fill;
 						if (instruction.bitmap)
-							graphics.beginBitmapFill(instruction.bitmap, null || instruction.matrix, instruction.repeat as Boolean, false || instruction.smooth);
+							graphics.beginBitmapFill(instruction.bitmap, instruction.matrix || null, instruction.repeat as Boolean, instruction.smooth || false);
 						else if (instruction.type)
-							graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], null || instruction.matrix, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", 0 || instruction.focalPointRatio);
+							graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], instruction.matrix || null, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", instruction.focalPointRatio || 0);
 						else
-							graphics.beginFill(0 || instruction.color, instruction.alpha || 1);
+							graphics.beginFill(instruction.color || 0, instruction.alpha || instruction.alpha == undefined || 0);
 						instruction = temp;
 					}
 					if (instruction.line)
 					{
 						temp = instruction;
 						instruction = instruction.line;
-						graphics.lineStyle(null || instruction.thickness, 0 || instruction.color, instruction.alpha || 1, false || instruction.pixelHinting, instruction.scaleMode || "normal", null || instruction.caps, null || instruction.joints, instruction.miterLimit || 3)
+						graphics.lineStyle(instruction.thickness || null, instruction.color || 0, instruction.alpha || instruction.alpha == undefined || 0, instruction.pixelHinting || false, instruction.scaleMode || "normal", instruction.caps || null, instruction.joints || null, instruction.miterLimit || 3)
 						instruction = temp;
 					}
 					if (instruction.width || instruction.height)
 					{
-						graphics.drawEllipse(instruction.x || prevPoint.x, instruction.y || prevPoint.y, instruction.width || instruction.radius || 1, instruction.height || instruction.radius || 1);
+						graphics.drawEllipse(instruction.x || prevPoint.x, instruction.y || prevPoint.y, instruction.width || instruction.radius || (instruction.width == undefined && instruction.radius == undefined) || 0, instruction.height || instruction.radius || (instruction.height == undefined && instruction.radius == undefined) || 0);
 					}
 					else
 					{
@@ -308,7 +318,7 @@ Renderer.draw("myWeirdArrow",
 					{
 						temp = instruction;
 						instruction = prevLine;
-						graphics.lineStyle(null || instruction.thickness, 0 || instruction.color, instruction.alpha || 1, false || instruction.pixelHinting, instruction.scaleMode || "normal", null || instruction.caps, null || instruction.joints, instruction.miterLimit || 3)
+						graphics.lineStyle(instruction.thickness || null, instruction.color || 0, instruction.alpha || instruction.alpha == undefined || 0, instruction.pixelHinting || false, instruction.scaleMode || "normal", instruction.caps || null, instruction.joints || null, instruction.miterLimit || 3)
 						instruction = temp;
 					}
 					if (instruction.color || instruction.alpha)
@@ -321,11 +331,11 @@ Renderer.draw("myWeirdArrow",
 						{
 							instruction = prevFill;
 							if (instruction.bitmap)
-								graphics.beginBitmapFill(instruction.bitmap, null || instruction.matrix, instruction.repeat as Boolean, false || instruction.smooth);
+								graphics.beginBitmapFill(instruction.bitmap, instruction.matrix || null, instruction.repeat as Boolean, instruction.smooth || false);
 							else if (instruction.type)
-								graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], null || instruction.matrix, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", 0 || instruction.focalPointRatio);
+								graphics.beginGradientFill(instruction.type, instruction.colors || [0, 1], instruction.alphas || [1, 1], instruction.ratios || [0, 1], instruction.matrix || null, instruction.spreadMethod || "pad", instruction.interpolationMethod || "rgb", instruction.focalPointRatio || 0);
 							else
-								graphics.beginFill(0 || instruction.color, instruction.alpha || 1);
+								graphics.beginFill(instruction.color || 0, instruction.alpha || instruction.alpha == undefined || 0);
 						}
 					}
 				}

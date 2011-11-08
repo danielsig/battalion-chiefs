@@ -80,13 +80,13 @@ package com.battalion.flashpoint.core
 				{	
 					body.angularDrag = physics.rigidbody.angularDrag;
 					body.drag = physics.rigidbody.drag;
-					body.mass = physics.rigidbody.mass;
+					body.mass = isNaN(physics.rigidbody._density) ? physics.rigidbody.mass : physics.rigidbody.density * body.volume;
+					body.inertia = isNaN(physics.rigidbody._massDistribution) ? (physics.rigidbody.freezeRotation ? Infinity : physics.rigidbody.inertia) : (physics.rigidbody.massDistribution * body.volume);
 					body.affectedByGravity = physics.rigidbody.affectedByGravity;
 					var v : Point = physics.rigidbody.velocity;
 					body.vx = v.x;
 					body.vy = v.y;
 					body.va = physics.rigidbody.angularVelocity;
-					body.inertia = physics.rigidbody.freezeRotation ? Infinity : physics.rigidbody.inertia;
 					
 					physics.rigidbody.body = body;
 					
@@ -109,6 +109,7 @@ package com.battalion.flashpoint.core
 						for each(var child : AbstractRigidbody in bodies)
 						{
 							child.mass = 0;
+							child.inertia = Infinity;
 						}
 					}
 					_gameObject.beginMovement = physics.collider0.beginMovement;
@@ -135,6 +136,7 @@ package com.battalion.flashpoint.core
 						physics.collider0.addPhysics();
 					}
 				}
+				if (physics.rigidbody && physics.group) physics.group.computeCenterOfMass();
 				physics.updated = false;
 			}
 		}

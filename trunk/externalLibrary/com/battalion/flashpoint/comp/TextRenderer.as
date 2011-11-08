@@ -19,11 +19,15 @@ package com.battalion.flashpoint.comp
 		public var italic : Boolean = false;
 		public var underline : Boolean = false;
 		//RGB format for specifying color: 0x000000
-		public var color : String = null;
+		public var color : uint = 0;
 		public var font : String = null;
 		public var size : int = 12;
 		public var htmlText : String = null;
 		
+		public function setOffset(x : Number, y : Number, scale : Number = 1) : void
+		{
+			offset = new Matrix(scale, 0, 0, scale, x, y);
+		}
 		
 		/** @private **/
 		public function start() : void

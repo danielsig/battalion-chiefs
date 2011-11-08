@@ -1,6 +1,7 @@
 package com.battalion.flashpoint.core 
 {
 	
+	import flash.sampler.NewObjectSample;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.*;
 	
@@ -171,6 +172,7 @@ trace(myChild);//WORLD.foo.bar
 			var awakeIndex : int = 0;
 			for each(var comp : Class in args)
 			{
+				if (!comp) continue;
 				CONFIG::debug
 				{
 					if (!Util.isComponent(comp)) throw new Error(comp + " does not extend " + Component + ".");
@@ -493,7 +495,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				if (type == null) throw new Error("Type must be non-null.");
 			}
 			var name : String = type + "";
-			name = name.charAt(8).toLowerCase() + name.slice(8, name.length-1);
+			name = name.charAt(7).toLowerCase() + name.slice(8, name.length-1);
 			if (this.hasOwnProperty(name))
 			{
 				return this[name];
@@ -524,6 +526,24 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			
 			_parent.unparentChild(this);
 			_parent = null;
+		}
+		
+		public function clone() : GameObject
+		{
+			return cloneRecursive(parent);
+		}
+		private function cloneRecursive(newParent : GameObject) : GameObject
+		{
+			var copy : GameObject = new GameObject(name, newParent);
+			for each(var comp : Component in _components)
+			{
+				copy.addComponent(Class(getDefinitionByName(getQualifiedClassName(comp)))).copyFrom(comp);
+			}
+			for each(var child : GameObject in _children)
+			{
+				child.cloneRecursive(copy);
+			}
+			return copy;
 		}
 		
 		/**
@@ -940,6 +960,102 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				return _parent.toString() + "." + _name;
 			}
 			return _name;
+		}
+		/**
+		 * The current state this GameObject's hierachy represented in XML.
+		 */
+		public function get hierachy() : XML
+		{
+			var root : XML = new XML("<" + _name + "/>");
+			for each(var child : GameObject in _children)
+			{
+				root.appendChild(child.hierachy);
+			}
+			return root;
+		}
+		/**
+		 * Just like <code>hierachy</code> but includes information about the components too.
+		 */
+		public function get description() : XML
+		{
+			var gameObjectNS : Namespace = new Namespace("GameObject");
+			var componentNS : Namespace = new Namespace("Component");
+			
+			var root : XML = new XML("<" + _name + "/>");
+			for each(var component : Component in _components)
+			{
+				var compName : String = getQualifiedClassName(component);
+				compName = compName.slice(compName.lastIndexOf(":") + 1);
+				root.appendChild(XML("<" + compName + "/>"))
+			}
+			for each(var child : GameObject in _children)
+			{
+				root.appendChild(child.description);
+			}
+			return root;
+		}
+		/**
+		 * Use this to view the current GameObject hierachy.
+		 * @param logComponents, true will trace out the component types currently added to each GameObject.
+		 */
+		public function logHierachy(logComponents : Boolean = false) : void
+		{
+			var components : String = "";
+			if (logComponents)
+			{
+				var i : int = _components.length;
+				var compNames : Vector.<String> = new Vector.<String>(i);
+				while(i--)
+				{
+					compNames[i] = getQualifiedClassName(_components[i]);
+					compNames[i] = compNames[i].slice(compNames[i].lastIndexOf(":") + 1);
+				}
+				components = ": [" + compNames.join(", ") + "]";
+			}
+			trace(_name + components + "\n{");
+			
+			var target : GameObject = this;
+			var depth : String = "";
+			var indexStack : Vector.<uint> = new <uint>[0];
+			while (indexStack.length > 0)
+			{
+				var index : uint = indexStack[indexStack.length - 1];
+				if (index < target._children.length)
+				{
+					target = target._children[index];
+					indexStack[indexStack.length - 1]++;
+					components = "";
+					if (logComponents)
+					{
+						i = target._components.length;
+						compNames = new Vector.<String>(i);
+						while(i--)
+						{
+							compNames[i] = getQualifiedClassName(target._components[i]);
+							compNames[i] = compNames[i].slice(compNames[i].lastIndexOf(":") + 1);
+						}
+						components = ": [" + compNames.join(", ") + "]";
+					}
+					
+					if (target._children.length)
+					{
+						indexStack.push(0);
+						trace((depth += "\t") + target.name + components + "\n" + depth + "{");
+					}
+					else
+					{
+						trace(depth + "\t" + target.name + components);
+						target = target._parent;
+					}
+				}
+				else
+				{
+					trace(depth + "}");
+					indexStack.pop();
+					target = target._parent;
+					depth = depth.slice(0, -1);
+				}
+			}
 		}
 		/**
 		 * Use this instead of trace when possible.

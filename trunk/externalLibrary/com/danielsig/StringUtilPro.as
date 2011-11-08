@@ -10,8 +10,9 @@ package com.danielsig
 		{
 			return getHashRaw(string) % 0xFF;
 		}
-		public static function startsWith(string : String, pattern : *) : Boolean
+		public static function startsWith(string : String, pattern : *, i : uint = 0) : Boolean
 		{
+			if(i) return string.slice(i).search(pattern) == 0;
 			return string.search(pattern) == 0;
 		}
 		public static function endsWith(string : String, pattern : *) : Boolean
@@ -25,7 +26,7 @@ package com.danielsig
 				regx = new RegExp("(" + regx.source.replace(/\$/g, "") + ")$", (regx.ignoreCase ? "i" : "") + (regx.multiline ? "m" : "") + (regx.extended ? "x" : "") + "g");
 				return regx.test(string);
 			}
-			return string.lastIndexOf(pattern) == 0;
+			return string.lastIndexOf(pattern) == string.length - pattern.length;
 		}
 		public static function reverseCharAt(string : String, index : int = 0) : String
 		{

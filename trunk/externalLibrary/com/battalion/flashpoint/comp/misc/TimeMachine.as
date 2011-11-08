@@ -20,9 +20,9 @@ package com.battalion.flashpoint.comp.misc
 		/** @private **/
 		public function fixedUpdate() : void 
 		{
-			if (FlashPoint.timeScale > 0.15 && Input.pressButton("slower"))
+			if (FlashPoint.timeScale > 0.08 && Input.pressButton("slower"))
 			{
-				FlashPoint.timeScale -= 0.1;
+				FlashPoint.timeScale -= 0.05;
 			}
 			if (FlashPoint.timeScale < 10 && Input.pressButton("faster"))
 			{

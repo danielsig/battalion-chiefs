@@ -607,7 +607,9 @@ package com.battalion.powergrid
 											var nx : Number = dx * invLength;
 											var ny : Number = dy * invLength;
 											length -= r;
-											var invMass : Number = length / (circle._mass + otherCircle._mass);
+											var invMass : Number = circle._mass + otherCircle._mass;
+											if (invMass > 0) invMass = length / invMass
+											else invMass = length;
 											
 											circle.x -= nx * otherCircle._mass * invMass;
 											circle.y -= ny * otherCircle._mass * invMass;
@@ -863,10 +865,8 @@ package com.battalion.powergrid
 							
 							if (triangle.layers & _tiles[i])
 							{
-								if (resolveTriangleVsTile(triangle, i, timeScale))
-								{
-									collision = true;
-								}
+								collision = true;
+								resolveTriangleVsTile(triangle, i, timeScale);
 							}
 							
 							//check for collisions with other rigidbodies
@@ -1019,7 +1019,7 @@ package com.battalion.powergrid
 				}
 			}
 			
-			if (!(nx & ny)) ny = 1;
+			if (!nx && !ny) ny = 1;
 			if (nx * gravityX + ny * gravityY < 0) body.resting += timeScale * restingSpeed;
 			if (body.group)
 			{
@@ -1360,6 +1360,16 @@ package com.battalion.powergrid
 			var tileRight : Number = tileLeft + unitSize;
 			var tileBottom : Number = tileTop + unitSize;
 			
+			var onLeftBound : Boolean = tileX <= 0;
+			var onRightBound : Boolean = tileX >= _widthUint - 1;
+			var onTopBound : Boolean = tileY <= 0;
+			var onBottomBound : Boolean = tile + _widthUint >= _length;
+			
+			var tileOnLeft : uint = (onLeftBound ? uint.MAX_VALUE : (onRightBound ? 0 : _tiles[tile-1])) & triangle.layers;
+			var tileOnRight : uint = (onRightBound ? uint.MAX_VALUE : (onLeftBound ? 0 : _tiles[tile+1])) & triangle.layers;
+			var tileOnTop : uint = (onTopBound ? uint.MAX_VALUE : (onBottomBound ? 0 : _tiles[tile-_widthUint])) & triangle.layers;
+			var tileOnBottom : uint = (onBottomBound ? uint.MAX_VALUE : (onTopBound ? 0 : _tiles[tile+_widthUint])) & triangle.layers;
+			
 			var moveX : Number = 0, moveY : Number = 0, move : Number = Number.NEGATIVE_INFINITY;
 			var axisX : Number = 0, axisY : Number = 0;
 			var pointX : Number = 0, pointY : Number = 0;
@@ -1376,7 +1386,7 @@ package com.battalion.powergrid
 			var absDx : Number = dx > 0 ? dx : -dx;
 			var absDy : Number = dy > 0 ? dy : -dy;
 			
-			var tileAbove : Boolean = (tile < _widthUint || (_tiles[tile - _widthUint] & triangle.layers)) && dy > 0;
+			var doSide : Boolean = !(dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom);
 			
 			if (p1x > tileLeft && p1x < tileRight && p1y > tileTop && p1y < tileBottom)
 			{
@@ -1388,14 +1398,14 @@ package com.battalion.powergrid
 				if (currentMoveX < 0) currentMoveX = -currentMoveX;
 				if (currentMoveY < 0) currentMoveY = -currentMoveY;
 				
-				if (absDx > absDy || tileAbove)
+				if (absDx > absDy && currentMoveX > move && doSide)
 				{
 					move = currentMoveX;
 					moveX = colX - p1x;
 					moveY = axisY = 0; axisX = colX > p1x ? 1 : -1;
 					pointX = p1x; pointY = p1y;
 				}
-				else
+				else if(currentMoveY > move && !doSide)
 				{
 					move = currentMoveY;
 					moveY = colY - p1y;
@@ -1413,14 +1423,14 @@ package com.battalion.powergrid
 				if (currentMoveX < 0) currentMoveX = -currentMoveX;
 				if (currentMoveY < 0) currentMoveY = -currentMoveY;
 				
-				if (absDx > absDy && currentMoveX > move || tileAbove)
+				if (absDx > absDy && currentMoveX > move && doSide)
 				{
 					move = currentMoveX;
 					moveX = colX - p2x;
 					moveY = axisY = 0; axisX = colX > p2x ? 1 : -1;
 					pointX = p2x; pointY = p2y;
 				}
-				else if (currentMoveY > move)
+				else if (currentMoveY > move && !doSide)
 				{
 					move = currentMoveY;
 					moveY = colY - p2y;
@@ -1438,14 +1448,14 @@ package com.battalion.powergrid
 				if (currentMoveX < 0) currentMoveX = -currentMoveX;
 				if (currentMoveY < 0) currentMoveY = -currentMoveY;
 				
-				if (absDx > absDy && currentMoveX > move || tileAbove)
+				if (absDx > absDy && currentMoveX > move && doSide)
 				{
 					move = currentMoveX;
 					moveX = colX - p3x;
 					moveY = axisY = 0; axisX = colX > p3x ? 1 : -1;
 					pointX = p3x; pointY = p3y;
 				}
-				else if (currentMoveY > move)
+				else if (currentMoveY > move && !doSide)
 				{
 					move = currentMoveY;
 					moveY = colY - p3y;
@@ -1454,123 +1464,135 @@ package com.battalion.powergrid
 				}
 			}
 			
-			var left : Number = tileLeft - triangle.x;
-			var right : Number = tileRight - triangle.x;
-			var top : Number = tileTop - triangle.y;
-			var bottom : Number = tileBottom - triangle.y;
-			
-			var dot1a : Number = triangle.gn12x * left + triangle.gn12y * top - triangle.n12d;
-			var dot2a : Number = triangle.gn23x * left + triangle.gn23y * top - triangle.n23d;
-			var dot3a : Number = triangle.gn31x * left + triangle.gn31y * top - triangle.n31d;
-			
-			var dot1b : Number = triangle.gn12x * right + triangle.gn12y * top - triangle.n12d;
-			var dot2b : Number = triangle.gn23x * right + triangle.gn23y * top - triangle.n23d;
-			var dot3b : Number = triangle.gn31x * right + triangle.gn31y * top - triangle.n31d;
-			
-			var dot1c : Number = triangle.gn12x * left + triangle.gn12y * bottom - triangle.n12d;
-			var dot2c : Number = triangle.gn23x * left + triangle.gn23y * bottom - triangle.n23d;
-			var dot3c : Number = triangle.gn31x * left + triangle.gn31y * bottom - triangle.n31d;
-			
-			var dot1d : Number = triangle.gn12x * right + triangle.gn12y * bottom - triangle.n12d;
-			var dot2d : Number = triangle.gn23x * right + triangle.gn23y * bottom - triangle.n23d;
-			var dot3d : Number = triangle.gn31x * right + triangle.gn31y * bottom - triangle.n31d;
-			
-			if (dot1a > 0 && dot1b > 0 && dot1c > 0 && dot1d > 0) return false;
-			if (dot1a < dot1b && dot1a < dot1c && dot1a < dot1d)
+			if (move == -Infinity)
 			{
-				if (dot1a > move)
+				
+				var left : Number = tileLeft - triangle.x;
+				var right : Number = tileRight - triangle.x;
+				var top : Number = tileTop - triangle.y;
+				var bottom : Number = tileBottom - triangle.y;
+				
+				var dot1a : Number = triangle.gn12x * left + triangle.gn12y * top - triangle.n12d;
+				var dot2a : Number = triangle.gn23x * left + triangle.gn23y * top - triangle.n23d;
+				var dot3a : Number = triangle.gn31x * left + triangle.gn31y * top - triangle.n31d;
+				
+				var dot1b : Number = triangle.gn12x * right + triangle.gn12y * top - triangle.n12d;
+				var dot2b : Number = triangle.gn23x * right + triangle.gn23y * top - triangle.n23d;
+				var dot3b : Number = triangle.gn31x * right + triangle.gn31y * top - triangle.n31d;
+				
+				var dot1c : Number = triangle.gn12x * left + triangle.gn12y * bottom - triangle.n12d;
+				var dot2c : Number = triangle.gn23x * left + triangle.gn23y * bottom - triangle.n23d;
+				var dot3c : Number = triangle.gn31x * left + triangle.gn31y * bottom - triangle.n31d;
+				
+				var dot1d : Number = triangle.gn12x * right + triangle.gn12y * bottom - triangle.n12d;
+				var dot2d : Number = triangle.gn23x * right + triangle.gn23y * bottom - triangle.n23d;
+				var dot3d : Number = triangle.gn31x * right + triangle.gn31y * bottom - triangle.n31d;
+				
+				var aInside : Boolean = dot1a < 0 && dot2a < 0 && dot3a < 0;
+				var bInside : Boolean = dot1b < 0 && dot2b < 0 && dot3b < 0;
+				var cInside : Boolean = dot1c < 0 && dot2c < 0 && dot3c < 0;
+				var dInside : Boolean = dot1d < 0 && dot2d < 0 && dot3d < 0;
+				
+				//if (move == -Infinity && !(aInside || bInside || cInside || dInside)) return false;
+				if (dot1a > 0 && dot1b > 0 && dot1c > 0 && dot1d > 0) return false;
+				if (dot2a > 0 && dot2b > 0 && dot2c > 0 && dot2d > 0) return false;
+				if (dot3a > 0 && dot3b > 0 && dot3c > 0 && dot3d > 0) return false;
+				
+				
+				if (dot1a < dot1b && dot1a < dot1c && dot1a < dot1d)
 				{
-					axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1a;
-					pointX = tileLeft; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					if (dot1a > move && aInside)
+					{
+						axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1a;
+						pointX = tileLeft; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot1b < dot1c && dot1b < dot1d)
+				{
+					if (dot1b > move && bInside)
+					{
+						axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1b;
+						pointX = tileRight; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot1c < dot1d)
+				{
+					if (dot1c > move && cInside)
+					{
+						axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1c;
+						pointX = tileLeft; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot1d > move && dInside)
+				{
+					axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1d;
+					pointX = tileRight; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
+				}
+				
+				
+				if (dot2a < dot2b && dot2a < dot2c && dot2a < dot2d)
+				{
+					if (dot2a > move && aInside)
+					{
+						axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2a;
+						pointX = tileLeft; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot2b < dot2c && dot2b < dot2d)
+				{
+					if (dot2b > move && bInside)
+					{
+						axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2b;
+						pointX = tileRight; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot2c < dot2d)
+				{
+					if (dot2c > move && cInside)
+					{
+						axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2c;
+						pointX = tileLeft; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot2d > move && dInside)
+				{
+					axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2d;
+					pointX = tileRight; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
+				}
+				
+				
+				if (dot3a < dot3b && dot3a < dot3c && dot3a < dot3d)
+				{
+					if (dot3a > move && aInside)
+					{
+						axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3a;
+						pointX = tileLeft; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot3b < dot3c && dot3b < dot3d)
+				{
+					if (dot3b > move && bInside)
+					{
+						axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3b;
+						pointX = tileRight; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot3c < dot3d)
+				{
+					if (dot3c > move && cInside)
+					{
+						axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3c;
+						pointX = tileLeft; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
+					}
+				}
+				else if (dot3d > move && dInside)
+				{
+					axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3d;
+					pointX = tileRight; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
 				}
 			}
-			else if (dot1b < dot1c && dot1b < dot1d)
-			{
-				if (dot1b > move)
-				{
-					axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1b;
-					pointX = tileRight; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot1c < dot1d)
-			{
-				if (dot1c > move)
-				{
-					axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1c;
-					pointX = tileLeft; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot1d > move)
-			{
-				axisX = -triangle.gn12x; axisY = -triangle.gn12y; move = dot1d;
-				pointX = tileRight; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
-			}
 			
-			
-			if (dot2a > 0 && dot2b > 0 && dot2c > 0 && dot2d > 0) return false;
-			if (dot2a < dot2b && dot2a < dot2c && dot2a < dot2d)
-			{
-				if (dot2a > move)
-				{
-					axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2a;
-					pointX = tileLeft; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot2b < dot2c && dot2b < dot2d)
-			{
-				if (dot2b > move)
-				{
-					axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2b;
-					pointX = tileRight; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot2c < dot2d)
-			{
-				if (dot2c > move)
-				{
-					axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2c;
-					pointX = tileLeft; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot2d > move)
-			{
-				axisX = -triangle.gn23x; axisY = -triangle.gn23y; move = dot2d;
-				pointX = tileRight; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
-			}
-			
-			
-			if (dot3a > 0 && dot3b > 0 && dot3c > 0 && dot3d > 0) return false;
-			if (dot3a < dot3b && dot3a < dot3c && dot3a < dot3d)
-			{
-				if (dot3a > move)
-				{
-					axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3a;
-					pointX = tileLeft; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot3b < dot3c && dot3b < dot3d)
-			{
-				if (dot3b > move)
-				{
-					axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3b;
-					pointX = tileRight; pointY = tileTop; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot3c < dot3d)
-			{
-				if (dot3c > move)
-				{
-					axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3c;
-					pointX = tileLeft; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
-				}
-			}
-			else if (dot3d > move)
-			{
-				axisX = -triangle.gn31x; axisY = -triangle.gn31y; move = dot3d;
-				pointX = tileRight; pointY = tileBottom; moveX = -axisX * move; moveY = -axisY * move;
-			}
-			
-			if (moveX || moveY || move)
+			if (move != -Infinity)
 			{
 				/*
 				stage.graphics.beginFill(0x00FF00);
@@ -1672,7 +1694,10 @@ package com.battalion.powergrid
 					
 					var triangleMass : Number = triangle._mass;
 					var circleMass : Number = circle._mass;
-					var invMass : Number = 1 / (triangleMass + circleMass);
+					
+					var invMass : Number = triangleMass + circleMass;
+					if (invMass > 0) invMass = 1 / invMass;
+					else invMass = 1;
 					
 					length -= circle.radius;
 					
