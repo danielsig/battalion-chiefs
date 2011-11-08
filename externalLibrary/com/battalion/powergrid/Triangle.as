@@ -196,19 +196,19 @@ package com.battalion.powergrid
 		
 		// ------------  NORMALS  --------------
 		/** @private **/
-		internal var gn12x : Number;
+		public var gn12x : Number;
 		/** @private **/
-		internal var gn12y : Number;
+		public var gn12y : Number;
 		
 		/** @private **/
-		internal var gn23x : Number;
+		public var gn23x : Number;
 		/** @private **/
-		internal var gn23y : Number;
+		public var gn23y : Number;
 		
 		/** @private **/
-		internal var gn31x : Number;
+		public var gn31x : Number;
 		/** @private **/
-		internal var gn31y : Number;
+		public var gn31y : Number;
 		
 		/**
 		 * scale the vertices by <code>scalar</code>.

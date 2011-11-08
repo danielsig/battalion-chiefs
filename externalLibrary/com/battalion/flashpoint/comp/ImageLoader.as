@@ -17,6 +17,14 @@ package com.battalion.flashpoint.comp
 		{
 			e.target.removeEventListener(Event.COMPLETE, onNamedBitmapLoaded);
 			Renderer._bitmaps[name] = (e.target.content as Bitmap).bitmapData;
+			if (Renderer._filterQueue[name])
+			{
+				for each(var obj : Object in Renderer._filterQueue[name])
+				{
+					Renderer.filter(name, obj.t, obj.r);
+				}
+				delete Renderer._filterQueue[name];
+			}
 			for each(var subscriber : Renderer in subscribers)
 			{
 				subscriber.setBitmapByName(name);

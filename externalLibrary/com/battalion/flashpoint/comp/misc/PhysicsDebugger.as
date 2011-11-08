@@ -5,6 +5,7 @@ package com.battalion.flashpoint.comp.misc
 	import com.battalion.flashpoint.core.IExclusiveComponent;
 	import com.battalion.powergrid.*;
 	import com.battalion.Input;
+	import com.danielsig.ColorFactory;
 	import flash.display.Sprite;
 	import flash.display.Graphics;
 	import flash.geom.Point;
@@ -23,6 +24,11 @@ package com.battalion.flashpoint.comp.misc
 		
 		private var _debugGraphics : Graphics;
 		
+		private var _maxDensity : Number = 1;
+		private var _maxInvDensity : Number;
+		
+		public var alpha : Number = 0.7;
+		
 		/** @private */
 		public function update() : void
 		{
@@ -32,6 +38,9 @@ package com.battalion.flashpoint.comp.misc
 				_debugGraphics.clear();
 				if (Input.hold(Keyboard.SPACE))
 				{
+					drawGrid(false);
+					_maxInvDensity = 1 / _maxDensity;
+					_maxDensity = 0;
 					debugSprite.scaleX = debugSprite.scaleY = 1 / world.cam.transform.scale;
 					debugSprite.x = 400 + (Physics.gridOffset.x - world.cam.transform.x) * debugSprite.scaleX;
 					debugSprite.y = 225 + (Physics.gridOffset.y - world.cam.transform.y) * debugSprite.scaleX;
@@ -42,14 +51,17 @@ package com.battalion.flashpoint.comp.misc
 					PowerGrid.forEachTriangle(drawTriangle);
 					PowerGrid.forEachGroup(drawGroup);
 					_debugGraphics.endFill();
-					drawGrid(false);
 				}
 			}
 		}
 		/** @private */
 		public function drawCircle(circle : Circle, sleeping : Boolean = false) : void
 		{
-			_debugGraphics.beginFill(sleeping ? 0x666666 : 0x22BB22, 0.3);
+			var density : Number = circle.mass / circle.volume;
+ 			if (density > _maxDensity) _maxDensity = density;
+			if (circle.parent) density = circle.parent.mass / circle.parent.volume;
+			
+			_debugGraphics.beginFill(sleeping ? 0x666666 : ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			_debugGraphics.drawCircle(circle.x, circle.y, circle.radius);
 			/*_debugGraphics.beginFill(0x00FF00);
 			for each(var contact : Contact in circle.contacts)
@@ -61,33 +73,58 @@ package com.battalion.flashpoint.comp.misc
 		/** @private */
 		public function drawTriangle(triangle : Triangle, sleeping : Boolean = false) : void
 		{
-			_debugGraphics.beginFill(sleeping ? 0x666666 : 0x22BB22, 0.3);
+			var density : Number = triangle.mass / triangle.volume;
+ 			if (density > _maxDensity) _maxDensity = density;
+			if (triangle.parent) density = triangle.parent.mass / triangle.parent.volume;
+			
+			_debugGraphics.lineStyle(1, 0x000000);
+			_debugGraphics.beginFill(sleeping ? 0x666666 : ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			_debugGraphics.moveTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
 			_debugGraphics.lineTo(triangle.gx2 + triangle.x, triangle.gy2 + triangle.y);
 			_debugGraphics.lineTo(triangle.gx3 + triangle.x, triangle.gy3 + triangle.y);
 			_debugGraphics.lineTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
+			
+			_debugGraphics.moveTo(triangle.x + (triangle.gx1 + triangle.gx2) * 0.5					   , triangle.y + (triangle.gy1 + triangle.gy2) * 0.5);
+			_debugGraphics.lineStyle(1, 0xFF0000, 1);
+			_debugGraphics.lineTo(triangle.x + (triangle.gx1 + triangle.gx2) * 0.5 + triangle.gn12x * 5, triangle.y + (triangle.gy1 + triangle.gy2) * 0.5 + triangle.gn12y * 5);
+			_debugGraphics.moveTo(triangle.x + (triangle.gx2 + triangle.gx3) * 0.5					   , triangle.y + (triangle.gy2 + triangle.gy3) * 0.5);
+			_debugGraphics.lineStyle(1, 0x00FF00, 1);
+			_debugGraphics.lineTo(triangle.x + (triangle.gx2 + triangle.gx3) * 0.5 + triangle.gn23x * 5, triangle.y + (triangle.gy2 + triangle.gy3) * 0.5 + triangle.gn23y * 5);
+			_debugGraphics.moveTo(triangle.x + (triangle.gx3 + triangle.gx1) * 0.5					   , triangle.y + (triangle.gy3 + triangle.gy1) * 0.5);
+			_debugGraphics.lineStyle(1, 0x0000FF, 1);
+			_debugGraphics.lineTo(triangle.x + (triangle.gx3 + triangle.gx1) * 0.5 + triangle.gn31x * 5, triangle.y + (triangle.gy3 + triangle.gy1) * 0.5 + triangle.gn31y * 5);
+			
 			_debugGraphics.beginFill(0x00FF00);
+			_debugGraphics.lineStyle(1, 0x00FFFF);
 			for each(var contact : Contact in triangle.contacts)
 			{
-				_debugGraphics.drawCircle(contact.x, contact.y, 4);
+				var x : Number = contact.x + (triangle.x - (triangle.parent || triangle).x);
+				var y : Number = contact.y + (triangle.y - (triangle.parent || triangle).y);
+				_debugGraphics.drawCircle(x, y, 1);
+				_debugGraphics.moveTo(x, y);
+				_debugGraphics.lineTo(x + contact.nx * 10, y + contact.ny * 10);
 			}
+			_debugGraphics.lineStyle(1, 0, 0);
 			_debugGraphics.beginFill(0x22BB22, 0.3);
 		}
 		/** @private */
 		public function drawGroup(group : Group) : void
 		{
+			var density : Number = group.mass / group.volume;
+ 			if (density > _maxDensity) _maxDensity = density;
+			
 			_debugGraphics.drawRect(group.x - 8, group.y - 8, 16, 16);
 			var length : int = group.length;
 			for (var i : uint = 0; i < length; i++)
 			{
 				var member : AbstractRigidbody = group.getBodyAt(i);
 			}
-			_debugGraphics.beginFill(0x00FF00);
+			/*_debugGraphics.beginFill(ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			for each(var contact : Contact in group.contacts)
 			{
 				_debugGraphics.drawCircle(contact.x, contact.y, 4);
 			}
-			_debugGraphics.beginFill(0x22BB22, 0.3);
+			_debugGraphics.beginFill(0x22BB22, 0.3);*/
 		}
 		private function drawGrid(onlySleepingBodies : Boolean) : void
 		{

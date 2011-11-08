@@ -1,0 +1,17 @@
+using assets.geomcode.Primitives;
+
+BrickWall
+(
+	height = 10, broken = false, density = 0;
+	height > 0; height--, pos += (0, -24)
+)
+{
+	discrete if(broken)
+	{
+		Box(pos = (-12, -6), width = 24, height = 12, mass = density * 2, color = 0xAA0000, outline = 0x000001);
+		Box(pos = (12, -6), width = 24, height = 12, mass = density * 2, color = 0xAA0000, outline = 0x000001);
+		Box(pos = (0, -18), width = 24, height = 12, mass = density * 2, color = 0xAA0000, outline = 0x000001);
+		Box(pos = (-18, -18), width = 12, height = 12, mass = density, color = 0xAA0000, outline = 0x000001);
+		Box(pos = (18, -18), width = 12, height = 12, mass = density, color = 0xAA0000, outline = 0x000001);
+	}
+}

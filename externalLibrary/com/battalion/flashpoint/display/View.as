@@ -9,6 +9,7 @@ package com.battalion.flashpoint.display
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
 	import com.battalion.flashpoint.comp.Renderer;
 	import com.battalion.flashpoint.comp.TextRenderer;
 	import com.battalion.flashpoint.comp.Camera;
@@ -40,6 +41,7 @@ package com.battalion.flashpoint.display
 		private var _content : Sprite = new Sprite();//to center things
 		private var _layers : Sprite = new Sprite();//to perferm transformation on all layers
 		private var _dynamicLayer : Sprite = new Sprite();
+		private var _textLayer : Sprite = new Sprite();
 		private var _name : String;
 		
 		/** @private **/
@@ -119,6 +121,7 @@ package com.battalion.flashpoint.display
 			_name = "view" + _viewCounter;
 			_bounds = bounds || new Rectangle;
 			_layers.addChild(_dynamicLayer);
+			_layers.addChild(_textLayer);
 			_content.addChild(_layers);
 			_content.x = bounds.width * 0.5;
 			_content.y = bounds.height * 0.5;
@@ -207,41 +210,50 @@ package com.battalion.flashpoint.display
 			while (i--)
 			{
 				var text : TextRenderer = _texts[i];
-				if (text.text)
+				if (text.text || text.htmlText)
 				{
-					if (!_textFields[i]) _textFields[i] = new TextField();
-					if (text.htmlText) _textFields[i].htmlText = text.htmlText;
+					var field : TextField = _textFields[i];
+					if (!field) field = _textFields[i] = new TextField();
+					if (text.htmlText) field.htmlText = text.htmlText;
+					else
+					{
+						field.text = text.text;
+						//Set format for text
+						var format : TextFormat = field.defaultTextFormat;
+						format.font = text.font;
+						format.size = text.size;
+						format.color = text.color;
+						format.bold = text.bold;
+						format.italic = text.italic;
+						format.underline = text.underline;
+						field.defaultTextFormat = format;
+					}
+					field.wordWrap = text.wordWrap;
+					field.width = text.width;
+					field.height = text.height;
+					field.autoSize = TextFieldAutoSize.CENTER;
+					field.selectable = false;
 					
-					//Set format for text
-					var format : TextFormat = new TextFormat();
-					format.font = text.font;
-					format.size = text.size;
-					format.color = text.color;
-					format.bold = text.bold;
-					format.italic = text.italic;
-					format.underline = text.underline;
-					_textFields[i].defaultTextFormat = format;
-					
-					_textFields[i].wordWrap = text.wordWrap;
-					_textFields[i].text = text.text;
-					_textFields[i].width = text.width;
-					_textFields[i].height = text.height;
-					
+					m = text.gameObject.transform.globalMatrix;
 					if (text.offset)
 					{
-						matrix = text.offset.clone();
-						matrix.concat(renderer.gameObject.transform.globalMatrix);
-						_textFields[i].transform.matrix = matrix;
+						var sx : Number = m.a * text.offset.a + m.c * text.offset.c;
+						var sy : Number = m.b * text.offset.b + m.d * text.offset.d;
+						field.scaleX = field.scaleY = Math.sqrt(sx * sx + sy * sy);
+						field.x = m.tx + text.offset.tx - field.textWidth * 0.5 * field.scaleX;
+						field.y = m.ty + text.offset.ty - field.textHeight * 0.5 * field.scaleY;
 					}
 					else
 					{
-						_textFields[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
+						field.scaleX = field.scaleY = Math.sqrt((m.a + m.c) * (m.a + m.c) + (m.b + m.d) * (m.b + m.d));
+						field.x = m.tx - field.textWidth * 0.5 * field.scaleX;
+						field.y = m.ty - field.textHeight * 0.5 * field.scaleY;
 					}
-					_dynamicLayer.addChild(_textFields[i]);
+					_textLayer.addChild(_textFields[i]);
 				}
 				else if (_textFields[i])
 				{
-					_dynamicLayer.removeChild(_textFields[i]);
+					_textLayer.removeChild(_textFields[i]);
 					_textFields[i] = null;
 				}
 			}

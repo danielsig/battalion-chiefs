@@ -83,6 +83,7 @@ package com.battalion.powergrid
 		 * x position.
 		 */
 		public var x : Number = 0;
+		
 		/**
 		 * y position.
 		 */
@@ -110,17 +111,22 @@ package com.battalion.powergrid
 		 */
 		public var layers : uint = 1;
 		
+		/**
+		 * A property to store user data
+		 */
+		public var userData : Object = {};
+		
 		/** @private **/
 		internal var nodes : BodyNode;
 		
 		/** @private **/
 		internal var group : Group = null;
-		/** @private **/
-		internal var relativeX : Number = 0;
-		/** @private **/
-		internal var relativeY : Number = 0;
-		/** @private **/
-		internal var relativeA : Number = 0;
+		/** If this body is in a group than this is the x-position relative to the group's position and rotation. **/
+		public var relativeX : Number = 0;
+		/** If this body is in a group than this is the y-position relative to the group's position and rotation. **/
+		public var relativeY : Number = 0;
+		/** If this body is in a group than this is the rotation relative to the group's rotation. **/
+		public var relativeA : Number = 0;
 		
 		/** @private **/
 		internal var prevLower : uint = uint.MAX_VALUE;

@@ -4,6 +4,7 @@ package com.battalion.flashpoint.core
 	import com.battalion.powergrid.*;
 	import flash.filters.ConvolutionFilter;
 	import flash.geom.Point;
+	import flash.geom.Matrix;
 	
 	/**
 	 * A Rigidbody, add this alone with a Collider to a GameObject to make it react to collisions.
@@ -31,6 +32,10 @@ package com.battalion.flashpoint.core
 		private var _vx : Number = 0;
 		private var _vy : Number = 0;
 		private var _va : Number = 0;
+		/** @private **/
+		internal var _density : Number = NaN;
+		/** @private **/
+		internal var _massDistribution : Number = NaN;
 		
 		/**
 		 * Determines if this rigidbody is affected by gravity or not, default is true.
@@ -47,11 +52,15 @@ package com.battalion.flashpoint.core
 		 * This value is not the same as the mass.
 		 * The density can be found using the formula: density = mass / volume.
 		 */
-		public function get density() : Number { return _mass / (body ? body.volume : 1); }
+		public function get density() : Number
+		{
+			if (body) return _mass / body.volume;
+			return isNaN(_density) ? 1 : _density;
+		}
 		public function set density(value : Number) : void
 		{
-			_mass = value * body.volume;
-			if (body) body.mass = _mass;
+			_density = value;
+			if (body) body.mass = _mass = value * body.volume;
 		}
 		
 		/**
@@ -62,11 +71,15 @@ package com.battalion.flashpoint.core
 		 * In other words: massDistribution = inertia / volume.
 		 * for comparison: density = mass / volume.
 		 */
-		public function get massDistribution() : Number { return _inertia / (body ? body.volume : 1); }
+		public function get massDistribution() : Number
+		{
+			if (body) return _inertia / body.volume;
+			return isNaN(_massDistribution) ? 1 : _massDistribution;
+		}
 		public function set massDistribution(value : Number) : void
 		{
-			_inertia = value * body.volume;
-			if (body) body.inertia = _inertia;
+			_massDistribution = value;
+			if (body) body.inertia = _inertia = value * body.volume;
 		}
 		
 		/**
@@ -159,6 +172,53 @@ package com.battalion.flashpoint.core
 			_freeze = value;
 			if (body) body.inertia = value ? Infinity : _inertia;
 		}
+		
+		public function touchingInDirection(normal : Point, thresholdSquared : Number) : Vector.<ContactPoint>
+		{
+			var contacts : Vector.<Contact> = body.contacts;
+			if (!contacts) return null;
+			thresholdSquared = 1 - thresholdSquared;
+			var nx : Number = -normal.x;
+			var ny : Number = -normal.y;
+			var insert : uint = 0;
+			var length : uint = contacts.length;
+			for (var i : uint = 0; i < length; i++)
+			{
+				if (contacts[i].nx * nx + contacts[i].ny * ny > thresholdSquared)
+				{
+					contacts[insert++] = contacts[i];
+				}
+			}
+			if (!insert) return null;
+			var points : Vector.<ContactPoint> = new Vector.<ContactPoint>(insert);
+			while(insert--)
+			{
+				points[insert] = new ContactPoint(contacts[insert]);
+			}
+			return points;
+		}
+		public function touching(collider : Collider) : Vector.<ContactPoint>
+		{
+			var contacts : Vector.<Contact> = body.contacts;
+			if (!contacts) return null;
+			var insert : uint = 0;
+			var length : uint = contacts.length;
+			for (var i : uint = 0; i < length; i++)
+			{
+				if (contacts[i].other.thisBody.userData == collider)
+				{
+					contacts[insert++] = contacts[i];
+				}
+			}
+			if (!insert) return null;
+			var points : Vector.<ContactPoint> = new Vector.<ContactPoint>(insert);
+			while(insert--)
+			{
+				points[insert] = new ContactPoint(contacts[insert]);
+			}
+			return points;
+		}
+		
 		public function addTorque(torque : Number, mode : uint = ForceMode.FORCE) : void
 		{
 			switch(mode)
@@ -284,6 +344,7 @@ package com.battalion.flashpoint.core
 		/** @private */
 		internal final function syncPhysics() : IPhysicsSyncable 
 		{
+			// updating the body
 			var bod : AbstractRigidbody = _this.body;
 			var changed : int = _transform._changed;
 			
@@ -301,6 +362,86 @@ package com.battalion.flashpoint.core
 			
 			if (changed && bod.isSleeping()) bod.wakeUp();
 			
+			//updating in case this collider is not on a root gameobject
+			if (_this.subColliders)
+			{
+				var groupChange : Boolean = false;
+				for each(var collider : Collider in _this.subColliders)
+				{
+					var transform : Transform = collider._gameObject.transform;
+					changed = transform._changed;
+					
+					if (collider is BoxCollider)
+					{
+						var triangle1 : Triangle = (collider as BoxCollider).triangle1;
+						var triangle2 : Triangle = (collider as BoxCollider).triangle2;
+						var parent : GameObject = collider._gameObject._parent;
+						var parentTransform : Transform = parent.transform;
+						var grandParentTransform : Transform = parent._parent.transform;
+						
+						if (changed & 1)
+						{
+							triangle1.relativeA = triangle2.relativeA = transform.rotation;
+						}
+						else
+						{
+							transform.rotation = triangle1.relativeA;
+						}
+						if (changed & 6)
+						{
+							if (parentTransform == _transform)
+							{
+								var matrix : Matrix = transform.matrix;
+							}
+							else
+							{
+								matrix = transform.matrix.clone();
+								matrix.concat(parentTransform.matrix);
+							}
+							var width : Number = (collider as BoxCollider).width;
+							var height : Number = (collider as BoxCollider).height;
+							
+							triangle1.relativeX = matrix.tx + matrix.a * width * 0.16 + matrix.b * height * 0.16;
+							triangle1.relativeY = matrix.ty + matrix.b * width * 0.16 - matrix.a * height * 0.16;
+							triangle2.relativeX = matrix.tx - (matrix.a * width * 0.16 + matrix.b * height * 0.16);
+							triangle2.relativeY = matrix.ty - (matrix.b * width * 0.16 - matrix.a * height * 0.16);
+						}
+						else if (parentTransform == _transform)
+						{
+							transform.x = (triangle1.relativeX + triangle2.relativeX) * 0.5;
+							transform.y = (triangle1.relativeY + triangle2.relativeY) * 0.5;
+						}
+						else
+						{
+							var pos : Point = new Point((triangle1.relativeX + triangle2.relativeX) * 0.5, (triangle1.relativeY + triangle2.relativeY) * 0.5);
+							matrix = parentTransform.matrix.clone();
+							matrix.invert();
+							pos = matrix.transformPoint(pos);
+							
+							transform.x = pos.x;
+							transform.y = pos.y;
+						}
+					}
+					else
+					{
+						bod = collider.body;
+						if (changed & 1) bod.relativeA = transform.rotation;
+						else transform.rotation = bod.relativeA;
+						if (changed & 2) bod.relativeX = transform.x;
+						else transform.x = bod.relativeX;
+						if (changed & 4) bod.relativeY = transform.y;
+						else transform.y = bod.relativeY;
+						
+						transform._physicsX = bod.relativeX;
+						transform._physicsY = bod.relativeY;
+						transform._physicsRotation = bod.relativeA;
+					}
+					transform._changed = 0;
+					groupChange ||= changed & 6;
+				}
+				if (groupChange) _this.body.computeCenterOfMass();
+			}
+			//continue
 			return _next;
 		}
 	}

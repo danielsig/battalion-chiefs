@@ -130,6 +130,7 @@ package com.battalion.flashpoint.core
 			body = new Triangle();
 			
 			var triangle : Triangle = body as Triangle;
+			triangle.userData = this;
 			
 			triangle.x1 = -1;
 			triangle.x2 = 0;

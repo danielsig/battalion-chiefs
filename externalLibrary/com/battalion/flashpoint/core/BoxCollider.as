@@ -13,8 +13,10 @@ package com.battalion.flashpoint.core
 		private var _width : Number = 1;
 		private var _height : Number = 1;
 		
-		private var triangle1 : Triangle;
-		private var triangle2 : Triangle;
+		/** @private **/
+		internal var triangle1 : Triangle;
+		/** @private **/
+		internal var triangle2 : Triangle;
 		
 		public override function get layers() : uint
 		{
@@ -79,6 +81,7 @@ package com.battalion.flashpoint.core
 			body = BodyFactory.createBox(_width, _height);
 			triangle1 = (body as Group).getBodyAt(0) as Triangle;
 			triangle2 = (body as Group).getBodyAt(1) as Triangle;
+			triangle1.userData = triangle2.userData = this;
 			
 			triangle1.friction = material._friction;
 			triangle1.bounciness = material._bounciness;

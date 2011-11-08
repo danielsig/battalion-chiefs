@@ -44,6 +44,8 @@ package com.battalion.flashpoint.core
 			{
 				return GameObject.WORLD;
 			}
+			protected var _privateMemberNames : Vector.<String> = new <String>["_gameObject"];
+			protected function getPrivate(name : String) : * { return this[name]; }
 		}
 		/**
 		 * The world GameObject.
@@ -73,6 +75,21 @@ package com.battalion.flashpoint.core
 				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
 			}
 			removeComponent(this);
+		}
+		/**
+		 * Copy properties from another component of the same type
+		 * @param	original
+		 */
+		public function copyFrom(original : Component) : void
+		{
+			var info : XMLList = describeType(original).children();
+			for each(var member : XML in info)
+			{
+				if ((member.name() == "variable" || member.name() == "accessor"))
+				{
+					this[member.@name] = original[member.@name];
+				}
+			}
 		}
 		/** @private **/
 		internal final function destroyConcise(message : String) : void
@@ -425,12 +442,40 @@ package com.battalion.flashpoint.core
 		 */
 		public function logOn(gameObjectName : String, ...args) : Boolean
 		{
-			if (gameObject.name == gameObjectName)
+			CONFIG::debug
 			{
-				log.apply(this, args);
-				return true;
+				if (gameObject.name == gameObjectName)
+				{
+					log.apply(this, args);
+					return true;
+				}
 			}
 			return false;
+		}
+		public function logPrivateMembers() : void
+		{
+			CONFIG::debug
+			{
+				var name : String = getQualifiedClassName(this);
+				name = name.slice(name.lastIndexOf("::") + 2);
+				name = name.charAt(0).toLowerCase() + name.slice(1);
+				
+				trace(_gameObject._name + "." + name + ": ");
+				for each(var member : String in _privateMemberNames)
+				{
+					var value : * = getPrivate(member);
+					if (getQualifiedClassName(value) == "Object")
+					{
+						var string : String = "{";
+						for (var valueMember : String in value)
+						{
+							string += valueMember + ":" + value[valueMember] + ", ";
+						}
+						value = string.slice(0, -2) + "}";
+					}
+					trace("\t" + member + ": " + value);
+				}
+			}
 		}
 		/**
 		 * Use this instead of trace when possible.
