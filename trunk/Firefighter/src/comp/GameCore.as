@@ -1,7 +1,6 @@
 package comp
 {
 	import com.battalion.flashpoint.core.*;
-	import com.danielsig.sgcl.SGCL;
 	import flash.display.BitmapData;
 	import flash.display.Shape;
 	import flash.geom.Matrix;
