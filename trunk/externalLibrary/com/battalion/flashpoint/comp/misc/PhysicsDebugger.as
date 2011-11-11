@@ -30,13 +30,19 @@ package com.battalion.flashpoint.comp.misc
 		public var alpha : Number = 0.7;
 		
 		/** @private */
+		public function awake() : void
+		{
+			Input.assignButton("physicsDebug", "<", "~", "\\");;
+		}
+		
+		/** @private */
 		public function update() : void
 		{
 			if (debugSprite)
 			{
 				_debugGraphics = debugSprite.graphics;
 				_debugGraphics.clear();
-				if (Input.hold(Keyboard.SPACE))
+				if (Input.toggledButton("physicsDebug"))
 				{
 					drawGrid(false);
 					_maxInvDensity = 1 / _maxDensity;
@@ -45,7 +51,6 @@ package com.battalion.flashpoint.comp.misc
 					debugSprite.x = 400 + (Physics.gridOffset.x - world.cam.transform.x) * debugSprite.scaleX;
 					debugSprite.y = 225 + (Physics.gridOffset.y - world.cam.transform.y) * debugSprite.scaleX;
 					
-					_debugGraphics.beginFill(0x22BB22, 0.3);
 					_debugGraphics.lineStyle(0);
 					PowerGrid.forEachCircle(drawCircle);
 					PowerGrid.forEachTriangle(drawTriangle);
@@ -63,6 +68,7 @@ package com.battalion.flashpoint.comp.misc
 			
 			_debugGraphics.beginFill(sleeping ? 0x666666 : ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			_debugGraphics.drawCircle(circle.x, circle.y, circle.radius);
+			_debugGraphics.endFill();
 			/*_debugGraphics.beginFill(0x00FF00);
 			for each(var contact : Contact in circle.contacts)
 			{
@@ -94,7 +100,7 @@ package com.battalion.flashpoint.comp.misc
 			_debugGraphics.lineStyle(1, 0x0000FF, 1);
 			_debugGraphics.lineTo(triangle.x + (triangle.gx3 + triangle.gx1) * 0.5 + triangle.gn31x * 5, triangle.y + (triangle.gy3 + triangle.gy1) * 0.5 + triangle.gn31y * 5);
 			
-			_debugGraphics.beginFill(0x00FF00);
+			_debugGraphics.endFill();
 			_debugGraphics.lineStyle(1, 0x00FFFF);
 			for each(var contact : Contact in triangle.contacts)
 			{
@@ -105,7 +111,6 @@ package com.battalion.flashpoint.comp.misc
 				_debugGraphics.lineTo(x + contact.nx * 10, y + contact.ny * 10);
 			}
 			_debugGraphics.lineStyle(1, 0, 0);
-			_debugGraphics.beginFill(0x22BB22, 0.3);
 		}
 		/** @private */
 		public function drawGroup(group : Group) : void
@@ -113,12 +118,17 @@ package com.battalion.flashpoint.comp.misc
 			var density : Number = group.mass / group.volume;
  			if (density > _maxDensity) _maxDensity = density;
 			
+			_debugGraphics.lineStyle(1, 0, 1);
 			_debugGraphics.drawRect(group.x - 8, group.y - 8, 16, 16);
 			var length : int = group.length;
 			for (var i : uint = 0; i < length; i++)
 			{
 				var member : AbstractRigidbody = group.getBodyAt(i);
 			}
+			_debugGraphics.lineStyle(3, 0xFF0000, 1);
+			_debugGraphics.moveTo(group.x, group.y);
+			_debugGraphics.lineTo(group.x + group.vx * 10, group.y + group.vy * 10);
+			_debugGraphics.lineStyle(1, 0, 1);
 			/*_debugGraphics.beginFill(ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			for each(var contact : Contact in group.contacts)
 			{

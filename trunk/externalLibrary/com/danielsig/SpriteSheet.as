@@ -126,7 +126,7 @@ package com.danielsig
 					var infoX : int = i % sheet.width;
 					var infoY : int = i / sheet.width;
 					var pixel : uint = sheet.getPixel32(infoX, infoY);
-
+					
 					if(pixel == NULL)
 					{
 						//Tracer.TraceLine("#" + i, "NULL");

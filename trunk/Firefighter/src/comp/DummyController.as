@@ -1,6 +1,7 @@
 package comp 
 {
 	
+	import com.battalion.flashpoint.comp.Audio;
 	import com.battalion.flashpoint.comp.Camera;
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.comp.misc.*;
@@ -16,28 +17,34 @@ package comp
 	 */
 	public class DummyController extends Component implements IExclusiveComponent
 	{
-		
-		public var speed : Number = 60;
-		public var backSpeed : Number = 30;
-		public var runSpeed : Number = 120;
-		public var jumpSpeed : Number = 600;
+		public static var cheatsEnabled : Boolean = CONFIG::debug;
+		public var speed : Number = 160;
+		public var backSpeed : Number = 100;
+		public var runSpeed : Number = 240;
+		public var jumpSpeed : Number = 300;
+		public var inAir : Boolean = true;
 		
 		public function awake() : void 
 		{
-			requireComponent(TimeMachine);
-			requireComponent(Zoomer);
+			if (cheatsEnabled)
+			{
+				requireComponent(TimeMachine);
+				requireComponent(Zoomer);
+			}
 			(requireComponent(Rigidbody) as Rigidbody);
-			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.06, new Point(0, -100));
+			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.06, new Point(0, -50));
 			
 			Input.assignDirectional("samusDirection", "d", "a", Keyboard.RIGHT, Keyboard.LEFT);
 			Input.assignButton("shift", Keyboard.SHIFT);
 			Input.assignButton("jump", Keyboard.SPACE);
 			Input.assignButton("crouch", "c");
 			gameObject.transform.scaleY = 3;
+			addComponent(RigidbodyInterpolator);
 		}
 			
 		public function fixedUpdate() : void 
 		{
+			var stopAudio : Boolean = false;
 			var thisPos : Point = (gameObject.transform as Transform).globalPosition;
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
 			var isMouseOnTheLeft : Boolean = mousePos.x < thisPos.x;
@@ -59,10 +66,16 @@ package comp
 					gameObject.animation.reversed = !isMouseOnTheLeft;
 					gameObject.animation.play();
 				}
-				else
+				else if (!inAir)
 				{
 					gameObject.animation.gotoAndPause(4);
-					gameObject.sendMessage("Audio_stop");
+					sendMessage("Audio_stop");
+				}
+				else
+				{
+					trace("inAir");
+					inAir = false;
+					sendMessage("Audio_gotoAndPlay", 200);
 				}
 				if (Input.pressButton("jump"))
 				{
@@ -75,7 +88,8 @@ package comp
 			}
 			else
 			{
-				gameObject.animation.gotoAndPause(4);
+				inAir = true;
+				gameObject.animation.gotoAndPause(5);
 			}
 			if (isMouseOnTheLeft)
 			{
@@ -84,6 +98,11 @@ package comp
 			else
 			{
 				gameObject.transform.scaleX = 3;
+			}
+			if (Input.mouseClick && cheatsEnabled)
+			{
+				gameObject.transform.x += world.cam.transform.mouseRelativeX;
+				gameObject.transform.y += world.cam.transform.mouseRelativeY - 50;
 			}
 		}
 		

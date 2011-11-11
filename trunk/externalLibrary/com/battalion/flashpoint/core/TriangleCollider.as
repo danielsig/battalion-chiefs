@@ -59,7 +59,22 @@ package com.battalion.flashpoint.core
 		 */
 		public function defineSizeAndAnchor(size : Number, anchorX : Number, anchorY : Number, rotation : Number = 0) : void
 		{
-			(body as Triangle).defineForm(size, anchorX, anchorY);
+			var triangle : Triangle = body as Triangle;
+			triangle.defineForm(size, anchorX, anchorY);
+			
+			var dist1 : Number = triangle.x1 * triangle.x1 + triangle.y1 * triangle.y1;
+			var dist2 : Number = triangle.x2 * triangle.x2 + triangle.y2 * triangle.y2;
+			var dist3 : Number = triangle.x3 * triangle.x3 + triangle.y3 * triangle.y3;
+			if (dist1 > dist2 && dist1 > dist3)
+			{
+				if (dist1 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist1) * 1.2;
+			}
+			else if (dist2 > dist3)
+			{
+				if (dist2 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist2) * 1.2;
+			}
+			else if (dist3 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist3) * 1.2;
+			
 			if(rotation != 0) (body as Triangle).rotate(rotation);
 		}
 		
@@ -80,6 +95,19 @@ package com.battalion.flashpoint.core
 			triangle.y1 = p1.y;
 			triangle.y2 = p2.y;
 			triangle.y3 = p3.y;
+			
+			var dist1 : Number = p1.x * p1.x + p1.y * p1.y;
+			var dist2 : Number = p2.x * p2.x + p2.y * p2.y;
+			var dist3 : Number = p2.x * p2.x + p2.y * p2.y;
+			if (dist1 > dist2 && dist1 > dist3)
+			{
+				if (dist1 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist1) * 1.2;
+			}
+			else if (dist2 > dist3)
+			{
+				if (dist2 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist2) * 1.2;
+			}
+			else if (dist3 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist3) * 1.2;
 			
 			triangle.updateVertices();
 		}
@@ -103,6 +131,19 @@ package com.battalion.flashpoint.core
 			triangle.y1 = y1;
 			triangle.y2 = y2;
 			triangle.y3 = y3;
+			
+			var dist1 : Number = x1 * x1 + y1 * y1;
+			var dist2 : Number = x2 * x2 + y2 * y2;
+			var dist3 : Number = x3 * x3 + y3 * y3;
+			if (dist1 > dist2 && dist1 > dist3)
+			{
+				if (dist1 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist1) * 1.2;
+			}
+			else if (dist2 > dist3)
+			{
+				if (dist2 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist2) * 1.2;
+			}
+			else if (dist3 > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(dist3) * 1.2;
 			
 			triangle.updateVertices();
 		}
@@ -139,6 +180,7 @@ package com.battalion.flashpoint.core
 			triangle.y1 = 0.7;
 			triangle.y2 = -0.7;
 			triangle.y3 = 0.7;
+			if (Physics._maxSize < 2) Physics.maxSize = 2;
 		}
 	}
 

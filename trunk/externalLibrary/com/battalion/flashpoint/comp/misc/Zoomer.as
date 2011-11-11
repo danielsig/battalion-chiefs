@@ -12,14 +12,25 @@ package com.battalion.flashpoint.comp.misc
 	public class Zoomer extends Component implements IExclusiveComponent
 	{
 		
+		public static var zoomKey : * = "e";
 		private var _zoom : Number = 1;
 		
+		/** @private **/
+		public function awake() : void 
+		{
+			Input.assignButton("zoomButton", zoomKey);
+		}
+		
+		/** @private **/
 		public function update() : void 
 		{
-			if (_zoom > Input.scroll * 0.1 && Input.scroll > 0 || _zoom < 10 + Input.scroll * 0.1 && Input.scroll < 0)
+			if (!Input.toggledButton("zoomButton"))
 			{
-				_zoom -= Input.scroll * 0.05;
-				TweenMax.to(world.cam.transform, 0.3, { scale:_zoom } );
+				if (_zoom > Input.scroll * 0.1 && Input.scroll > 0 || _zoom < 20 + Input.scroll * 0.1 && Input.scroll < 0)
+				{
+					_zoom -= Input.scroll * 0.06;
+					TweenMax.to(world.cam.transform, 0.3, { scale:_zoom } );
+				}
 			}
 		}
 		public function zoom(amount : Number) : void

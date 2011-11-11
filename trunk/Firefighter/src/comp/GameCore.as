@@ -24,23 +24,36 @@ package comp
 	{
 		public function start() : void 
 		{
-			var grid : BitmapData = new BitmapData(20, 10, true, 0xFF000007);
+			/*var grid : BitmapData = new BitmapData(20, 10, true, 0xFF000007);
 			grid.fillRect(new Rectangle(0, 0, 20, 9), 0);
 			grid.fillRect(new Rectangle(4, 8, 3, 2), 0xFF000007);
 			Physics.grid = grid;
-			Physics.unitSize = 64;
+			Physics.unitSize = 64;*/
 			Physics.maxSize = 300;
 			Physics.gravityVector = new Point(0, 0.9);
-			Physics.gridOffset = new Point( -200, -200);
-			Physics.iterations = 2;
-			Physics.init();
+			Physics.iterations = 1;
+			//Physics.init();
 			
-			world.cam.transform.scale = 1;
+			//FlashPoint.timeScale = 0.05;
+			//world.cam.transform.scale = 15;
+			
+			TileRenderer.loadMap("level1", "assets/maps/tilemap1.png");
+			TileRenderer.loadSet("level1Set", "assets/tiles/tileset1.png~0-63~");
+			
+			var tileRenderer : TileRenderer = addComponent(TileRenderer) as TileRenderer;
+			tileRenderer.setTileMapByName("level1");
+			tileRenderer.setTileSetByName("level1Set");
+			
+			const ALL : uint = uint.MAX_VALUE;
+			tileRenderer.setAsCollisionMap(new Point( -200, -200),
+			0, ALL, ALL, ALL, ALL, ALL, 0, 0,
+			ALL, ALL, ALL, ALL, ALL, ALL, ALL, ALL,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); 
 			
 			var geomCode : GeomCodeRuntime = world.addComponent(GeomCodeRuntime) as GeomCodeRuntime;
 			world.addComponent(GeomCodePrimitives);
 			geomCode.source = "assets/geomcode/Main.gmc";
-			geomCode.construct("BrickWall", { pos:new Point(223.5, 311.9), broken:false, height:6} );
+			//geomCode.construct("BrickWall", { pos:new Point(223.5, 311.9), broken:false, height:6} );
 			
 			Renderer.draw("head",
 				"fill", { color:"0x555555" },
@@ -55,23 +68,15 @@ package comp
 			Animation.load("samusRunning", "assets/img/samus.png~0-9~");
 			Animation.filterWhite("samusRunning");
 			samusObj.animation.play("samusRunning");
-			Animation.addLabel("samusRunning", "Audio_gotoAndPlay", 0, 0, "samusSound");
-			Animation.addLabel("samusRunning", "Audio_gotoAndPlay", 5, 0, "samusSound");
+			Animation.addLabel("samusRunning", "Audio_gotoAndPlay", 0, 200, "samusSound");
+			Animation.addLabel("samusRunning", "Audio_gotoAndPlay", 5, 200, "samusSound");
 			samusObj.boxCollider.dimensions = new Point(62, 126);
-			samusObj.boxCollider.material = new PhysicMaterial(0.1, 0);
+			samusObj.boxCollider.material = new PhysicMaterial(0.3, 0);
 			samusObj.rigidbody.mass = 50;
 			samusObj.rigidbody.drag = 0;
 			samusObj.rigidbody.freezeRotation = true;
-			samusObj.transform.y = -25;
-			samusObj.transform.x = 25;
-			
-			
-			var head : GameObject = new GameObject("head", samusObj, Renderer, LookAtMouse);
-			head.renderer.setBitmapByName("head");
-			head.transform.y = -14;
-			head.renderer.offset = new Matrix(1, 0, 0, 1, 1, -7);
-			head.renderer.putInFrontOf(samusObj.renderer);
-			
+			samusObj.transform.y = 350;
+			samusObj.transform.x = 4500;
 			
 			
 			Renderer.draw("aboxGraph",
@@ -87,7 +92,7 @@ package comp
 			);
 			
 			var amount : uint = 0;
-			var makeBox : Boolean = true;
+			var makeBox : Boolean = false;
 			
 			var squareAmount : uint = Math.sqrt(amount);
 			var i : int = squareAmount;
@@ -104,8 +109,8 @@ package comp
 						abox.renderer.setBitmapByName("aboxGraph");
 						
 						abox.boxCollider.dimensions = new Point(20, 20);
-						abox.transform.x = (c * 25) - 300;
-						abox.transform.y = -(i * 25);
+						abox.transform.x = Physics.gridOffset.x + (c * 40);
+						abox.transform.y = Physics.gridOffset.y + (i * 40);
 					}
 					else
 					{
@@ -113,18 +118,12 @@ package comp
 						aball.renderer.setBitmapByName("aballGraph");
 						
 						aball.rigidbody.mass = i > squareAmount * 0.3 ? (i > squareAmount * 0.6 ? 0.8 : 0.4) : 0.2;
-						aball.circleCollider.layers = 2;
 						aball.circleCollider.radius = 20;
-						aball.transform.x = (c * 25) - 300;
-						aball.transform.y = -(i * 25);
+						aball.transform.x = Physics.gridOffset.x + (c * 40);
+						aball.transform.y = Physics.gridOffset.y + (i * 40);
 					}
 				}
 			}
 		}
-		public function update() : void
-		{
-			//if(count++ == 2) Animation.filterWhite("samusRunning");
-		}
-		private var count : uint = 0;
 	}
 }

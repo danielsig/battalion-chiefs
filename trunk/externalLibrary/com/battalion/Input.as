@@ -20,11 +20,12 @@ package com.battalion
 	{
 		
 		private static var _prevKeyCounter : int = 0;
-		private static var _prevKeys : Vector.<int> = new Vector.<int>(223);
+		private static var _prevKeys : Vector.<int> = new Vector.<int>(256);
 		
-		private static var _press : Vector.<Boolean> = new Vector.<Boolean>(223);
-		private static var _release : Vector.<Boolean> = new Vector.<Boolean>(223);
-		private static var _hold : Vector.<Boolean> = new Vector.<Boolean>(223);
+		private static var _press : Vector.<Boolean> = new Vector.<Boolean>(256);
+		private static var _release : Vector.<Boolean> = new Vector.<Boolean>(256);
+		private static var _hold : Vector.<Boolean> = new Vector.<Boolean>(256);
+		private static var _toggled : Vector.<Boolean> = new Vector.<Boolean>(256);
 		private static var _buttons : Object = { };
 		
 		private static var _mouseButton : int = 0;
@@ -87,6 +88,7 @@ package com.battalion
 		}
 		private static function onKeyDown(e : KeyboardEvent) : void
 		{
+			_toggled[e.keyCode] = !_toggled[e.keyCode];
 			_press[e.keyCode] = !_hold[e.keyCode];
 			_hold[e.keyCode] = true;
 			_prevKeys[_prevKeyCounter++] = e.keyCode;
@@ -123,10 +125,21 @@ package com.battalion
 		public static function hold(keycode : int) : Boolean 	{ return _hold[keycode]; }
 		public static function press(keycode : int) : Boolean 	{ return _press[keycode]; }
 		public static function release(keycode : int) : Boolean { return _release[keycode]; }
+		public static function toggled(keycode : int) : Boolean { return _toggled[keycode]; }
 		
 		public static function holdButton(name : String) : Boolean { return getButtons(name, _hold); }
 		public static function pressButton(name : String) : Boolean { return getButtons(name, _press); }
 		public static function releaseButton(name : String) : Boolean	{ return getButtons(name, _release); }
+		public static function toggledButton(name : String) : Boolean
+		{
+			var i : int = _buttons[name + "NumAlt"];
+			var value : Boolean = _toggled[_buttons[name]];
+			while (i)
+			{
+				if (_toggled[_buttons[name + "Alt" + (--i)]]) value = !value;
+			}
+			return value;
+		}
 		private static function getButtons(name : String, arr : Vector.<Boolean>) : Boolean
 		{
 			var i : int = _buttons[name + "NumAlt"];

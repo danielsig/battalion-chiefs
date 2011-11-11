@@ -148,6 +148,11 @@ package com.battalion.powergrid
 		/** @private **/
 		internal var resting : Number = 1;
 		
+		/** @private **/
+		internal var lastX : Number = 0;
+		/** @private **/
+		internal var lastY : Number = 0;
+		
 		/**
 		 * If the rigidbody is sleeping, call this method before changing the velocity or angular velocity directly.
 		 */

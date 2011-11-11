@@ -52,8 +52,8 @@ package com.battalion.flashpoint.core
 		private var _sin : Number = 0;
 		private var _cosSinCalculated : Boolean = false;
 		
-		public function get mouseRelativeX():Number { return Input.mouseX - Input.stageWidth * 0.5 - globalMatrix.tx + world.cam.transform.gx}
-		public function get mouseRelativeY():Number { return Input.mouseY - Input.stageHeight * 0.5 - globalMatrix.ty + world.cam.transform.gy}
+		public function get mouseRelativeX():Number { return (Input.mouseX - Input.stageWidth * 0.5 - globalMatrix.tx + world.cam.transform.gx) * world.cam.transform.scaleX; }
+		public function get mouseRelativeY():Number { return (Input.mouseY - Input.stageHeight * 0.5 - globalMatrix.ty + world.cam.transform.gy) * world.cam.transform.scaleY; }
 		
 		/** @private **/
 		internal var _changed : int = 0;
