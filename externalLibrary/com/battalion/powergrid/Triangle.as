@@ -264,20 +264,13 @@ package com.battalion.powergrid
 		{
 			anchorX *= size;
 			anchorY *= size;
-			x1 = -(anchorX + size) * 0.5;
-			x2 = (size - anchorX) * 0.5;
-			x3 = anchorX * 0.5;
+			x1 = -(size * 0.5 + anchorX * 0.333333333333);
+			x2 = size * 0.5 - anchorX * 0.333333333333;
+			x3 = anchorX * 0.666666666666;
 			
-			y1 = -anchorY * 0.5;
-			y2 = -anchorY * 0.5;
-			y3 = anchorY * 0.5;
-			
-			
-			var centerX : Number = (x1 + x2 + x3) * 0.333333333333;
-			var centerY : Number = (y1 + y2 + y3) * 0.333333333333;
-			
-			x1 -= centerX; x2 -= centerX; x3 -= centerX;
-			y1 -= centerY; y2 -= centerY; y3 -= centerY;
+			y1 = -anchorY * 0.333333333333;
+			y2 = -anchorY * 0.333333333333;
+			y3 = anchorY * 0.666666666666;
 			
 			if (anchorY < 0)
 			{

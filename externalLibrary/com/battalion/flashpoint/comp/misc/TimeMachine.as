@@ -11,22 +11,35 @@ package com.battalion.flashpoint.comp.misc
 	 */
 	public class TimeMachine extends Component implements IExclusiveComponent
 	{
+		
+		public static var timeMachineKey : * = "e";
+		
+		public var lowerLimit : Number = 0.06;
+		public var upperLimit : Number = 1;
+		public var step : Number = 0.05;
+		
 		/** @private **/
-		public function start() : void 
+		public function awake() : void 
 		{
-			Input.assignButton("slower", Keyboard.DOWN);
-			Input.assignButton("faster", Keyboard.UP);
+			Input.assignButton("timeButton", timeMachineKey);
 		}
 		/** @private **/
 		public function fixedUpdate() : void 
 		{
-			if (FlashPoint.timeScale > 0.08 && Input.pressButton("slower"))
+			CONFIG::debug
 			{
-				FlashPoint.timeScale -= 0.05;
+				if (step <= 0) throw new Error("step must be greater than 0");
+				if (lowerLimit <= step) throw new Error("lowerLimit must be greater than step");
+				if (upperLimit < lowerLimit) throw new Error("upperLimit must be greater than lowerLimit");
 			}
-			if (FlashPoint.timeScale < 10 && Input.pressButton("faster"))
+			if (Input.toggledButton("timeButton"))
 			{
-				FlashPoint.timeScale += 0.1;
+				if (FlashPoint.timeScale > lowerLimit && Input.scroll < 0 || FlashPoint.timeScale < upperLimit && Input.scroll > 0)
+				{
+					FlashPoint.timeScale += Input.scroll * step;
+				}
+				if (FlashPoint.timeScale < lowerLimit) FlashPoint.timeScale = lowerLimit + step * 0.1;
+				if (FlashPoint.timeScale > upperLimit) FlashPoint.timeScale = upperLimit - step * 0.1;
 			}
 		}
 		

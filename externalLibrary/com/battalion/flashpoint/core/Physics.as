@@ -18,6 +18,9 @@ package com.battalion.flashpoint.core
 		/** @private  */
 		internal static var _maxSize : Number = 512;
 		/** @private  */
+		internal static var _maxSizeSquared : Number = _maxSize * _maxSize;
+		private static var _powerGridMaxSize : Number = 0;
+		/** @private  */
 		internal static var _unitSize : Number = 32;
 		/** @private  */
 		internal static var _offsetX : Number = 0;
@@ -67,7 +70,11 @@ package com.battalion.flashpoint.core
 		}
 		
 		/**
-		 * The maximum size for colliders in your game.
+		 * The maximum size* for colliders in the current grid. We highly recommend setting
+		 * this property to a number larger than the size* of the largest collider you will
+		 * have for each grid.
+		 * 
+		 * 	* The size of a collider is the diameter of the smallest circle that contains the whole collider and is positioned at it's center.
 		 */
 		public static function get maxSize() : Number
 		{
@@ -75,8 +82,12 @@ package com.battalion.flashpoint.core
 		}
 		public static function set maxSize(value : Number) : void
 		{
-			_maxSize = value;
-			if (_initialized)
+			CONFIG::debug
+			{
+				if (isNaN(value)) throw new Error("The static property Physics.maxSize can not be assigned to NaN (Not a Number)");
+			}
+			_maxSizeSquared = (_maxSize = value) * value;
+			if (_initialized && _maxSize > _powerGridMaxSize)
 			{
 				init();
 			}
@@ -133,9 +144,15 @@ package com.battalion.flashpoint.core
 		
 		public static function init() : void
 		{
+			CONFIG::debug
+			{
+				if (!_grid) throw new Error("The static property Physics.grid must be non null before calling Physics.init()");
+			}
 			_initialized = true;
+			_powerGridMaxSize = _maxSize;
 			PowerGrid.init(_grid, _unitSize, _maxSize);
 			PowerGrid.setOptimalMaxVelocity();
+			_unitSize = PowerGrid.unitSize;
 		}
 		
 		/** @private **/

@@ -48,6 +48,7 @@ package com.battalion.flashpoint.core
 			{
 				BodyFactory.redefineBox(body as Group, _width, _height, triangle1, triangle2);
 			}
+			if (_width * _width + _height * _height > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(_width * _width + _height * _height) * 1.2;
 		}
 		
 		public function get width() : Number
@@ -61,6 +62,7 @@ package com.battalion.flashpoint.core
 			{
 				BodyFactory.redefineBox(body as Group, _width, _height, triangle1, triangle2);
 			}
+			if (_width * _width + _height * _height > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(_width * _width + _height * _height) * 1.2;
 		}
 		public function get height() : Number
 		{
@@ -73,6 +75,7 @@ package com.battalion.flashpoint.core
 			{
 				BodyFactory.redefineBox(body as Group, _width, _height, triangle1, triangle2);
 			}
+			if (_width * _width + _height * _height > Physics._maxSizeSquared) Physics.maxSize = Math.sqrt(_width * _width + _height * _height) * 1.2;
 		}
 		
 		/** @private */

@@ -30,15 +30,21 @@ package
 
 		private function init(e : Event = null) : void 
 		{
+			stage.tabChildren = false;
+			stage.scaleMode = StageScaleMode.EXACT_FIT;
 			stage.quality = "low";
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			FlashPoint.fixedFPS = 30;
 			FlashPoint.timeScale = 1;
 			FlashPoint.init(stage);
 			GameObject.world.addComponent(GameCore);
-			GameObject.world.addComponent(PhysicsDebugger);
 			addChild(new com.battalion.flashpoint.display.View(new Rectangle(0, 0, stage.stageWidth, stage.stageHeight)));
-			GameObject.world.physicsDebugger.debugSprite = addChild(new Sprite()) as Sprite;
+			
+			CONFIG::debug
+			{
+				GameObject.world.addComponent(PhysicsDebugger);
+				GameObject.world.physicsDebugger.debugSprite = addChild(new Sprite()) as Sprite;
+			}
 		}
 		public var val : Number = 1;
 		public var obj : GameObject;

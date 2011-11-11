@@ -127,6 +127,11 @@ package com.battalion.powergrid
 		
 		public static function init(grid : BitmapData, unitSize : uint, maxSizePromise : Number) : void
 		{
+			CONFIG::debug
+			{
+				if (!grid) throw new Error("grid must be non null");
+				if (isNaN(maxSizePromise)) throw new Error("maxSizePromise is NaN (Not a Number)");
+			}
 			generateSqrtTable(2, 0.01, maxSizePromise * 1.2);
 			
 			_unitLog2 = 0;
@@ -423,16 +428,6 @@ package com.battalion.powergrid
 							if (rigidbody.a > 180 || rigidbody.a < -180) rigidbody.a = ((rigidbody.a + 180) % 360) - 180;
 						}
 						body = body.next;
-						/*
-						if (triangle)
-						{
-							stage.graphics.lineStyle(1, 0xFF0000);
-							stage.graphics.moveTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
-							stage.graphics.lineTo(triangle.gx2 + triangle.x, triangle.gy2 + triangle.y);
-							stage.graphics.lineTo(triangle.gx3 + triangle.x, triangle.gy3 + triangle.y);
-							stage.graphics.lineTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
-						}
-						*/
 					}
 				}
 				if (typeCount > 1) bodies = _triangles;
@@ -541,6 +536,7 @@ package com.battalion.powergrid
 						var c : uint = width;
 						var brother : BodyNode = null;
 						var prev : AbstractRigidbody = null;
+						var tileCollision : Boolean = false;
 						
 						for (var i : uint = lowerIndex; i < upperIndex; i++)
 						{
@@ -579,7 +575,7 @@ package com.battalion.powergrid
 							{
 								if (resolveCircleVsTile(circle, i, timeScale))
 								{
-									collision = true;
+									tileCollision = collision = true;
 								}
 							}
 							
@@ -593,13 +589,13 @@ package com.battalion.powergrid
 									var otherCircle : Circle = other as Circle;
 									var otherTriangle : Triangle = other as Triangle;
 									var contact1x:Number = NaN;
-									if (otherCircle)
+									if (otherCircle && otherCircle != circle)
 									{
 										var dx : Number = circle.x - otherCircle.x;
 										var dy : Number = circle.y - otherCircle.y;
 										var r : Number = circle.radius + otherCircle.radius;
 										var distSquare : Number = dx * dx + dy * dy;
-										if (distSquare < r * r - 1)
+										if (distSquare <= r * r)
 										{											
 											var length : Number = sqrtTable[int(distSquare * sqrtPow)];
 											
@@ -622,12 +618,7 @@ package com.battalion.powergrid
 											contact1x = nx * otherCircle._mass * invMass;
 											var contact1y:Number = ny * otherCircle._mass * invMass;
 											var contact2x:Number = nx * circle._mass * invMass;
-											var contact2y:Number = ny * circle._mass * invMass;											
-											
-											
-											//var dot : Number = circle.vx * nx + circle.vy * ny;
-											
-											//circle.vx = otherCircle.vx * circle._mass + circle.vx - (2 * nx * dot)
+											var contact2y:Number = ny * circle._mass * invMass;
 										}
 										else if (circle.vanDerWaals + otherCircle.vanDerWaals)
 										{
@@ -660,12 +651,6 @@ package com.battalion.powergrid
 									if (!isNaN(contact1x))
 									{
 										touching = true;
-										/*
-										stage.graphics.beginFill(0x00FF00);
-										stage.graphics.drawCircle(contact1x + triangle.x, contact1y + triangle.y, 4);
-										stage.graphics.endFill();
-										*/
-										
 										resolveCollision(circle, other, contact1x, contact1y, contact2x, contact2y, nx, ny, timeScale);
 									}
 								}
@@ -676,6 +661,11 @@ package com.battalion.powergrid
 						{
 							circle.prevLower = lowerIndex;
 							circle.prevUpper = upperIndex;
+						}
+						if (!tileCollision)
+						{
+							circle.lastX = circle.x;
+							circle.lastY = circle.y;
 						}
 						if (!touching)
 						{
@@ -829,6 +819,7 @@ package com.battalion.powergrid
 						c = width;
 						brother = null;
 						prev = null;
+						tileCollision = false;
 						
 						for (i = lowerIndex; i < upperIndex; i++)
 						{
@@ -866,7 +857,7 @@ package com.battalion.powergrid
 							if (triangle.layers & _tiles[i])
 							{
 								collision = true;
-								resolveTriangleVsTile(triangle, i, timeScale);
+								tileCollision ||= resolveTriangleVsTile(triangle, i, timeScale);
 							}
 							
 							//check for collisions with other rigidbodies
@@ -894,7 +885,7 @@ package com.battalion.powergrid
 											ny = colInfo[3];
 										}
 									}
-									else if (otherTriangle)
+									else if (otherTriangle && otherTriangle != triangle)
 									{
 										colInfo = resolveTriangles(triangle, otherTriangle, timeScale);
 										if (colInfo)
@@ -922,17 +913,16 @@ package com.battalion.powergrid
 								}
 							}
 						}
-						/*
-						stage.graphics.moveTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
-						stage.graphics.lineTo(triangle.gx2 + triangle.x, triangle.gy2 + triangle.y);
-						stage.graphics.lineTo(triangle.gx3 + triangle.x, triangle.gy3 + triangle.y);
-						stage.graphics.lineTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
-						*/
 						triangle.nodes = brother;
 						if (!collision)
 						{
 							triangle.prevLower = lowerIndex;
 							triangle.prevUpper = upperIndex;
+						}
+						if (!tileCollision)
+						{
+							triangle.lastX = triangle.x;
+							triangle.lastY = triangle.y;
 						}
 						if (!touching)
 						{
@@ -1044,7 +1034,7 @@ package com.battalion.powergrid
 			}
 			var rvNorm : Number = nx * velocityAtContactx + ny * velocityAtContacty;
 			
-			var impulse : Number = (originalStatic ? originalStatic.bounciness : 0.5) + original.bounciness * 0.5;
+			var impulse : Number = (originalStatic ? originalStatic.bounciness  + original.bounciness * 0.5 : original.bounciness);
 			if (velocityAtContactx * velocityAtContactx + velocityAtContacty * velocityAtContacty < 2) impulse = 0;
 			impulse = -( 1 + impulse) * rvNorm / impulseDenominator;
 			
@@ -1060,7 +1050,7 @@ package com.battalion.powergrid
 			
 			rvNorm = -ny * velocityAtContactx + nx * velocityAtContacty;
 			
-			impulse = -(rvNorm / impulseDenominator) * original.friction * (originalStatic ? originalStatic.friction : 1.0);
+			impulse = -(rvNorm / impulseDenominator) * (originalStatic ? original.friction * originalStatic.friction : original.friction);
 			
 			dlv1x -= ny * impulse;
 			dlv1y += nx * impulse;
@@ -1214,12 +1204,43 @@ package com.battalion.powergrid
 		}
 		private static function resolveCircleVsTile(circle : Circle, tile : uint, timeScale : Number) : Boolean
 		{
+			var unit : uint = 1 << _unitLog2;
 			var tileX : uint = tile % _widthUint;
 			var tileY : uint = tile / _widthUint;
-			var tileLeft : Number = tileX * unitSize;
-			var tileTop : Number = tileY * unitSize;
-			var tileRight : Number = tileLeft + unitSize;
-			var tileBottom : Number = tileTop + unitSize;
+			var tileLeft : Number = tileX * unit;
+			var tileTop : Number = tileY * unit;
+			var tileRight : Number = tileLeft + unit;
+			var tileBottom : Number = tileTop + unit;
+			
+			var onLeftBound : Boolean = tileX <= 0;
+			var onRightBound : Boolean = tileX >= _widthUint - 1;
+			var onTopBound : Boolean = tileY <= 0;
+			var onBottomBound : Boolean = tile + _widthUint >= _length;
+			
+			var tileOnLeft : uint = (onLeftBound ? uint.MAX_VALUE : (onRightBound ? 0 : _tiles[tile-1])) & circle.layers;
+			var tileOnRight : uint = (onRightBound ? uint.MAX_VALUE : (onLeftBound ? 0 : _tiles[tile+1])) & circle.layers;
+			var tileOnTop : uint = (onTopBound ? uint.MAX_VALUE : (onBottomBound ? 0 : _tiles[tile-_widthUint])) & circle.layers;
+			var tileOnBottom : uint = (onBottomBound ? uint.MAX_VALUE : (onTopBound ? 0 : _tiles[tile + _widthUint])) & circle.layers;
+			
+			var dx : Number = (tileLeft + tileRight) * 0.5 - circle.x;
+			var dy : Number = (tileTop + tileBottom) * 0.5 - circle.y;
+			
+			if ((dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom))
+			{
+				if (circle.group)
+				{
+					circle.group.x += circle.lastX - circle.x;
+					circle.group.y += circle.lastY - circle.y;
+				}
+				else
+				{
+					circle.x = circle.lastX;
+					circle.y = circle.lastY;
+				}
+				return true;
+			}
+			
+			var doSide : Boolean = !(dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom);
 			
 			var posX : Number = circle.x;
 			var posY : Number = circle.y;
@@ -1227,71 +1248,77 @@ package com.battalion.powergrid
 			var prevY : Number = circle.prevY;
 			var radius : Number = circle.radius;
 			
-			if (posX + radius > tileLeft && posX - radius < tileRight && posY + radius > tileTop && posY - radius < tileBottom)
+			if (posX + radius >= tileLeft && posX - radius <= tileRight && posY + radius >= tileTop && posY - radius <= tileBottom)
 			{
-				if (prevX + radius < tileLeft || prevX - radius > tileRight || prevY + radius < tileTop || prevY - radius > tileBottom)
+				if (prevX + radius <= tileLeft || prevX - radius >= tileRight || prevY + radius <= tileTop || prevY - radius >= tileBottom)
 				{
 					//can calculate time of impact.
 					dx = posX - prevX;
 					dy = posY - prevY;
-					if (dy > 0)//falling down meaning it crosses tileTop
+					//if (!doSide)
 					{
-						var toi : Number = (tileTop - (prevY + radius)) / dy;
-						colX = prevX + dx * toi;
-						if (colX > tileLeft && colX < tileRight)//colliding with top
+						if (dy > 0)//falling down meaning it crosses tileTop
 						{
-							circle.x = colX;
-							circle.y = tileTop - radius;
-							resolveWallCollision(circle, 0, radius, 0, -1, timeScale);
-							circle.prevX = circle.x += dx * (1 - toi);
-							circle.prevY = circle.y -= dy * (1 - toi);
-							circle.prevA = circle.a;
-							return true;
+							var toi : Number = (tileTop - (prevY + radius)) / dy;
+							colX = prevX + dx * toi;
+							if (colX >= tileLeft && colX <= tileRight)//colliding with top
+							{
+								circle.x = colX;
+								circle.y = tileTop - radius;
+								resolveWallCollision(circle, 0, radius, 0, -1, timeScale);
+								circle.prevX = circle.x += dx * (1 - toi);
+								circle.prevY = circle.y -= dy * (1 - toi);
+								circle.prevA = circle.a;
+								return true;
+							}
+						}
+						else//rising up meaning it crosses tileBottom
+						{
+							toi = (tileBottom - (prevY - radius)) / dy;
+							colX = prevX + dx * toi;
+							if (colX >= tileLeft && colX <= tileRight)//colliding with bottom
+							{
+								circle.x = colX;
+								circle.y = tileBottom + radius;
+								resolveWallCollision(circle, 0, -radius, 0, 1, timeScale);
+								circle.prevX = circle.x += dx * (1 - toi);
+								circle.prevY = circle.y -= dy * (1 - toi);
+								circle.prevA = circle.a;
+								return true;
+							}
 						}
 					}
-					else//rising up meaning it crosses tileBottom
+					//else
 					{
-						toi = (tileBottom - (prevY - radius)) / dy;
-						colX = prevX + dx * toi;
-						if (colX > tileLeft && colX < tileRight)//colliding with bottom
+						if (dx > 0)//going right meaning it crosses tileLeft
 						{
-							circle.x = colX;
-							circle.y = tileBottom + radius;
-							resolveWallCollision(circle, 0, -radius, 0, 1, timeScale);
-							circle.prevX = circle.x += dx * (1 - toi);
-							circle.prevY = circle.y -= dy * (1 - toi);
-							circle.prevA = circle.a;
-							return true;
+							toi = (tileLeft - (prevX + radius)) / dx;
+							colY = prevY + dy * toi;
+							if (colY >= tileTop && colY <= tileBottom)//colliding with left
+							{
+								circle.x = tileLeft - radius;
+								circle.y = colY;
+								resolveWallCollision(circle, radius, 0, -1, 0, timeScale);
+								circle.prevX = circle.x -= dx * (1 - toi);
+								circle.prevY = circle.y += dy * (1 - toi);
+								circle.prevA = circle.a;
+								return true;
+							}
 						}
-					}
-					if (dx > 0)//going right meaning it crosses tileLeft
-					{
-						toi = (tileLeft - (prevX + radius)) / dx;
-						colY = prevY + dy * toi;
-						if (colY > tileTop && colY < tileBottom)//colliding with left
+						else//going left meaning it crosses tileRight
 						{
-							circle.x = tileLeft - radius;
-							circle.y = colY;
-							resolveWallCollision(circle, radius, 0, -1, 0, timeScale);
-							circle.prevX = circle.x -= dx * (1 - toi);
-							circle.prevY = circle.y += dy * (1 - toi);
-							circle.prevA = circle.a;
-							return true;
-						}
-					}
-					else//going left meaning it crosses tileRight
-					{
-						toi = (tileRight - (prevX - radius)) / dx;
-						colY = prevY + dy * toi;
-						if (colY > tileTop && colY < tileBottom)//colliding with left
-						{
-							circle.x = tileRight + radius;
-							circle.y = colY;
-							resolveWallCollision(circle, -radius, 0, 1, 0, timeScale);
-							circle.prevX = circle.x -= dx * (1 - toi);
-							circle.prevY = circle.y += dy * (1 - toi);
-							circle.prevA = circle.a;
-							return true;
+							toi = (tileRight - (prevX - radius)) / dx;
+							colY = prevY + dy * toi;
+							if (colY >= tileTop && colY <= tileBottom)//colliding with left
+							{
+								circle.x = tileRight + radius;
+								circle.y = colY;
+								resolveWallCollision(circle, -radius, 0, 1, 0, timeScale);
+								circle.prevX = circle.x -= dx * (1 - toi);
+								circle.prevY = circle.y += dy * (1 - toi);
+								circle.prevA = circle.a;
+								return true;
+							}
 						}
 					}
 					return false;
@@ -1299,8 +1326,8 @@ package com.battalion.powergrid
 				
 				// time of impact is not possible or it's colliding with a corner
 				
-				var dx : Number = (tileLeft + tileRight) * 0.5 - posX;
-				var dy : Number = (tileTop + tileBottom) * 0.5 - posY;
+				dx = (tileLeft + tileRight) * 0.5 - posX;
+				dy = (tileTop + tileBottom) * 0.5 - posY;
 				
 				var inside : Boolean = false;
 				var colX : Number = posX, colY : Number = posY
@@ -1353,12 +1380,13 @@ package com.battalion.powergrid
 		}
 		private static function resolveTriangleVsTile(triangle : Triangle, tile : uint, timeScale : Number) : Boolean
 		{
+			var unit : uint = 1 << _unitLog2;
 			var tileX : uint = tile % _widthUint;
 			var tileY : uint = tile / _widthUint;
-			var tileLeft : Number = tileX * unitSize;
-			var tileTop : Number = tileY * unitSize;
-			var tileRight : Number = tileLeft + unitSize;
-			var tileBottom : Number = tileTop + unitSize;
+			var tileLeft : Number = tileX * unit;
+			var tileTop : Number = tileY * unit;
+			var tileRight : Number = tileLeft + unit;
+			var tileBottom : Number = tileTop + unit;
 			
 			var onLeftBound : Boolean = tileX <= 0;
 			var onRightBound : Boolean = tileX >= _widthUint - 1;
@@ -1368,11 +1396,26 @@ package com.battalion.powergrid
 			var tileOnLeft : uint = (onLeftBound ? uint.MAX_VALUE : (onRightBound ? 0 : _tiles[tile-1])) & triangle.layers;
 			var tileOnRight : uint = (onRightBound ? uint.MAX_VALUE : (onLeftBound ? 0 : _tiles[tile+1])) & triangle.layers;
 			var tileOnTop : uint = (onTopBound ? uint.MAX_VALUE : (onBottomBound ? 0 : _tiles[tile-_widthUint])) & triangle.layers;
-			var tileOnBottom : uint = (onBottomBound ? uint.MAX_VALUE : (onTopBound ? 0 : _tiles[tile+_widthUint])) & triangle.layers;
+			var tileOnBottom : uint = (onBottomBound ? uint.MAX_VALUE : (onTopBound ? 0 : _tiles[tile + _widthUint])) & triangle.layers;
 			
-			var moveX : Number = 0, moveY : Number = 0, move : Number = Number.NEGATIVE_INFINITY;
-			var axisX : Number = 0, axisY : Number = 0;
-			var pointX : Number = 0, pointY : Number = 0;
+			
+			var dx : Number = (tileLeft + tileRight) * 0.5 - triangle.x;
+			var dy : Number = (tileTop + tileBottom) * 0.5 - triangle.y;
+			
+			if ((dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom))
+			{
+				if (triangle.group)
+				{
+					triangle.group.x += triangle.lastX - triangle.x;
+					triangle.group.y += triangle.lastY - triangle.y;
+				}
+				else
+				{
+					triangle.x = triangle.lastX;
+					triangle.y = triangle.lastY;
+				}
+				return true;
+			}
 			
 			var p1x : Number = triangle.gx1 + triangle.x;
 			var p1y : Number = triangle.gy1 + triangle.y;
@@ -1381,14 +1424,34 @@ package com.battalion.powergrid
 			var p3x : Number = triangle.gx3 + triangle.x;
 			var p3y : Number = triangle.gy3 + triangle.y;
 			
-			var dx : Number = (tileLeft + tileRight) * 0.5 - triangle.x;
-			var dy : Number = (tileTop + tileBottom) * 0.5 - triangle.y;
+			var doSide : Boolean = !(dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom);
+			
+			if (doSide)
+			{
+				if (dx > 0)
+				{
+					if(p1x < tileLeft && p2x < tileLeft && p3x < tileLeft) return false;
+				}
+				else if(p1x > tileRight && p2x > tileRight && p3x > tileRight) return false;
+			}
+			else
+			{
+				if (dy > 0)
+				{
+					if(p1y < tileTop && p2y < tileTop && p3y < tileTop) return false;
+				}
+				else if(p1y > tileBottom && p2y > tileBottom && p3y > tileBottom) return false;
+			}
+			
+			var moveX : Number = 0, moveY : Number = 0, move : Number = Number.NEGATIVE_INFINITY;
+			var axisX : Number = 0, axisY : Number = 0;
+			var pointX : Number = 0, pointY : Number = 0;
+			
 			var absDx : Number = dx > 0 ? dx : -dx;
 			var absDy : Number = dy > 0 ? dy : -dy;
 			
-			var doSide : Boolean = !(dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom);
 			
-			if (p1x > tileLeft && p1x < tileRight && p1y > tileTop && p1y < tileBottom)
+			if (p1x > tileLeft && p1x <= tileRight && p1y >= tileTop && p1y <= tileBottom)
 			{
 				var colX : Number = tileLeft, colY : Number = tileTop;
 				if (dx < 0) colX = tileRight;
@@ -1402,18 +1465,18 @@ package com.battalion.powergrid
 				{
 					move = currentMoveX;
 					moveX = colX - p1x;
-					moveY = axisY = 0; axisX = colX > p1x ? 1 : -1;
+					moveY = axisY = 0; axisX = colX >= p1x ? 1 : -1;
 					pointX = p1x; pointY = p1y;
 				}
 				else if(currentMoveY > move && !doSide)
 				{
 					move = currentMoveY;
 					moveY = colY - p1y;
-					moveX = axisX = 0; axisY = colY > p1y ? 1 : -1;
+					moveX = axisX = 0; axisY = colY >= p1y ? 1 : -1;
 					pointX = p1x; pointY = p1y;
 				}
 			}
-			if (p2x > tileLeft && p2x < tileRight && p2y > tileTop && p2y < tileBottom)
+			if (p2x > tileLeft && p2x <= tileRight && p2y >= tileTop && p2y <= tileBottom)
 			{
 				colX = tileLeft; colY = tileTop;
 				if (dx < 0) colX = tileRight;
@@ -1427,18 +1490,18 @@ package com.battalion.powergrid
 				{
 					move = currentMoveX;
 					moveX = colX - p2x;
-					moveY = axisY = 0; axisX = colX > p2x ? 1 : -1;
+					moveY = axisY = 0; axisX = colX >= p2x ? 1 : -1;
 					pointX = p2x; pointY = p2y;
 				}
 				else if (currentMoveY > move && !doSide)
 				{
 					move = currentMoveY;
 					moveY = colY - p2y;
-					moveX = axisX = 0; axisY = colY > p2y ? 1 : -1;
+					moveX = axisX = 0; axisY = colY >= p2y ? 1 : -1;
 					pointX = p2x; pointY = p2y;
 				}
 			}
-			if (p3x > tileLeft && p3x < tileRight && p3y > tileTop && p3y < tileBottom)
+			if (p3x > tileLeft && p3x <= tileRight && p3y >= tileTop && p3y <= tileBottom)
 			{
 				colX = tileLeft; colY = tileTop;
 				if (dx < 0) colX = tileRight;
@@ -1452,14 +1515,18 @@ package com.battalion.powergrid
 				{
 					move = currentMoveX;
 					moveX = colX - p3x;
-					moveY = axisY = 0; axisX = colX > p3x ? 1 : -1;
+					moveY = axisY = 0; axisX = colX >= p3x ? 1 : -1;
 					pointX = p3x; pointY = p3y;
 				}
 				else if (currentMoveY > move && !doSide)
 				{
+					if ((triangle.group || triangle).vy < -50)
+					{
+						var n : Number = 5;
+					}
 					move = currentMoveY;
 					moveY = colY - p3y;
-					moveX = axisX = 0; axisY = colY > p3y ? 1 : -1;
+					moveX = axisX = 0; axisY = colY >= p3y ? 1 : -1;
 					pointX = p3x; pointY = p3y;
 				}
 			}
@@ -1594,24 +1661,6 @@ package com.battalion.powergrid
 			
 			if (move != -Infinity)
 			{
-				/*
-				stage.graphics.beginFill(0x00FF00);
-				stage.graphics.drawCircle(pointX, pointY, 4);
-				stage.graphics.endFill();
-				
-				stage.graphics.lineStyle(2);
-				stage.graphics.moveTo( pointX - axisY * 100, pointY + axisX * 100);
-				stage.graphics.lineTo( pointX + axisY * 100, pointY - axisX * 100);
-				
-				stage.graphics.lineStyle(1, 0xFF0000, 0.5);
-				stage.graphics.moveTo(triangle.x, triangle.y);
-				stage.graphics.lineTo((tileLeft + tileRight) * 0.5, (tileTop + tileBottom) * 0.5);
-				
-				stage.graphics.moveTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
-				stage.graphics.lineTo(triangle.gx2 + triangle.x, triangle.gy2 + triangle.y);
-				stage.graphics.lineTo(triangle.gx3 + triangle.x, triangle.gy3 + triangle.y);
-				stage.graphics.lineTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
-				*/
 				if (triangle.group)
 				{
 					triangle.group.x += moveX;
@@ -1619,6 +1668,8 @@ package com.battalion.powergrid
 				}
 				triangle.x += moveX;
 				triangle.y += moveY;
+				var body : AbstractRigidbody = triangle.group || triangle;
+				if ((axisX == 1 || axisX == -1) && body.vx * axisX > 0 || (axisY == 1 || axisY == -1) && body.vy * axisY > 0) return true;
 				resolveWallCollision(triangle, pointX - triangle.x, pointY - triangle.y, axisX, axisY, timeScale);
 				return true;
 			}

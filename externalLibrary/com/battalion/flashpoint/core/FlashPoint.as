@@ -24,6 +24,12 @@ package com.battalion.flashpoint.core
 		 */
 		public static var timeScale : Number = 1;
 		/**
+		 * This value is the square root of the timeScale.
+		 * WARNING For performance reasons, this property is not a getter function but a public varible,
+		 * you gain nothing but bad luck from assigning a value to this.
+		 */
+		public static var timeScaleSqrt : Number = 1;
+		/**
 		 * Setting the fixedFPS (fixed frames per second) will take effect on the next fixed update.
 		 * This is the number of FixedUpdate() calls per second.
 		 * This effects the <code>fixedInterval</code> property.
@@ -56,7 +62,7 @@ fixedUpdate.....|--- x ---|---------|---------|---------|---------|--- x ---|---
 update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|...
 </p>
 		 * WARNING For performance reasons, this property is not a getter function but a public varible,
-		 * If gain nothing but bad luck from assigning a value to this.
+		 * you gain nothing but bad luck from assigning a value to this.
 		 */
 		public static var frameInterpolationRatio : Number = 0;
 		
@@ -64,7 +70,7 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		/**
 		 * Milliseconds since the last fixedUpdate.
 		 * During a fixedUpdate frame, this is the milliseconds
-		 * since the last fixedUpdate not the current one.
+		 * since the preveious fixedUpdate not the current one.
 		 */
 		public static var deltaTime : Number = 0;
 		
@@ -79,6 +85,7 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		private static var _initTime : Number;
 		private static var _dynamicInterval : Number = fixedInterval / timeScale;
 		private static var _stage : Stage;
+		private static var _prevTimeScale : Number = 1;
 		
 		/**
 		 * Use this to initialize the FlashPoint engine.
@@ -105,6 +112,9 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		
 		private static function update(event : Event = null) : void
 		{
+			if (timeScale == 1) timeScaleSqrt = 1;
+			else if (timeScaleSqrt * timeScaleSqrt != timeScale) timeScaleSqrt = Math.sqrt(timeScale);
+			
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
 			var now : Number = new Date().time;
 			deltaTime = now - _prevTime2;
@@ -115,13 +125,9 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 			now = new Date().time;
 			frameInterpolationRatio = (now - _prevTime) / _dynamicInterval;
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
-			//trace(frameInterpolationRatio);
 		}
 		private static function fixedUpdate(event : Event = null) : void
 		{
-			//_dynamicInterval = new Date().time - _prevTime;
-			//frameInterpolationRatio = 0;
-			
 			var interval : Number = fixedInterval / timeScale;
 			Physics.step(interval * 0.001 * timeScale);
 			

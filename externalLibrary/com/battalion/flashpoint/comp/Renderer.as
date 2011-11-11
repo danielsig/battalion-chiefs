@@ -382,7 +382,7 @@ Renderer.draw("myWeirdArrow",
 		
 		/**
 		 * setting this property will not take effect until you set the updateBitmap property to true.
-		 * it is recommended to use the url property insteaad.
+		 * it is recommended to use the <code>url</code> property or the <code>setBitmapByName()</code> method insteaad.
 		 */
 		public var bitmapData : BitmapData = null;
 		
@@ -489,12 +489,19 @@ Renderer.draw("myWeirdArrow",
 			return false;
 		}
 		/**
-		 * This method is not correct when any other transformation other than translation has been applied to the GameObject or it's parents.
+		 * The bounding rectangle of the Renderer in world space.
 		 */
 		public function get bounds() : Rectangle
 		{
-			return bitmapData == null ? new Rectangle(Infinity, Infinity) : new Rectangle(_transform.x - bitmapData.width * 0.5, _transform.y - bitmapData.height * 0.5,
-								 _transform.x + bitmapData.width * 0.5, _transform.y + bitmapData.height * 0.5);
+			if (!bitmapData) return new Rectangle(NaN, NaN, NaN, NaN);
+			var m : Matrix = _transform.globalMatrix;
+			var cos : Number = m.a;
+			var sin : Number = m.b;
+			if (cos < 0) cos = -cos;
+			if (sin < 0) sin = -sin;
+			var width : Number = (cos * bitmapData.width) + (sin * bitmapData.height);
+			var height : Number = (sin * bitmapData.width) + (cos * bitmapData.height);
+			return new Rectangle(m.tx - width * 0.5, m.ty - height * 0.5, width, height);
 		}
 	}
 	
