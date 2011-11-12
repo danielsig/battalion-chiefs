@@ -18,7 +18,7 @@ package com.battalion.flashpoint.comp
 		{
 			if (!_next && _generator._counter > _generator.maxParticleCount)
 			{
-				_prev._next = null;
+				if(_prev) _prev._next = null;
 				_generator._counter--;
 				gameObject.destroy();
 			}

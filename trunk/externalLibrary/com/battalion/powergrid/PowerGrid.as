@@ -1,6 +1,8 @@
 package com.battalion.powergrid 
 {
 	
+	import com.battalion.flashpoint.comp.TextRenderer;
+	import com.battalion.flashpoint.core.GameObject;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
@@ -119,12 +121,19 @@ package com.battalion.powergrid
 		
         private static var sqrtTable:Vector.<Number>;
         private static var sqrtPow:Number;
+        private static var maxSize:Number;
 		
 		private static var _wallLeft : AbstractRigidbody = new AbstractRigidbody();
 		private static var _wallRight : AbstractRigidbody = new AbstractRigidbody();
 		private static var _wallTop : AbstractRigidbody = new AbstractRigidbody();
 		private static var _wallBottom : AbstractRigidbody = new AbstractRigidbody();
 		
+		/**
+		 * Call this to initiate the PowerGrid.
+		 * @param	grid
+		 * @param	unitSize
+		 * @param	maxSizePromise, must be a number between 1 and 3861 (which is sqrt(int.MAX_VALUE) / 12)
+		 */
 		public static function init(grid : BitmapData, unitSize : uint, maxSizePromise : Number) : void
 		{
 			CONFIG::debug
@@ -133,7 +142,7 @@ package com.battalion.powergrid
 				if (isNaN(maxSizePromise)) throw new Error("maxSizePromise is NaN (Not a Number)");
 			}
 			generateSqrtTable(2, 0.01, maxSizePromise * 1.2);
-			
+			maxSize = sqrtTable.length / sqrtPow;
 			_unitLog2 = 0;
 			while (unitSize >>> _unitLog2)
 			{
@@ -596,10 +605,23 @@ package com.battalion.powergrid
 										var r : Number = circle.radius + otherCircle.radius;
 										var distSquare : Number = dx * dx + dy * dy;
 										if (distSquare <= r * r)
-										{											
-											var length : Number = sqrtTable[int(distSquare * sqrtPow)];
+										{
+											var length : Number;
 											
-											var invLength : Number = 1 / length;
+											CONFIG::debug
+											{
+												if (distSquare < maxSize) length = sqrtTable[int(distSquare * sqrtPow)];
+												else
+												{
+													length = Math.sqrt(distSquare);
+													trace("WARNING! maxSizePromise is not large enough!!!");
+												}
+											}
+											CONFIG::release
+											{
+												length = sqrtTable[int(distSquare * sqrtPow)];
+											}
+											var invLength : Number = 1.0 / length;
 											var nx : Number = dx * invLength;
 											var ny : Number = dy * invLength;
 											length -= r;
@@ -1709,7 +1731,19 @@ package com.battalion.powergrid
 					{
 						nx = posX - triangle.x1;
 						ny = posY - triangle.y1;
-						length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+						CONFIG::debug
+						{
+							if (distSquare < maxSize) length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+							else
+							{
+								length = Math.sqrt(nx * nx + ny * ny);
+								trace("WARNING! maxSizePromise is not large enough!!!");
+							}
+						}
+						CONFIG::release
+						{
+							length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+						}
 						nx /= length;
 						ny /= length;
 					}
@@ -1717,7 +1751,19 @@ package com.battalion.powergrid
 					{
 						nx = posX - triangle.x2;
 						ny = posY - triangle.y2;
-						length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+						CONFIG::debug
+						{
+							if (distSquare < maxSize) length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+							else
+							{
+								length = Math.sqrt(nx * nx + ny * ny);
+								trace("WARNING! maxSizePromise is not large enough!!!");
+							}
+						}
+						CONFIG::release
+						{
+							length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+						}
 						nx /= length;
 						ny /= length;
 					}
@@ -1725,7 +1771,19 @@ package com.battalion.powergrid
 					{
 						nx = posX - triangle.x3;
 						ny = posY - triangle.y3;
-						length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+						CONFIG::debug
+						{
+							if (distSquare < maxSize) length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+							else
+							{
+								length = Math.sqrt(nx * nx + ny * ny);
+								trace("WARNING! maxSizePromise is not large enough!!!");
+							}
+						}
+						CONFIG::release
+						{
+							length = sqrtTable[int((nx * nx + ny * ny) * sqrtPow)];
+						}
 						nx /= length;
 						ny /= length;
 					}
@@ -1968,8 +2026,8 @@ package com.battalion.powergrid
 			{
 				if (!(body is Group || body is Triangle || body is Circle)) throw new Error("Do not instantiate the AbstractRigidbody.");
 				if (body._added) throw new Error("Rigidbody has already been added.");
-				body._added = true;
 			}
+			body._added = true;
 			
 			if (BodyNode.pool)
 			{
@@ -2033,14 +2091,18 @@ package com.battalion.powergrid
 				_groups = newBody;
 			}
 			if (rest.length) addBody.apply(null, rest);
+			body.lastX = body.x;
+			body.lastY = body.y;
 		}
 		public static function removeBody(body : AbstractRigidbody) : void
 		{
 			CONFIG::debug
 			{
 				if (!body._added) throw new Error("Rigidbody is not in the powergrid, perhaps it has already been removed.");
-				body._added = false;
 			}
+			body._added = false;
+
+			//(GameObject.world.cam.addComponent(TextRenderer) as TextRenderer).text = "" + body;
 			//remove previous nodes
 			for (var node : BodyNode = body.nodes; node;)
 			{

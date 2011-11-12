@@ -34,7 +34,7 @@ package
 			stage.scaleMode = StageScaleMode.EXACT_FIT;
 			stage.quality = "low";
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-			FlashPoint.fixedFPS = 30;
+			FlashPoint.fixedFPS = 24;
 			FlashPoint.timeScale = 1;
 			FlashPoint.init(stage);
 			GameObject.world.addComponent(GameCore);

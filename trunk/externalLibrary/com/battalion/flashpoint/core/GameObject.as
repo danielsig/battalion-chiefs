@@ -1,6 +1,7 @@
 package com.battalion.flashpoint.core 
 {
 	
+	import com.battalion.flashpoint.comp.TextRenderer;
 	import flash.sampler.NewObjectSample;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.*;
@@ -225,6 +226,7 @@ trace(myChild);//WORLD.foo.bar
 			while (awakeIndex--)
 			{
 				awakeCalls[awakeIndex]();
+				if (!_parent) return;
 			}
 		}
 		
@@ -523,7 +525,6 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				}
 			}*/
 			sendMessage("onDestroy");
-			
 			_parent.unparentChild(this);
 			_parent = null;
 		}
@@ -1105,6 +1106,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				for each(var f : Function in _start)
 				{
 					f();
+					if (!_parent) return;
 				}
 				_start.length = 0;
 			}
@@ -1114,6 +1116,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				for each(var before : Array in _before.update)
 				{
 					sendMessage.apply(this, before);
+					if (!_parent) return;
 				}
 				delete _before.update;
 			}
@@ -1121,6 +1124,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			for each(f in _update)
 			{
 				f();
+				if (!_parent) return;
 			}
 			//AFTER UPDATE
 			if (_after.update)
@@ -1128,6 +1132,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				for each(var after : Array in _after.update)
 				{
 					sendMessage.apply(this, after);
+					if (!_parent) return;
 				}
 				delete _after.update;
 			}
@@ -1135,6 +1140,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			for each(var child : GameObject in _children)
 			{
 				child.update();
+				if (!_parent) return;
 			}
 			CONFIG::debug
 			{
@@ -1154,6 +1160,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				for each(var before : Array in _before.fixedUpdate)
 				{
 					sendMessage.apply(this, before);
+					if (!_parent) return;
 				}
 				delete _before.fixedUpdate;
 			}
@@ -1161,6 +1168,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			for each(var f : Function in _fixedUpdate)
 			{
 				f();
+				if (!_parent) return;
 			}
 			//AFTER FIXED UPDATE
 			if (_after.fixedUpdate)
@@ -1168,6 +1176,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				for each(var after : Array in _after.fixedUpdate)
 				{
 					sendMessage.apply(this, after);
+					if (!_parent) return;
 				}
 				delete _after.fixedUpdate;
 			}
@@ -1175,6 +1184,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			for each(var child : GameObject in _children)
 			{
 				child.fixedUpdate();
+				if (!_parent) return;
 			}
 		}
 	}

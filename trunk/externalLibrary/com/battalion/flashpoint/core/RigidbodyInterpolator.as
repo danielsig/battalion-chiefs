@@ -74,14 +74,17 @@ package com.battalion.flashpoint.core
 		public function fixedUpdate() : void
 		{
 			var physics : Object = _gameObject._physicsComponents;
-			_prevX = _nextX;
-			_prevY = _nextY;
-			_prevA = _nextA;
-			_nextX = physics.body.x + Physics._offsetX;
-			_nextY = physics.body.y + Physics._offsetY;
-			_nextA = physics.body.a;
-			if (_nextA - _prevA > 180) _prevA += 360;
-			if (_nextA - _prevA < -180) _prevA -= 360;
+			if (physics.body)
+			{
+				_prevX = _nextX;
+				_prevY = _nextY;
+				_prevA = _nextA;
+				_nextX = physics.body.x + Physics._offsetX;
+				_nextY = physics.body.y + Physics._offsetY;
+				_nextA = physics.body.a;
+				if (_nextA - _prevA > 180) _prevA += 360;
+				if (_nextA - _prevA < -180) _prevA -= 360;
+			}
 		}
 	}
 

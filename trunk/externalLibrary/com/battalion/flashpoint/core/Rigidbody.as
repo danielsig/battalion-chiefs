@@ -5,6 +5,7 @@ package com.battalion.flashpoint.core
 	import flash.filters.ConvolutionFilter;
 	import flash.geom.Point;
 	import flash.geom.Matrix;
+	import com.battalion.flashpoint.comp.TextRenderer;
 	
 	/**
 	 * A Rigidbody, add this alone with a Collider to a GameObject to make it react to collisions.
@@ -175,6 +176,7 @@ package com.battalion.flashpoint.core
 		
 		public function touchingInDirection(normal : Point, thresholdSquared : Number) : Vector.<ContactPoint>
 		{
+			if (!body) return null;
 			var contacts : Vector.<Contact> = body.contacts;
 			if (!contacts) return null;
 			thresholdSquared = 1 - thresholdSquared;
@@ -199,6 +201,7 @@ package com.battalion.flashpoint.core
 		}
 		public function touching(collider : Collider) : Vector.<ContactPoint>
 		{
+			if (!body) return null;
 			var contacts : Vector.<Contact> = body.contacts;
 			if (!contacts) return null;
 			var insert : uint = 0;
@@ -221,6 +224,7 @@ package com.battalion.flashpoint.core
 		
 		public function addTorque(torque : Number, mode : uint = ForceMode.FORCE) : void
 		{
+			if (!body) return;
 			switch(mode)
 			{
 				case ForceMode.VELOCITY_CHANGE:
@@ -236,6 +240,7 @@ package com.battalion.flashpoint.core
 		}
 		public function addForceX(force : Number, mode : uint = ForceMode.FORCE) : void
 		{
+			if (!body) return;
 			switch(mode)
 			{
 				case ForceMode.VELOCITY_CHANGE:
@@ -251,6 +256,7 @@ package com.battalion.flashpoint.core
 		}
 		public function addForceY(force : Number, mode : uint = ForceMode.FORCE) : void
 		{
+			if (!body) return;
 			switch(mode)
 			{
 				case ForceMode.VELOCITY_CHANGE:
@@ -266,6 +272,7 @@ package com.battalion.flashpoint.core
 		}
 		public function addForce(force : Point, mode : uint = ForceMode.FORCE) : void
 		{
+			if (!body) return;
 			switch(mode)
 			{
 				case ForceMode.VELOCITY_CHANGE:
@@ -311,13 +318,16 @@ package com.battalion.flashpoint.core
 		/** @private */
 		public final function onDestroy() : Boolean
 		{
-			if (_this && _this.added == this) removePhysics();
-			if(body.added) PowerGrid.removeBody(body);
-			if (!_this.updated)
+			if (body)
 			{
-				_this.updated = true;
-				addConcise(UpdatePhysics, "updatePhysics");
-				sendBefore("updatePhysics", "update");
+				if (_this && _this.added == this) removePhysics();
+				if(body.added) PowerGrid.removeBody(body);
+				if (!_this.updated)
+				{
+					_this.updated = true;
+					addConcise(UpdatePhysics, "updatePhysics");
+					sendBefore("updatePhysics", "update");
+				}
 			}
 			return false;
 		}
