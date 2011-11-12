@@ -13,26 +13,26 @@ package com.battalion.flashpoint.comp
 		
 		/**
 		 * Set this to a Point so that the ParticleGenerator will add a rigidbody to the
-		 * GameObject. The values will determne the initial velocity of the rigidbody.
+		 * GameObject. The values will determine the initial velocity of the rigidbody.
 		 */
 		public var velocity : Point = null;
 		
 		/**
 		 * Set this to a Point so that the ParticleGenerator will add a rigidbody to the
-		 * GameObject. The values will determne the initial random velocity of the rigidbody.
+		 * GameObject. The values will determine the initial random velocity of the rigidbody.
 		 * e.g. a Point(0, 10) will cause the velocity along Y axis to range between -10 and 10.
 		 */
 		public var randomVelocity : Point = null;
 		
 		/**
 		 * Set this to a a non-zero value so that the ParticleGenerator will add a rigidbody to the
-		 * GameObject. The values will determne the mass of the rigidbody.
+		 * GameObject. The values will determine the mass of the rigidbody.
 		 */
 		public var mass : Number = 0;
 		
 		/**
 		 * Set this to a a non-zero value so that the ParticleGenerator will add a rigidbody to the
-		 * GameObject. The values will determne the inertia of the rigidbody.
+		 * GameObject. The values will determine the inertia of the rigidbody.
 		 */
 		public var inertia : Number = 0;
 		
@@ -65,7 +65,20 @@ package com.battalion.flashpoint.comp
 		
 		private var _hzCount : Number = 0;
 		
+		public function start() : void
+		{
+			emitting = true;
+		}
+		public function stop() : void
+		{
+			emitting = false;
+		}
+		public function toggleEmitting() : void
+		{
+			emitting = !emitting;
+		}
 		
+		/** @private **/
 		public function fixedUpdate() : void
 		{
 			if (emitting)

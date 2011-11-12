@@ -129,6 +129,7 @@ package com.battalion.flashpoint.display
 		public static function removeTextFromView(text : TextRenderer) : void
 		{
 			var index : int = _texts.indexOf(text);
+			if (index < 0) return;
 			if (index < _texts.length - 1 && index > 0)//not the last element
 			{
 				_texts[index] = _texts.pop();
@@ -260,7 +261,7 @@ package com.battalion.flashpoint.display
 						_sprites[i].visible = false;
 					}
 				}
-				else if(_sprites[i])
+				else if(_sprites[i] && _sprites[i].parent)
 				{
 					_sprites[i].parent.removeChild(_sprites[i]);
 					delete renderer.sprites[_name];

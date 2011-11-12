@@ -18,7 +18,7 @@ package com.battalion.flashpoint.core
 		{
 			_radius = value;
 			if (body) (body as Circle).radius = value;
-			if (_radius > Physics._maxSize) Physics.maxSize = _radius * 1.2;
+			if (_radius * 2 > Physics._maxSize) Physics.maxSize = _radius * 2.4;
 		}
 		
 		/** @private */

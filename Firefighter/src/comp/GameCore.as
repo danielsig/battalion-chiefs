@@ -48,7 +48,7 @@ package comp
 			tileRenderer.setAsCollisionMap(new Point( -200, -200),
 			0, ALL, ALL, ALL, ALL, ALL, 0, 0,
 			ALL, ALL, ALL, ALL, ALL, ALL, ALL, ALL,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); 
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 			
 			var geomCode : GeomCodeRuntime = world.addComponent(GeomCodeRuntime) as GeomCodeRuntime;
 			world.addComponent(GeomCodePrimitives);
@@ -75,9 +75,15 @@ package comp
 			samusObj.rigidbody.mass = 50;
 			samusObj.rigidbody.drag = 0;
 			samusObj.rigidbody.freezeRotation = true;
-			samusObj.transform.y = 350;
-			samusObj.transform.x = 4500;
+			samusObj.transform.y = 100;
+			samusObj.transform.x = 1000;
 			
+			samusObj.addComponent(Fire);
+			/*
+			Fire.createFire(samusObj.transform.x + 0, samusObj.transform.y + 180);
+			Fire.createFire(samusObj.transform.x + 300, samusObj.transform.y + 180);
+			Fire.createFire(samusObj.transform.x + 600, samusObj.transform.y + 180);
+			*/
 			
 			Renderer.draw("aboxGraph",
 			"fill", { color:"0xBB0000" },

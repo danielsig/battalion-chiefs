@@ -17,7 +17,7 @@ package comp
 	 */
 	public class DummyController extends Component implements IExclusiveComponent
 	{
-		public static var cheatsEnabled : Boolean = CONFIG::debug;
+		public static var cheatsEnabled : Boolean = true;// CONFIG::debug;
 		public var speed : Number = 160;
 		public var backSpeed : Number = 100;
 		public var runSpeed : Number = 240;
@@ -38,12 +38,26 @@ package comp
 			Input.assignButton("shift", Keyboard.SHIFT);
 			Input.assignButton("jump", Keyboard.SPACE);
 			Input.assignButton("crouch", "c");
+			Input.assignButton("burn", "f");
+			/*
+			Input.assignButton("CHEAT1", "C");
+			Input.assignButton("CHEAT2", "H");
+			Input.assignButton("CHEAT3", "E");
+			Input.assignButton("CHEAT4", "A");
+			Input.assignButton("CHEAT5", "T");
+			*/
 			gameObject.transform.scaleY = 3;
 			addComponent(RigidbodyInterpolator);
 		}
 			
 		public function fixedUpdate() : void 
 		{
+			/*if (!cheatsEnabled && Input.toggledButton("CHEAT1") && Input.toggledButton("CHEAT2") && Input.toggledButton("CHEAT3") && Input.toggledButton("CHEAT4") && Input.toggledButton("CHEAT5"))
+			{
+				cheatsEnabled = true;
+				requireComponent(TimeMachine);
+				requireComponent(Zoomer);
+			}*/
 			var stopAudio : Boolean = false;
 			var thisPos : Point = (gameObject.transform as Transform).globalPosition;
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
@@ -73,7 +87,6 @@ package comp
 				}
 				else
 				{
-					trace("inAir");
 					inAir = false;
 					sendMessage("Audio_gotoAndPlay", 200);
 				}
@@ -104,6 +117,7 @@ package comp
 				gameObject.transform.x += world.cam.transform.mouseRelativeX;
 				gameObject.transform.y += world.cam.transform.mouseRelativeY - 50;
 			}
+			if (Input.pressButton("burn")) sendMessage("ParticleGenerator_toggleEmitting");
 		}
 		
 	}

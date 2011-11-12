@@ -163,10 +163,10 @@ myObj.animation.play("myAnimation");
 			}
 			_animations[animationName] = frames;
 			_animationLabels[animationName] = new Vector.<Array>(index);
-			var loader : BitmapLoader = new BitmapLoader(urls, frames, CONFIG::debug, null, false);
-			loader.start();
 			_filterQueue[animationName] = new Vector.<Object>();
+			var loader : BitmapLoader = new BitmapLoader(urls, frames, CONFIG::debug, null, false);
 			new AnimationLoader(animationName, loader);
+			loader.start();
 		}
 		/**
 		 * Traces out currently loaded/loading animations and their labels.

@@ -31,7 +31,14 @@ package com.battalion.flashpoint.comp
 		}
 		private function step() : void
 		{
+			if (!Animation._filterQueue[name])
+			{
+				loader.removeEventListener(ProgressEvent.PROGRESS, onProgress);
+				loader.removeEventListener(Event.COMPLETE, onComplete);
+				return;
+			}
 			var length : uint = frames.length;
+			var sple : Object = Animation._filterQueue;
 			var queueLength : uint = Animation._filterQueue[name].length;
 			var queue : Vector.<Object> = Animation._filterQueue[name];
 			for (var i : uint = 0; i < length; i++)
