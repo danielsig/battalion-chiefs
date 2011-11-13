@@ -1,18 +1,15 @@
 package comp 
 {
 	
-	import com.battalion.flashpoint.comp.Audio;
-	import com.battalion.flashpoint.comp.Camera;
 	import com.battalion.flashpoint.core.*;
+	import com.battalion.flashpoint.comp.*;
 	import com.battalion.flashpoint.comp.misc.*;
-	import com.battalion.flashpoint.comp.Animation;
 	import com.battalion.Input;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	
 	/**
-	 * ...
 	 * @author Battalion Chiefs
 	 */
 	public class DummyController extends Component implements IExclusiveComponent
@@ -23,14 +20,21 @@ package comp
 		public var runSpeed : Number = 240;
 		public var jumpSpeed : Number = 300;
 		public var inAir : Boolean = true;
+		public var hose : GameObject;
 		
 		public function awake() : void 
-		{
+		{		
 			if (cheatsEnabled)
 			{
 				requireComponent(TimeMachine);
 				requireComponent(Zoomer);
 			}
+			
+			hose = WaterHose.createWaterHose(10, -10, gameObject);
+			hose.particleGenerator.emitting = false;
+			hose.addComponent(LookAtMouse);
+			
+			
 			(requireComponent(Rigidbody) as Rigidbody);
 			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.06, new Point(0, -50));
 			
@@ -39,25 +43,14 @@ package comp
 			Input.assignButton("jump", Keyboard.SPACE);
 			Input.assignButton("crouch", "c");
 			Input.assignButton("burn", "f");
-			/*
-			Input.assignButton("CHEAT1", "C");
-			Input.assignButton("CHEAT2", "H");
-			Input.assignButton("CHEAT3", "E");
-			Input.assignButton("CHEAT4", "A");
-			Input.assignButton("CHEAT5", "T");
-			*/
+			Input.assignButton("teleport", "t");
+			
 			gameObject.transform.scaleY = 3;
 			addComponent(RigidbodyInterpolator);
 		}
 			
 		public function fixedUpdate() : void 
 		{
-			/*if (!cheatsEnabled && Input.toggledButton("CHEAT1") && Input.toggledButton("CHEAT2") && Input.toggledButton("CHEAT3") && Input.toggledButton("CHEAT4") && Input.toggledButton("CHEAT5"))
-			{
-				cheatsEnabled = true;
-				requireComponent(TimeMachine);
-				requireComponent(Zoomer);
-			}*/
 			var stopAudio : Boolean = false;
 			var thisPos : Point = (gameObject.transform as Transform).globalPosition;
 			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
@@ -112,12 +105,24 @@ package comp
 			{
 				gameObject.transform.scaleX = 3;
 			}
-			if (Input.mouseClick && cheatsEnabled)
+			if (cheatsEnabled)
 			{
-				gameObject.transform.x += world.cam.transform.mouseRelativeX;
-				gameObject.transform.y += world.cam.transform.mouseRelativeY - 50;
+				if (Input.pressButton("teleport"))
+				{
+					gameObject.transform.x += world.cam.transform.mouseRelativeX;
+					gameObject.transform.y += world.cam.transform.mouseRelativeY - 50;
+				}
+				if (Input.pressButton("burn")) Fire.createFire(gameObject.transform.x, gameObject.transform.y);
 			}
-			if (Input.pressButton("burn")) sendMessage("ParticleGenerator_toggleEmitting");
+			
+			//hose.transform.rotateTowards(new Point(Transform.mouseWorldX, Transform.mouseWorldY), 0);
+			
+			if (Input.mouseHold)
+			{
+				hose.particleGenerator.emitting = true;
+			}
+			else hose.particleGenerator.emitting = false;
+			
 		}
 		
 	}

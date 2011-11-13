@@ -174,6 +174,20 @@ package com.battalion.flashpoint.core
 			if (body) body.inertia = value ? Infinity : _inertia;
 		}
 		
+		public function get contacts() : Vector.<ContactPoint>
+		{
+			if (!body) return null;
+			var contacts : Vector.<Contact> = body.contacts;
+			if (!contacts || !contacts.length) return null;
+			
+			var length : uint = contacts.length;
+			var points : Vector.<ContactPoint> = new Vector.<ContactPoint>(length);
+			while(length--)
+			{
+				points[length] = new ContactPoint(contacts[length]);
+			}
+			return points;
+		}
 		public function touchingInDirection(normal : Point, thresholdSquared : Number) : Vector.<ContactPoint>
 		{
 			if (!body) return null;

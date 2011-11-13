@@ -592,7 +592,7 @@ package com.battalion.powergrid
 							{
 								collision = true;
 								var other : AbstractRigidbody = node.next.body;
-								if (other && other != prev)
+								if (other && other != prev && other.layers & circle.layers)
 								{
 									prev = other;
 									var otherCircle : Circle = other as Circle;
@@ -1258,6 +1258,7 @@ package com.battalion.powergrid
 				{
 					circle.x = circle.lastX;
 					circle.y = circle.lastY;
+					//circle.vx = circle.vy = 0;
 				}
 				return true;
 			}
@@ -1277,7 +1278,7 @@ package com.battalion.powergrid
 					//can calculate time of impact.
 					dx = posX - prevX;
 					dy = posY - prevY;
-					//if (!doSide)
+					if (!doSide)
 					{
 						if (dy > 0)//falling down meaning it crosses tileTop
 						{
@@ -1310,7 +1311,7 @@ package com.battalion.powergrid
 							}
 						}
 					}
-					//else
+					else
 					{
 						if (dx > 0)//going right meaning it crosses tileLeft
 						{
@@ -2129,43 +2130,48 @@ package com.battalion.powergrid
 				else if (body is Triangle) bodies = _triangles;
 				else if (body is Group)
 				{
-					bodies = _circles;
-					do
+					if (_circles)
 					{
-						if (bodies.body.group == body)
+						bodies = _circles;
+						do
 						{
-							if (bodies.next) bodies.next.prev = bodies.prev;
-							if (bodies.prev) bodies.prev.next = bodies.next;
-							else _circles = bodies.next;
-							
-							bodies.next = BodyNode.pool;
-							BodyNode.pool = bodies;
-							
-							BodyNode.pool.brother = BodyNode.pool.prev = null;
-							BodyNode.pool.body = null;
-							BodyNode.pool.index = uint.MAX_VALUE;
+							if (bodies.body.group == body)
+							{
+								if (bodies.next) bodies.next.prev = bodies.prev;
+								if (bodies.prev) bodies.prev.next = bodies.next;
+								else _circles = bodies.next;
+								
+								bodies.next = BodyNode.pool;
+								BodyNode.pool = bodies;
+								
+								BodyNode.pool.brother = BodyNode.pool.prev = null;
+								BodyNode.pool.body = null;
+								BodyNode.pool.index = uint.MAX_VALUE;
+							}
 						}
+						while ((bodies = bodies.next));
 					}
-					while ((bodies = bodies.next));
-					
-					bodies = _triangles;
-					do
+					if (_triangles)
 					{
-						if (bodies.body.group == body)
+						bodies = _triangles;
+						do
 						{
-							if (bodies.next) bodies.next.prev = bodies.prev;
-							if (bodies.prev) bodies.prev.next = bodies.next;
-							else _triangles = bodies.next;
-							
-							bodies.next = BodyNode.pool;
-							BodyNode.pool = bodies;
-							
-							BodyNode.pool.brother = BodyNode.pool.prev = null;
-							BodyNode.pool.body = null;
-							BodyNode.pool.index = uint.MAX_VALUE;
+							if (bodies.body.group == body)
+							{
+								if (bodies.next) bodies.next.prev = bodies.prev;
+								if (bodies.prev) bodies.prev.next = bodies.next;
+								else _triangles = bodies.next;
+								
+								bodies.next = BodyNode.pool;
+								BodyNode.pool = bodies;
+								
+								BodyNode.pool.brother = BodyNode.pool.prev = null;
+								BodyNode.pool.body = null;
+								BodyNode.pool.index = uint.MAX_VALUE;
+							}
 						}
+						while ((bodies = bodies.next));
 					}
-					while ((bodies = bodies.next));
 					
 					bodies = _groups;
 				}

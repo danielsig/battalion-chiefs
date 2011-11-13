@@ -52,6 +52,9 @@ package com.battalion.flashpoint.core
 		private var _sin : Number = 0;
 		private var _cosSinCalculated : Boolean = false;
 		
+		public static function get mouseWorldX():Number { return (Input.mouseX - Input.stageWidth * 0.5) * world.cam.transform.scaleX + world.cam.transform.x; }
+		public static function get mouseWorldY():Number { return (Input.mouseY - Input.stageHeight * 0.5) * world.cam.transform.scaleY + world.cam.transform.y; }
+		
 		public function get mouseRelativeX():Number { return (Input.mouseX - Input.stageWidth * 0.5 - globalMatrix.tx + world.cam.transform.gx) * world.cam.transform.scaleX; }
 		public function get mouseRelativeY():Number { return (Input.mouseY - Input.stageHeight * 0.5 - globalMatrix.ty + world.cam.transform.gy) * world.cam.transform.scaleY; }
 		
@@ -193,6 +196,15 @@ package com.battalion.flashpoint.core
 		 */
 		public function get forward() : Point
 		{
+			if (!_gameObject._parent)
+			{
+				if (scaleX == 1 && scaleY == 1) return new Point(globalMatrix.a, globalMatrix.b)
+				else return new Point(globalMatrix.a / scaleX, globalMatrix.b / scaleY);
+			}
+			var frw : Point = new Point(globalMatrix.a, globalMatrix.b);
+			frw.normalize(1);
+			return frw;
+			/*
 			var angle : Number = (180 - ((180 - rotation) % 360)) * 0.0174532925;
 			
 			if(angle < 0.7854){
@@ -222,16 +234,19 @@ package com.battalion.flashpoint.core
 			
 			_cosSinCalculated = true;
 			_rotation = rotation;
-			return globalMatrix.deltaTransformPoint(new Point(_cos, _sin));
+			return globalMatrix.deltaTransformPoint(new Point(_cos, _sin));*/
 		}
 		public function set forward(value : Point) : void
 		{
-			if (gameObject.parent) var matrix : Matrix = gameObject.parent.transform.globalMatrix.clone();
+			if (gameObject.parent)
+			{
+				var matrix : Matrix = globalMatrix.clone();
+				matrix.invert();
+			}
 			else matrix = new Matrix();
-			matrix.invert();
 			value = matrix.deltaTransformPoint(value);
-			var xPos : Number = value.x - x;
-			var angle : Number = (value.y - y) / xPos;
+			var xPos : Number = value.x;
+			var angle : Number = value.y / xPos;
 			if (xPos < 0)
 			{
 				if(angle > 0) angle = -9.4 / ((angle + 2.44) * (angle + 2.44)) - 1.57079633;
