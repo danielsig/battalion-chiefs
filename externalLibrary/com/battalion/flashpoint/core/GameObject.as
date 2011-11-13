@@ -498,7 +498,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			var name : String = type + "";
 			name = name.charAt(7).toLowerCase() + name.slice(8, name.length-1);
-			if (this.hasOwnProperty(name))
+			if (this.hasOwnProperty(name) && this[name] is type)
 			{
 				return this[name];
 			}

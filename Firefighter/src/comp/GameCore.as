@@ -1,8 +1,11 @@
 package comp
 {
 	import com.battalion.flashpoint.core.*;
+	import com.battalion.flashpoint.display.ColorMatrix;
 	import flash.display.BitmapData;
 	import flash.display.Shape;
+	import flash.filters.ColorMatrixFilter;
+	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -17,13 +20,19 @@ package comp
 	import flash.utils.*;
 	
 	/**
-	 * ...
 	 * @author Battalion Chiefs
 	 */
 	public class GameCore extends Component implements IExclusiveComponent
 	{
 		public function start() : void 
 		{
+			var color : ColorMatrix  = (world.cam.camera as Camera).colorMatrix = new ColorMatrix();
+			
+			//color.saturate( -1);
+			//color.tint(0x80FF80, 1);
+			trace(color);
+			
+			
 			/*var grid : BitmapData = new BitmapData(20, 10, true, 0xFF000007);
 			grid.fillRect(new Rectangle(0, 0, 20, 9), 0);
 			grid.fillRect(new Rectangle(4, 8, 3, 2), 0xFF000007);
@@ -62,6 +71,17 @@ package comp
 				7, 10,
 				-7, 10
 			);
+			Renderer.draw("aboxGraph",
+			"fill", { color:"0xBB0000" },
+				0, 0,
+				20, 0,
+				20, 20,
+				0, 20
+			);
+			Renderer.draw("aballGraph",
+			"fill", { color:"0xBB0000" },
+			"circle", {radius:30}
+			);
 			
 			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, DummyController, BoxCollider, Rigidbody);
 			Audio.load("samusSound", "assets/sound/samus.mp3~100-2000~");
@@ -75,27 +95,23 @@ package comp
 			samusObj.rigidbody.mass = 50;
 			samusObj.rigidbody.drag = 0;
 			samusObj.rigidbody.freezeRotation = true;
-			samusObj.transform.y = 100;
-			samusObj.transform.x = 1000;
-			
-			samusObj.addComponent(Fire);
+			samusObj.transform.x = 4200;
+			samusObj.transform.y = 1260;
 			/*
-			Fire.createFire(samusObj.transform.x + 0, samusObj.transform.y + 180);
-			Fire.createFire(samusObj.transform.x + 300, samusObj.transform.y + 180);
-			Fire.createFire(samusObj.transform.x + 600, samusObj.transform.y + 180);
+			Fire.createFire(4200, 520);
+			Fire.createFire(4200, 1260);
+			Fire.createFire(4200, 1900);
+			
+			Fire.createFire(6120, 500);
+			Fire.createFire(6000, 1000);
+			
+			Fire.createFire(7410, 850);
 			*/
 			
-			Renderer.draw("aboxGraph",
-			"fill", { color:"0xBB0000" },
-				0, 0,
-				20, 0,
-				20, 20,
-				0, 20
-			);
-			Renderer.draw("aballGraph",
-			"fill", { color:"0xBB0000" },
-			"circle", {radius:30}
-			);
+			/*
+			var mouse : GameObject = new GameObject("mouse" + c, Renderer, FollowMouse);
+			mouse.renderer.setBitmapByName("aballGraph");
+			*/
 			
 			var amount : uint = 0;
 			var makeBox : Boolean = false;

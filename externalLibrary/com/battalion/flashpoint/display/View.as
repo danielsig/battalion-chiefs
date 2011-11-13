@@ -7,6 +7,7 @@ package com.battalion.flashpoint.display
 	import flash.display.Sprite;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.filters.ColorMatrixFilter;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
@@ -45,6 +46,7 @@ package com.battalion.flashpoint.display
 		
 		private var _bounds : Rectangle;
 		private var _cam : Camera;
+		private var _colorMatrix : ColorMatrix;
 		private var _content : Sprite = new Sprite();//to center things
 		private var _layers : Sprite = new Sprite();//to perferm transformation on all layers
 		private var _tileLayer : Sprite = new Sprite();
@@ -184,11 +186,25 @@ package com.battalion.flashpoint.display
 				removeEventListener(Event.ENTER_FRAME, onEveryFrame);
 				return;
 			}
-			_dynamicLayer.graphics.clear();
+			//_dynamicLayer.graphics.clear();
 			var tr : Transform = _cam.gameObject.transform;
 			var m : Matrix = _cam.gameObject.transform.matrix.clone();
 			m.invert();
 			_layers.transform.matrix = m;
+			
+			if (_cam.colorMatrix)
+			{
+				if (!_colorMatrix || !_colorMatrix.equals(_cam.colorMatrix))
+				{
+					_layers.filters = [_cam.colorMatrix.filter];
+					_colorMatrix = _cam.colorMatrix.clone();
+				}
+			}
+			else if (_colorMatrix)
+			{
+				_layers.filters = null;
+				_colorMatrix = null;
+			}
 			
 			_sprites.length = _renderers.length;
 			_tileViews.length = _tiles.length;
@@ -241,6 +257,19 @@ package com.battalion.flashpoint.display
 							else
 							{
 								(_sprites[i].getChildAt(0) as Bitmap).bitmapData = renderer.bitmapData;
+								if (renderer.rendererInFrontOfThis)
+								{
+									onFront = renderer.rendererInFrontOfThis.sprites[_name];
+									if (onFront && onFront.parent == _dynamicLayer)
+									{
+										back = _dynamicLayer.getChildIndex(_sprites[i]);
+										front = _dynamicLayer.getChildIndex(onFront);
+										if (back > front)
+										{
+											_dynamicLayer.swapChildren(_sprites[i], onFront);
+										}
+									}
+								}
 							}
 							renderer.updateBitmap = false;
 						}

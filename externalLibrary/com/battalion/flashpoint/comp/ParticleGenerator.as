@@ -91,8 +91,8 @@ package com.battalion.flashpoint.comp
 					_counter++;
 					
 					var particle : GameObject = new GameObject(gameObject.name + "Particle" + _counter);
-					particle.transform.x = gameObject.transform.x;
-					particle.transform.y = gameObject.transform.y;
+					particle.transform.x = gameObject.transform.gx;
+					particle.transform.y = gameObject.transform.gy;
 					if (maxParticleCount != Infinity)
 					{
 						var handler : ParticleHandler = particle.addComponent(ParticleHandler) as ParticleHandler;

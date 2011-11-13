@@ -31,7 +31,7 @@ package
 		private function init(e : Event = null) : void 
 		{
 			stage.tabChildren = false;
-			stage.scaleMode = StageScaleMode.EXACT_FIT;
+			stage.scaleMode = StageScaleMode.SHOW_ALL;
 			stage.quality = "low";
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			FlashPoint.fixedFPS = 24;

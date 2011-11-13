@@ -455,6 +455,7 @@ Renderer.draw("myWeirdArrow",
 		public function putInFrontOf(other : Renderer) : void
 		{
 			other.putBehind(this);
+			updateBitmap = true;
 		}
 		/**
 		 * Puts this Renderer behind the <code>other</code> Renderer.
@@ -462,11 +463,12 @@ Renderer.draw("myWeirdArrow",
 		 */
 		public function putBehind(other : Renderer) : void
 		{
-			if (rendererInFrontOfThis)
+			if (rendererInFrontOfThis && rendererInFrontOfThis.gameObject)
 			{
 				other.putBehind(rendererInFrontOfThis);
 			}
 			rendererInFrontOfThis = other;
+			updateBitmap = true;
 		}
 		
 		private function startLoading() : void 

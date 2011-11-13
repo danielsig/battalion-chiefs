@@ -2,6 +2,14 @@ package com.danielsig
 {
 	public class StringUtilPro
 	{
+		public static function getNumeral(number : uint) : String
+		{
+			var end : uint = number % 10;
+			if (!end && end > 3) return number + "th";
+			if (end == 1) return number + "st";
+			if (end == 2) return number + "nd";
+			return number + "rd"
+		}
 		public static function getHash16(string : String) : int
 		{
 			return getHashRaw(string) % 0xFFFF;
