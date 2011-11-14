@@ -17,7 +17,6 @@ package comp
 		private var _prevX : Number = 0;
 		private var _prevY : Number = 0;
 		
-		private var _rotationOffset : Number = Math.random() * 360;
 		private var _splashed : Boolean = false;
 		
 		private static var _jetMaterial : PhysicMaterial = new PhysicMaterial(0.9, 0.5);
@@ -34,7 +33,7 @@ package comp
 			_col.material = _jetMaterial;
 			_col.layers = uint.MAX_VALUE - 3;
 			gameObject.transform.forward = _body.velocity;
-			gameObject.renderer.offset = new Matrix(3, 0, 0, 0.333, 30, 0);
+			gameObject.renderer.offset = new Matrix(4, 0, 0, 0.7, 30, 0);
 		}
 		public function fixedUpdate() : void
 		{
@@ -76,6 +75,7 @@ package comp
 		}
 		public function splash() : void
 		{
+			gameObject.transform.rotation = Math.random() * 360 - 180;
 			//_body.addForce(new Point(Math.random() * 2 - 1, Math.random() * 2 - 1));
 			_splashed = true;
 			gameObject.animation.playhead = 40;

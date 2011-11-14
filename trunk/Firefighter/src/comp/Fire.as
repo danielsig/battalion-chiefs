@@ -42,7 +42,7 @@ package comp
 			//_gen.velocity = new Point(0, -50);
 			_gen.radius = 23;
 			_gen.mass = 0.5;
-			_gen.hz = 12;
+			_gen.hz = 24;
 			_gen.maxParticleCount = uint.MAX_VALUE;
 		}
 		
@@ -59,8 +59,8 @@ package comp
 			_gen.emitting = (world.cam.camera as Camera).transformInSight(gameObject.transform, 400, 800) && _emitting;
 			if (heat < 300)
 			{
-				_gen.destroy();
 				destroy();
+				_gen.destroy();
 			}
 		}
 		public function toggleFire() : void

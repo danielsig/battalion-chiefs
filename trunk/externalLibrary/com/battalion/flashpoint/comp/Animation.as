@@ -278,6 +278,12 @@ myObj.animation.play("myAnimation");
 				if (value <= -_length || value >= _length) throw new Error("Can not set playhead to " + value + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
 			_p = value < 0 ? _length + value : value;
+			_renderer.bitmapData = _frames[_p];
+			_renderer.updateBitmap = _renderer.bitmapData != null;
+			if (_messages[_p])
+			{
+				sendMessage.apply(this, _messages[_p]);
+			}
 		}
 		/**
 		 * Number of frames in the current animation.
