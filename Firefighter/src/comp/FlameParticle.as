@@ -11,34 +11,43 @@ package comp
 	 */
 	public final class FlameParticle extends Component implements IExclusiveComponent 
 	{
+		private static var _flameMaterial : PhysicMaterial = new PhysicMaterial(0.9, 0.9);
+		
 		private var _body : Rigidbody;
+		private var _col : CircleCollider;
+		private var _rotationOffset : Number = Math.random() * 360;
+		private var _tr : Transform;
+		private var _counter : int = 0;
 		
 		public var extinguished : Boolean = false;
 		public var fluctuation : Number = 30;
 		public var upDraft : Number = 10;
-		private var _rotationOffset : Number = Math.random() * 360;
 		internal var source : Fire = null;
 		
 		public function awake() : void
 		{
+			_tr = gameObject.transform;
 			requireComponent(RigidbodyInterpolator);
 			_body = gameObject.rigidbody;
 			_body.affectedByGravity = false;
-			//_body.vanDerWaals = 2200;
-			//_body.freezeRotation = true;
 			_body.drag = 0.01;
-			var collider : Collider = (gameObject.circleCollider || gameObject.boxCollider) as Collider;
-			collider.material = new PhysicMaterial(0.9, 0.9);
-			collider.layers = 2;
-			//(gameObject.renderer as Renderer).offset = new Matrix(0.5, 0, 0, 0.5, 0, 0);
+			
+			_col = gameObject.circleCollider as CircleCollider;
+			_col.material = _flameMaterial;
+			_col.layers = 2;
 		}
 		public function fixedUpdate() : void
 		{
 			var random : Point = new Point(Math.random() * fluctuation - fluctuation * 0.5, Math.random() * fluctuation - fluctuation * 0.5 - upDraft);
 			_body.addForce(random, ForceMode.ACCELLERATION);
-			gameObject.transform.rotateTowards(gameObject.transform.position.add(_body.velocity), _rotationOffset);
-			//gameObject.circleCollider.radius *= 0.95;
-			//gameObject.transform.scale += (Math.random() * 3 - gameObject.transform.scale) * 0.25;
+			var rotation : Number =  _tr.rotation;
+			_tr.rotateTowards(_tr.position.add(_body.velocity), _rotationOffset);
+			_body.angularVelocity = _tr.rotation - rotation;
+			if (_counter++ > 40 || !_counter)
+			{
+				_counter = -20;
+				_col.radius *= 0.6;
+			}
 		}
 		public function extinguish() : void
 		{

@@ -1263,28 +1263,30 @@ package com.battalion.powergrid
 				return true;
 			}
 			
-			var doSide : Boolean = !(dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom);
 			
 			var posX : Number = circle.x;
 			var posY : Number = circle.y;
-			var prevX : Number = circle.prevX;
-			var prevY : Number = circle.prevY;
 			var radius : Number = circle.radius;
 			
 			if (posX + radius >= tileLeft && posX - radius <= tileRight && posY + radius >= tileTop && posY - radius <= tileBottom)
 			{
-				if (prevX + radius <= tileLeft || prevX - radius >= tileRight || prevY + radius <= tileTop || prevY - radius >= tileBottom)
+				var prevX : Number = circle.prevX;
+				var prevY : Number = circle.prevY;
+				var colX : Number = posX, colY : Number = posY
+				var doSide : Boolean = !(dx > 0 ? tileOnLeft : tileOnRight) && (dy > 0 ? tileOnTop : tileOnBottom);
+				
+				if ((doSide && tileOnTop && tileOnBottom) || (!doSide && tileOnLeft && tileOnBottom) || (prevX + radius <= tileLeft || prevX - radius >= tileRight || prevY + radius <= tileTop || prevY - radius >= tileBottom))
 				{
 					//can calculate time of impact.
 					dx = posX - prevX;
 					dy = posY - prevY;
 					if (!doSide)
 					{
-						if (dy > 0)//falling down meaning it crosses tileTop
+						if (dy > 0 && !tileOnTop)//falling down meaning it crosses tileTop
 						{
 							var toi : Number = (tileTop - (prevY + radius)) / dy;
 							colX = prevX + dx * toi;
-							if (colX >= tileLeft && colX <= tileRight)//colliding with top
+							if ((tileOnLeft || colX >= tileLeft) && (tileOnRight || colX <= tileRight))//colliding with top
 							{
 								circle.x = colX;
 								circle.y = tileTop - radius;
@@ -1295,11 +1297,11 @@ package com.battalion.powergrid
 								return true;
 							}
 						}
-						else//rising up meaning it crosses tileBottom
+						else if (!tileOnBottom)//rising up meaning it crosses tileBottom
 						{
 							toi = (tileBottom - (prevY - radius)) / dy;
 							colX = prevX + dx * toi;
-							if (colX >= tileLeft && colX <= tileRight)//colliding with bottom
+							if ((tileOnLeft || colX >= tileLeft) && (tileOnRight || colX <= tileRight))//colliding with bottom
 							{
 								circle.x = colX;
 								circle.y = tileBottom + radius;
@@ -1313,11 +1315,11 @@ package com.battalion.powergrid
 					}
 					else
 					{
-						if (dx > 0)//going right meaning it crosses tileLeft
+						if (dx > 0 && !tileOnLeft)//going right meaning it crosses tileLeft
 						{
 							toi = (tileLeft - (prevX + radius)) / dx;
 							colY = prevY + dy * toi;
-							if (colY >= tileTop && colY <= tileBottom)//colliding with left
+							if ((tileOnTop || colY >= tileTop) && (tileOnBottom || colY <= tileBottom))//colliding with left
 							{
 								circle.x = tileLeft - radius;
 								circle.y = colY;
@@ -1328,11 +1330,11 @@ package com.battalion.powergrid
 								return true;
 							}
 						}
-						else//going left meaning it crosses tileRight
+						else if(!tileOnRight)//going left meaning it crosses tileRight
 						{
 							toi = (tileRight - (prevX - radius)) / dx;
 							colY = prevY + dy * toi;
-							if (colY >= tileTop && colY <= tileBottom)//colliding with left
+							if ((tileOnTop || colY >= tileTop) && (tileOnBottom || colY <= tileBottom))//colliding with left
 							{
 								circle.x = tileRight + radius;
 								circle.y = colY;
@@ -1346,14 +1348,7 @@ package com.battalion.powergrid
 					}
 					return false;
 				}
-				
 				// time of impact is not possible or it's colliding with a corner
-				
-				dx = (tileLeft + tileRight) * 0.5 - posX;
-				dy = (tileTop + tileBottom) * 0.5 - posY;
-				
-				var inside : Boolean = false;
-				var colX : Number = posX, colY : Number = posY
 				
 				if (posX < tileLeft) colX = tileLeft
 				else if (posX > tileRight) colX = tileRight;
@@ -1361,25 +1356,28 @@ package com.battalion.powergrid
 				if (posY < tileTop) colY = tileTop;
 				else if (posY > tileBottom) colY = tileBottom;
 				
-				if (colX == posX && colY == posY)
+				if (colX == posX && colY == posY || (doSide && (tileOnTop && tileOnBottom)) || (doSide && (tileOnLeft && tileOnRight)))
 				{	
+					//circle's center is inside the tile OR it's NOT touching a corner
+					
 					colX = tileLeft; colY = tileTop;
 					if (dx < 0) colX = tileRight;
 					if (dy < 0) colY = tileBottom;
 					
-					var absDx : Number = dx;
-					var absDy : Number = dy;
-					
-					if (absDx < 0) absDx = -absDx;
-					if (absDy < 0) absDy = -absDy;
-					
-					if (absDx > absDy) colY = posY;
-					else colX = posX;
-					inside = true;
+					if (doSide)
+					{
+						resolveWallCollision(circle, 0, colY - posY, dx < 0 ? 1 : -1, 0, timeScale);
+					}
+					else
+					{
+						resolveWallCollision(circle, colX - posX, 0, 0, dy < 0 ? 1 : -1, timeScale);
+					}
+					return true;
 				}
 				
 				if (colX && colY && !(colX == posX && colY == posY))
-				{	
+				{
+					//the circle is touching corners
 					dx = posX - colX; dy = posY - colY;
 					var dist : Number = Math.sqrt(dx * dx + dy * dy);
 					var invDist : Number = 1 / dist;
@@ -1387,12 +1385,6 @@ package com.battalion.powergrid
 					
 					circle.x += dx * (radius - dist);
 					circle.y += dy * (radius - dist);
-					
-					if (inside)
-					{
-						if (dx * dx > dy * dy) circle.x += (dx < 0 ? radius : -radius) * 2;
-						else circle.y += (dy < 0 ? radius : -radius) * 2;
-					}
 					
 					resolveWallCollision(circle, colX - posX, colY - posY, -dx, -dy, timeScale);
 					
