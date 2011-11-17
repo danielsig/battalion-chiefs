@@ -3,7 +3,6 @@ package com.battalion.flashpoint.comp
 	import com.battalion.flashpoint.core.Component;
 	import com.battalion.flashpoint.core.Physics;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
-	import com.battalion.flashpoint.display.View;
 	import com.danielsig.LoaderMax;
 	import com.danielsig.BitmapLoader;
 	import flash.display.Bitmap;
@@ -14,6 +13,15 @@ package com.battalion.flashpoint.comp
 	import flash.events.Event;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
+	
+	CONFIG::flashPlayer10
+	{
+		import com.battalion.flashpoint.display.View;
+	}
+	CONFIG::flashPlayer11
+	{
+		import com.battalion.flashpoint.display.ViewFlash11;
+	}
 	
 	/**
 	 * Use this component in order to render tiles maps
@@ -209,12 +217,26 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		public function start() : void
 		{
-			View.addTilesToView(this);
+			CONFIG::flashPlayer10
+			{
+				View.addTilesToView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.addTilesToView(this);
+			}
 		}
 		/** @private **/
 		public function onDestroy() : Boolean
 		{
-			View.removeTilesFromView(this);
+			CONFIG::flashPlayer10
+			{
+				View.removeTilesFromView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.removeTilesFromView(this);
+			}
 			return false;
 		}
 		
@@ -243,6 +265,7 @@ package com.battalion.flashpoint.comp
 					}
 				}
 			}
+			sendMessage("tilesLoaded");
 		}
 	}
 

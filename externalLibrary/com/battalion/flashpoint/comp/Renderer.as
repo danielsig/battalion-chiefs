@@ -1,8 +1,16 @@
 package com.battalion.flashpoint.comp 
 {
 	
+	CONFIG::flashPlayer10
+	{
+		import com.battalion.flashpoint.display.View;
+	}
+	CONFIG::flashPlayer11
+	{
+		import com.battalion.flashpoint.display.ViewFlash11;
+	}
+	
 	import com.battalion.flashpoint.core.*;
-	import com.battalion.flashpoint.display.View;
 	import com.danielsig.LoaderMax;
 	import flash.display.BitmapData;
 	import flash.display.Bitmap;
@@ -90,10 +98,99 @@ package com.battalion.flashpoint.comp
 				matrix.translate(-offset.x, -offset.y);
 			}
 			if (params.matrix) matrix.concat(params.matrix);
-			var data : BitmapData = new BitmapData(dimensions.x, dimensions.y, true, 0);
-			data.draw(bitmapDrawable, matrix, null || params.colorTransform, null || params.blendMode, null || params.clipRect, null || params.smoothing);
+			var data : BitmapData = new BitmapData(dimensions.x, dimensions.y, params.transparent == undefined || params.transparent, params.backgroundColor || 0);
+			data.draw(bitmapDrawable, matrix, params.colorTransform || null, params.blendMode || null, params.clipRect || null, params.smoothing || null);
 			_bitmaps[bitmapName] = data;
 		}
+		
+		/**
+		 * A quick way for drawing a simple circle, good for placeholders.
+		 * @see draw()
+		 * @param	bitmapName, the name that you plan on using to reference this box
+		 * @param	radius, the radius of the circle in pixels, default is 25
+		 * @param	color, a color code denoting the color of the circle, default is 0xFF0000 (red)
+		 * @param	alpha, a number between 0 and 1 denoting the transparency of the circle, 0 = invisible, 1 = solid, default is 1
+		 * @param	outlineThickness, a number denoting the thickness of the circle's outline in pixels, default is -1 (no outline)
+		 * @param	outlineColor, a color code denoting the color of the circle's outline, default is 0 (black)
+		 * @param	outlineAlpha, a number between 0 and 1 denoting the transparency of the circle's outline, 0 = invisible, 1 = solid, default is 1
+		 */
+		public static function drawCircle
+		(
+			bitmapName : String,
+			radius : Number = 25,
+			color : uint = 0xFF0000, alpha : Number = 1,
+			outlineThickness : int = -1, outlineColor : uint = 0, outlineAlpha : Number = 1
+		) : void
+		{
+			if (alpha > 0 && (outlineThickness < 0 || outlineAlpha <= 0))
+			{
+				Renderer.draw(bitmapName, "fill", { color:"0x" + color.toString(16), alpha:alpha},
+				"circle", {radius:radius});
+			}
+			else if (alpha <= 0 && outlineThickness > -1 && outlineAlpha > 0)
+			{
+				Renderer.draw(bitmapName, "line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+				"circle", {radius:radius});
+			}
+			else
+			{
+				Renderer.draw(bitmapName,
+				"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+				"fill", { color:"0x" + color.toString(16), alpha:alpha },
+				"circle", {radius:radius});
+			}
+		}
+		/**
+		 * A quick way for drawing a simple box, good for placeholders.
+		 * @see draw()
+		 * @param	bitmapName, the name that you plan on using to reference this box
+		 * @param	width, the width of the box in pixels, default is 50
+		 * @param	height, the height of the box in pixels, default is 50
+		 * @param	color, a color code denoting the color of the box, default is 0xFF0000 (red)
+		 * @param	alpha, a number between 0 and 1 denoting the transparency of the box, 0 = invisible, 1 = solid, default is 1
+		 * @param	outlineThickness, a number denoting the thickness of the box's outline in pixels, default is -1 (no outline)
+		 * @param	outlineColor, a color code denoting the color of the box's outline, default is 0 (black)
+		 * @param	outlineAlpha, a number between 0 and 1 denoting the transparency of the box's outline, 0 = invisible, 1 = solid, default is 1
+		 */
+		public static function drawBox
+		(
+			bitmapName : String,
+			width : Number = 50, height : Number = 50,
+			color : uint = 0xFF0000, alpha : Number = 1,
+			outlineThickness : int = -1, outlineColor : uint = 0, outlineAlpha : Number = 1
+		) : void
+		{
+			
+			if (alpha > 0 && (outlineThickness < 0 || outlineAlpha <= 0))
+			{
+				Renderer.draw(bitmapName, "fill", { color:"0x" + color.toString(16), alpha:alpha},
+				-width * 0.5, -height * 0.5,
+				width * 0.5, -height * 0.5,
+				width * 0.5, height * 0.5,
+				-width * 0.5, height * 0.5);
+			}
+			else if (alpha <= 0 && outlineThickness > -1 && outlineAlpha > 0)
+			{
+				Renderer.draw(bitmapName, "line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+				-width * 0.5, -height * 0.5,
+				width * 0.5, -height * 0.5,
+				width * 0.5, height * 0.5,
+				-width * 0.5, height * 0.5,
+				-width * 0.5, -height * 0.5);
+			}
+			else
+			{
+				Renderer.draw(bitmapName,
+				"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+				"fill", { color:"0x" + color.toString(16), alpha:alpha },
+				-width * 0.5, -height * 0.5,
+				width * 0.5, -height * 0.5,
+				width * 0.5, height * 0.5,
+				-width * 0.5, height * 0.5,
+				-width * 0.5, -height * 0.5);
+			}
+		}
+		
 		/**
 		 * Use this to draw bitmaps, works similearly to the native drawing API of flash.
 		 * Firstly, it takes a name <code>bitmapName</code> parameter to use as a reference to the drawn bitmap.
@@ -365,30 +462,36 @@ Renderer.draw("myWeirdArrow",
 		}
 		
 		/**
-		 * in case you don't want the bitmap to be centered about the GameObject's center.
+		 * In case you don't want the bitmap to be centered about the GameObject's center.
 		 */
 		public var offset : Matrix = null;
 		
 		
 		/**
-		 * set this property right before adding the component, in order for it to work.
+		 * Set this property right before adding the component, in order for it to work.
 		 */
 		public var pixelSnapping : String = PixelSnapping.NEVER;
 		
 		/**
-		 * set this property right before adding the component, in order for it to work.
+		 * Set this property right before adding the component, in order for it to work.
 		 */
 		public var smoothing : Boolean = false;
 		
 		/**
-		 * setting this property will not take effect until you set the updateBitmap property to true.
-		 * it is recommended to use the <code>url</code> property or the <code>setBitmapByName()</code> method insteaad.
+		 * Set this property to true in order to skip rotation, scaling and shearing
+		 * transformations in the final rendered bitmap to improve performance.
+		 */
+		public var optimized : Boolean = false;
+		
+		/**
+		 * Setting this property will not take effect until you set the updateBitmap property to true.
+		 * It is recommended to use the <code>url</code> property or the <code>setBitmapByName()</code> method insteaad.
 		 */
 		public var bitmapData : BitmapData = null;
 		
 		/**
-		 * setting the bitmapData property will not take effect until you set this property to true.
-		 * it is recommended to use the url property insteaad.
+		 * Setting the bitmapData property will not take effect until you set this property to true.
+		 * It is recommended to use the url property insteaad.
 		 */
 		public var updateBitmap : Boolean = false;
 		
@@ -408,7 +511,14 @@ Renderer.draw("myWeirdArrow",
 			if (front) putInFrontOf(front);
 			
 			_transform = gameObject.transform;
-			View.addToView(this);
+			CONFIG::flashPlayer10
+			{
+				View.addToView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.addToView(this);
+			}
 		}
 		/**
 		 * URL of the bitmap image to render. Can be both an individual image url or a spritesheet url.
@@ -438,6 +548,13 @@ Renderer.draw("myWeirdArrow",
 		 */
 		public function setBitmapByName(bitmapName : String) : void
 		{
+			CONFIG::debug
+			{
+				if (!_bitmaps[bitmapName])
+				{
+					throw new Error("the bitmap '" + bitmapName + "' is not defined, please load, draw or bake a bitmap with that name before calling this method.");
+				}
+			}
 			if (_bitmaps[bitmapName] is BitmapData)
 			{
 				bitmapData = _bitmaps[bitmapName];
@@ -488,6 +605,16 @@ Renderer.draw("myWeirdArrow",
 		public function onDestroy() : Boolean
 		{
 			bitmapData = null;
+			sprites = { };
+			rendererInFrontOfThis = null;
+			CONFIG::flashPlayer10
+			{
+				View.removeFromView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.removeFromView(this);
+			}
 			return false;
 		}
 		/**

@@ -9,7 +9,7 @@ package com.battalion.flashpoint.comp
 	public final class ParticleGenerator extends Component
 	{
 		
-		public var maxParticleCount : uint = Infinity;
+		public var maxParticleCount : uint = uint.MAX_VALUE;
 		
 		/**
 		 * Set this to a Point so that the ParticleGenerator will add a rigidbody to the
@@ -81,9 +81,13 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		public function fixedUpdate() : void
 		{
+			if (emitting) _hzCount++;
+		}
+		/** @private **/
+		public function update() : void
+		{
 			if (emitting)
 			{
-				_hzCount++;
 				var framesPerGen : Number = FlashPoint.fixedFPS / hz;
 				while (_hzCount > framesPerGen)
 				{
@@ -93,7 +97,7 @@ package com.battalion.flashpoint.comp
 					var particle : GameObject = new GameObject(gameObject.name + "Particle" + _counter);
 					particle.transform.x = gameObject.transform.gx;
 					particle.transform.y = gameObject.transform.gy;
-					if (maxParticleCount != Infinity)
+					if (maxParticleCount != uint.MAX_VALUE)
 					{
 						var handler : ParticleHandler = particle.addComponent(ParticleHandler) as ParticleHandler;
 						handler._generator = this;

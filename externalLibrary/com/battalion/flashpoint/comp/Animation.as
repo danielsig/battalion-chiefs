@@ -30,7 +30,7 @@ package com.battalion.flashpoint.comp
 		
 		public static function filterWhite(animationName : String) : void
 		{
-			filter(animationName, 0xFFFEFEFE, 0x00FFFFFF);
+			filter(animationName, 0xFFFFFFFF, 0x00FFFFFF);
 		}
 		
 		public static function filter(animationName : String, targetColor : uint, replacementColor : uint) : void
@@ -191,11 +191,11 @@ myObj.animation.play("myAnimation");
 		/** @private **/
 		internal var _p : int = 0;//playHead
 		/** @private **/
-		internal var _frames : Vector.<BitmapData>;
+		internal var _frames : Vector.<BitmapData> = null;
 		/** @private **/
 		internal var _length : int = 0;//just for convenience
 		/** @private **/
-		internal var _messages : Vector.<Array>;
+		internal var _messages : Vector.<Array> = null;
 		/** @private **/
 		internal var _playing : Boolean = false;
 		/** @private **/

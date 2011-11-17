@@ -245,7 +245,7 @@ package com.battalion.audio
 		 */
 		public function play() : void
 		{
-			if (!_channel)
+			if (!_channel && _data)
 			{
 				if (_reverse && _loops > 0) _loops++;
 				_sound.addEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);

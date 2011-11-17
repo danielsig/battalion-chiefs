@@ -297,10 +297,73 @@ package com.battalion.flashpoint.core
 			x = tx;
 			y = ty;
 		}
+		
+		private static var _stackLength : uint = 1;
+		private static var _countStack : Vector.<uint> = new Vector.<uint>(_stackLength);
+		
 		/** @private **/
 		internal static function flushGlobal() : void
 		{
-			world.transform.flushGlobalRecursive(new Matrix());
+			//world.transform.flushGlobalRecursive(new Matrix());
+			var target : Transform = world.transform;
+			var parent : Matrix = new Matrix();
+			var height : int = _countStack[0] = 0;
+			var globalMatrix : Matrix = null;
+			var matrix : Matrix = null;
+			
+			while (height > -1)
+			{
+				if (!_countStack[height])
+				{
+					//FLUSH
+					CONFIG::debug
+					{
+						globalMatrix = target._globalMatrix;
+						matrix = target._matrix;
+					}
+					CONFIG::release
+					{
+						globalMatrix = target.globalMatrix;
+						matrix = target.matrix;
+					}
+					
+					globalMatrix.a = matrix.a;
+					globalMatrix.b = matrix.b;
+					globalMatrix.c = matrix.c;
+					globalMatrix.d = matrix.d;
+					globalMatrix.tx = matrix.tx;
+					globalMatrix.ty = matrix.ty;
+					
+					globalMatrix.concat(parent);
+				}
+				CONFIG::debug
+				{
+					parent = target._globalMatrix;
+				}
+				CONFIG::release
+				{
+					parent = target.globalMatrix;
+				}
+				
+				//REPEAT ON CHILDREN
+				if (_countStack[height] < target._gameObject._children.length)
+				{
+					target = target._gameObject._children[_countStack[height++]++].transform;
+					//ADDING TO STACK
+					if (_stackLength <= height)
+					{
+						_stackLength = _countStack.push(0);
+					}
+					else
+					{
+						_countStack[height] = 0;
+					}
+				}
+				else if(height-- > 0)
+				{
+					target = target._gameObject._parent.transform;
+				}
+			}
 		}
 		CONFIG::debug
 		private function flushGlobalRecursive(parent : Matrix) : void

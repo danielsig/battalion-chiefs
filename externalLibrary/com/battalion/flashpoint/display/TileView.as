@@ -3,6 +3,7 @@ package com.battalion.flashpoint.display
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
+	import flash.display.PixelSnapping;
 	
 	/**
 	 * A Tile View class, Use this class to render tiles
@@ -57,6 +58,8 @@ package com.battalion.flashpoint.display
 					bitmap.bitmapData = tileSet[tileIndex];
 					bitmap.x = i * _pixelsPerTile;
 					bitmap.y = j * _pixelsPerTile;
+					bitmap.smoothing = false;
+					bitmap.pixelSnapping = PixelSnapping.NEVER;
 				}
 			}
 			_prevScrollX = _prevScrollY = -1;

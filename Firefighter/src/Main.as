@@ -2,7 +2,8 @@ package
 {
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.comp.misc.*;
-	import com.battalion.flashpoint.display.View;
+	import com.battalion.flashpoint.comp.TextRenderer;
+	import com.battalion.flashpoint.display.ViewFlash11;
 	import com.demonsters.debugger.MonsterDebugger;
 	import com.greensock.TweenLite;
 	import flash.display.*;
@@ -10,8 +11,12 @@ package
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.text.TextField;
     import flash.utils.*;
 	import comp.*;
+	
+	CONFIG::flashPlayer11
+	import starling.core.Starling;
 
 	/**
 	 * ...
@@ -38,8 +43,17 @@ package
 			FlashPoint.timeScale = 1;
 			FlashPoint.init(stage);
 			GameObject.world.addComponent(GameCore);
-			addChild(new com.battalion.flashpoint.display.View(new Rectangle(0, 0, stage.stageWidth, stage.stageHeight)));
 			
+			var viewPort : Rectangle = new Rectangle(0, 0, stage.stageWidth, stage.stageHeight);
+			
+			CONFIG::flashPlayer10
+			{
+				addChild(new com.battalion.flashpoint.display.View(viewPort));
+			}
+			CONFIG::flashPlayer11
+			{
+				new com.battalion.flashpoint.display.ViewFlash11(viewPort);
+			}
 			CONFIG::debug
 			{
 				GameObject.world.addComponent(PhysicsDebugger);

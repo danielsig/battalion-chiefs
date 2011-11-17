@@ -1,9 +1,18 @@
 package com.battalion.flashpoint.comp 
 {
+	CONFIG::flashPlayer10
+	{
+		import com.battalion.flashpoint.display.View;
+	}
+	CONFIG::flashPlayer11
+	{
+		import com.battalion.flashpoint.display.ViewFlash11;
+	}
+	
 	import com.battalion.flashpoint.core.Component;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
-	import com.battalion.flashpoint.display.View;
 	import flash.geom.Matrix;
+	
 	/**
 	 * ...
 	 * @author Battalion Chiefs
@@ -32,12 +41,26 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		public function start() : void
 		{
-			View.addTextToView(this);
+			CONFIG::flashPlayer10
+			{
+				View.addTextToView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.addTextToView(this);
+			}
 		}
 		/** @private **/
 		public function onDestroy() : Boolean
 		{
-			View.removeTextFromView(this);
+			CONFIG::flashPlayer10
+			{
+				View.removeTextFromView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.removeTextFromView(this);
+			}
 			return false;
 		}
 	}

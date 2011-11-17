@@ -19,6 +19,8 @@ package com.battalion.flashpoint.comp
 		function set pingPongPlayback(value : Boolean) : void;
 		function get currentName() : String;
 		function set currentName(value : String) : void;
+		function get reversed() : Boolean;
+		function set reversed(value : Boolean) : void;
 	}
 	
 }

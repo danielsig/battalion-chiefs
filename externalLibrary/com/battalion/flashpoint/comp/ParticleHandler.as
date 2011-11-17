@@ -28,6 +28,12 @@ package com.battalion.flashpoint.comp
 				destroy();
 			}
 		}
+		public function onDestroy() : Boolean
+		{
+			_generator = null;
+			_next = _prev = null;
+			return false;
+		}
 	}
 
 }

@@ -2,6 +2,7 @@ package com.battalion.flashpoint.display
 {
 	import com.battalion.flashpoint.core.Transform;
 	import com.danielsig.BitmapLoader;
+	import com.danielsig.SpriteSheet;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -58,67 +59,21 @@ package com.battalion.flashpoint.display
 		public static function addToView(renderer : Renderer) : void
 		{
 			_renderers.push(renderer);
+			for each(var view : View in _views)
+			{
+				view._sprites.push(null);
+			}
 		}
 		/** @private **/
 		public static function addTilesToView(tiles : TileRenderer) : void
 		{
 			_tiles.push(tiles);
-		}
-		/** @private **/
-		public static function removeFromView(renderer : Renderer) : void
-		{
-			var index : int = _renderers.indexOf(renderer);
-			if (index < _renderers.length - 1 && index > 0)
-			{
-				_renderers[index] = _renderers.pop();
-			}
-			else if (_renderers.length > 0)
-			{
-				_renderers.length--;
-			}
-			renderer.bitmapData = null;
-			
 			for each(var view : View in _views)
 			{
-				if(view._sprites[index] && view._sprites[index].parent.contains(view._sprites[index])) view._sprites[index].parent.removeChild(view._sprites[index]);
-				if (index < view._sprites.length - 1 && index > 0)
-				{
-					view._sprites[index] = view._sprites.pop();
-				}
-				else if (view._sprites.length > 0)
-				{
-					view._sprites.length--;
-				}
+				view._tileViews.push(null);
 			}
 		}
 		/** @private **/
-		public static function removeTilesFromView(tiles : TileRenderer) : void
-		{
-			var index : int = _tiles.indexOf(tiles);
-			if (index < _tiles.length - 1 && index > 0)
-			{
-				_tiles[index] = _tiles.pop();
-			}
-			else if (_tiles.length > 0)
-			{
-				_tiles.length--;
-			}
-			tiles.tileMap = null;
-			tiles.tileSet = null;
-			
-			for each(var view : View in _views)
-			{
-				if(view._tileViews[index] && view._tileViews[index].parent.contains(view._tileViews[index])) view._tileViews[index].parent.removeChild(view._tileViews[index]);
-				if (index < view._tileViews.length - 1 && index > 0)
-				{
-					view._tileViews[index] = view._tileViews.pop();
-				}
-				else if (view._tileViews.length > 0)
-				{
-					view._tileViews.length--;
-				}
-			}
-		}
 		public static function addTextToView(text : TextRenderer) : void
 		{
 			_texts.push(text);
@@ -128,26 +83,91 @@ package com.battalion.flashpoint.display
 			}
 		}
 		/** @private **/
+		public static function removeFromView(renderer : Renderer) : void
+		{
+			var index : int = _renderers.indexOf(renderer);
+			if (index < 0) return;
+			
+			if (index < _renderers.length - 1)
+			{
+				_renderers[index] = _renderers.pop();
+			}
+			else if (_renderers.length)
+			{
+				_renderers.length--;
+			}
+			
+			for each(var view : View in _views)
+			{
+				var sprite : Sprite = view._sprites[index];
+				if (sprite && sprite.parent)
+				{
+					sprite.removeChildAt(0);
+					sprite.parent.removeChild(sprite);
+				}
+				if (index < view._sprites.length - 1)
+				{
+					view._sprites[index] = view._sprites.pop();
+				}
+				else if (view._sprites.length)
+				{
+					view._sprites.length--;
+				}
+			}
+		}
+		/** @private **/
+		public static function removeTilesFromView(tiles : TileRenderer) : void
+		{
+			var index : int = _tiles.indexOf(tiles);
+			if (index < 0) return;
+			
+			if (index < _tiles.length - 1)
+			{
+				_tiles[index] = _tiles.pop();
+			}
+			else if (_tiles.length)
+			{
+				_tiles.length--;
+			}
+			tiles.tileMap = null;
+			tiles.tileSet = null;
+			
+			for each(var view : View in _views)
+			{
+				if(view._tileViews[index] && view._tileViews[index].parent.contains(view._tileViews[index])) view._tileViews[index].parent.removeChild(view._tileViews[index]);
+				if (index < view._tileViews.length - 1)
+				{
+					view._tileViews[index] = view._tileViews.pop();
+				}
+				else if (view._tileViews.length)
+				{
+					view._tileViews.length--;
+				}
+			}
+		}
+		/** @private **/
 		public static function removeTextFromView(text : TextRenderer) : void
 		{
 			var index : int = _texts.indexOf(text);
 			if (index < 0) return;
-			if (index < _texts.length - 1 && index > 0)//not the last element
+			
+			if (index < _texts.length - 1)//not the last element
 			{
 				_texts[index] = _texts.pop();
 			}
-			else if (_texts.length > 0)//not the last element
+			else if (_texts.length)//the last element
 			{
 				_texts.length--;
 			}
 			for each(var view : View in _views)
 			{
-				if(view._textFields[index] && view._textFields[index].parent.contains(view._textFields[index])) view._textFields[index].parent.removeChild(view._textFields[index]);
-				if (index < view._textFields.length - 1 && index > 0)
+				var textField : TextField = view._textFields[index];
+				if(textField && textField.parent) textField.parent.removeChild(textField);
+				if (index < view._textFields.length - 1)
 				{
 					view._textFields[index] = view._textFields.pop();
 				}
-				else if (view._textFields.length > 0)
+				else if (view._textFields.length)
 				{
 					view._textFields.length--;
 				}
@@ -205,9 +225,6 @@ package com.battalion.flashpoint.display
 				_layers.filters = null;
 				_colorMatrix = null;
 			}
-			
-			_sprites.length = _renderers.length;
-			_tileViews.length = _tiles.length;
 			
 			var left : Number = tr.x - _bounds.width * 0.5 * tr.scaleX;
 			var right : Number = tr.x + _bounds.width * 0.5 * tr.scaleX;
@@ -273,15 +290,23 @@ package com.battalion.flashpoint.display
 							}
 							renderer.updateBitmap = false;
 						}
-						if (renderer.offset)
+						if (renderer.optimized)
 						{
-							var matrix : Matrix = renderer.offset.clone();
-							matrix.concat(renderer.gameObject.transform.globalMatrix);
-							_sprites[i].transform.matrix = matrix;
+							_sprites[i].x = renderer.gameObject.transform.globalMatrix.tx;
+							_sprites[i].y = renderer.gameObject.transform.globalMatrix.ty;
 						}
 						else
 						{
-							_sprites[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
+							if (renderer.offset)
+							{
+								var matrix : Matrix = renderer.offset.clone();
+								matrix.concat(renderer.gameObject.transform.globalMatrix);
+								_sprites[i].transform.matrix = matrix;
+							}
+							else
+							{
+								_sprites[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
+							}
 						}
 					}
 					else if (_sprites[i] && _sprites[i].visible)
@@ -292,6 +317,7 @@ package com.battalion.flashpoint.display
 				}
 				else if(_sprites[i] && _sprites[i].parent)
 				{
+					_sprites[i].removeChildAt(0);
 					_sprites[i].parent.removeChild(_sprites[i]);
 					delete renderer.sprites[_name];
 					_sprites[i] = null;

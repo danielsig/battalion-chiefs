@@ -11,6 +11,13 @@ package com.battalion.flashpoint.core
 	import flash.display.Stage;
 	import flash.geom.Rectangle;
 	
+	CONFIG::flashPlayer11
+	{
+		import com.battalion.flashpoint.display.StageFlash11;
+		import starling.core.Starling;
+		import flash.display3D.Context3DRenderMode;
+	}
+	
 	
 	/**
 	 * This class is the core of the FlashPoint Engine.
@@ -87,6 +94,11 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		private static var _stage : Stage;
 		private static var _prevTimeScale : Number = 1;
 		
+		CONFIG::flashPlayer11
+		{
+			private static var _starling : Starling = null;
+		}
+		
 		/**
 		 * Use this to initialize the FlashPoint engine.
 		 * @param	stage, the Stage object.
@@ -108,6 +120,12 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 			
 			stage.addEventListener(Event.ENTER_FRAME, update);
 			_stage = stage;
+			
+			CONFIG::flashPlayer11
+			{
+				_starling = new Starling(StageFlash11, stage);
+				_starling.start();
+			}
 		}
 		
 		private static function update(event : Event = null) : void
@@ -120,8 +138,9 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 			deltaTime = now - _prevTime2;
 			time = now - _initTime;
 			
-			GameObject.WORLD.update();
+			GameObject.updateAll();
 			Transform.flushGlobal();
+			
 			now = new Date().time;
 			frameInterpolationRatio = (now - _prevTime) / _dynamicInterval;
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
@@ -137,7 +156,7 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 			_prevTime2 = now;
 			
 			AudioPlayer.globalTimeScale = timeScale;
-			GameObject.WORLD.fixedUpdate();
+			GameObject.fixedUpdateAll();
 			
 			if (interval != _timer.delay)
 			{

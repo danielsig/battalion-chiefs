@@ -107,6 +107,27 @@ package com.battalion.flashpoint.comp
 			_pingPongPlayback = value;
 		}
 		
+		/**
+		 * The direction of the animation relative to the original direction of the animation.
+		 * A value of:
+		 * <ul>
+		 * <li>
+		 * <code>true</code> means that the animation is a reversed version of the original animation.
+		 * </li>
+		 * <li>
+		 * <code>false</code> means that the animation is the same as the original animation.
+		 * </li>
+		 * </ul>
+		 */
+		public function get reversed() : Boolean
+		{
+			return _playback < 0;
+		}
+		public function set reversed(value : Boolean) : void
+		{
+			_playback = 1 - (int(value) << 1);
+		}
+		
 		public function get playhead() : Number
 		{
 			return _p * _length;
@@ -119,6 +140,7 @@ package com.battalion.flashpoint.comp
 			}
 			_p = value < 0 ? _length + value / _length : value / _length;
 		}
+		
 		
 		/**
 		 * current animation's name. Set this to change the current animation.
@@ -143,7 +165,11 @@ package com.battalion.flashpoint.comp
 			
 			for (var boneName : String in _animation)
 			{
-				if (boneName != "length" && boneName != "framesPerSecond") _bones[boneName] = gameObject.findGameObjectDownwards(boneName).transform;
+				if (boneName != "length" && boneName != "framesPerSecond" && !_bones[boneName]) _bones[boneName] = gameObject.findGameObjectDownwards(boneName).transform;
+			}
+			for (boneName in _bones)
+			{
+				if (!_animation[boneName]) delete _bones[boneName];
 			}
 		}
 		
@@ -173,9 +199,17 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		}
 		public function gotoAndPause(frame : Number, boneAnimName : String = null): void
 		{
-			if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
+			CONFIG::release
+			{
+				if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
+			}
 			CONFIG::debug
 			{
+				if (boneAnimName)
+				{
+					if(boneAnimName != _boneAnimName) currentName = boneAnimName;
+				}
+				else if (!_boneAnimName) throw new Error("You must define a bone animation before calling this method!");
 				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
 			_p = frame < 0 ? _length + frame / _length : frame / _length;
@@ -183,9 +217,17 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		}
 		public function gotoAndPlay(frame : Number, boneAnimName : String = null): void
 		{
-			if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
+			CONFIG::release
+			{
+				if (boneAnimName && boneAnimName != _boneAnimName) currentName = boneAnimName;
+			}
 			CONFIG::debug
 			{
+				if (boneAnimName)
+				{
+					if(boneAnimName != _boneAnimName) currentName = boneAnimName;
+				}
+				else if (!_boneAnimName) throw new Error("You must define a bone animation before calling this method!");
 				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
 			_p = frame < 0 ? _length + frame / _length : frame / _length;
