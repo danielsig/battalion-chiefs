@@ -216,6 +216,27 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 		}
 		
 		/**
+		 * The direction of the audio playback relative to the original direction of the audio playback.
+		 * A value of:
+		 * <ul>
+		 * <li>
+		 * <code>true</code> means that the audio is played backwards.
+		 * </li>
+		 * <li>
+		 * <code>false</code> means that the audio is played normally.
+		 * </li>
+		 * </ul>
+		 */
+		public function get reversed() : Boolean
+		{
+			return _player.reverse;
+		}
+		public function set reversed(value : Boolean) : void
+		{
+			_player.reverse = value;
+		}
+		
+		/**
 		 * The position of the playhead, in milliseconds.
 		 */
 		public function get playhead() : Number

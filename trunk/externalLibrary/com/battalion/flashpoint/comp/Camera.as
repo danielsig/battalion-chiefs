@@ -43,17 +43,25 @@ package com.battalion.flashpoint.comp
 		{
 			return rectangleInSight(renderer.bounds);
 		}
-		public function transformInSight(t : Transform, tWidth : Number, tHeight : Number) : Boolean
+		/**
+		 * Checks if a box with a certain center (x,y) and dimensions (width,height) is in sight from this camera in world space.
+		 * @param	x, the x coordinate of the box in world space
+		 * @param	y, the y coordinate of the box in world space
+		 * @param	width, the width of the box to be checked
+		 * @param	height, the height of the box to be checked
+		 * @return	true if the box is in sight from this camera, otherwise false
+		 */
+		public function inSight(x : Number, y : Number, width : Number, height : Number) : Boolean
 		{
-			tWidth *= 0.5;
-			tHeight *= 0.5;
+			width *= 0.5;
+			height *= 0.5;
 			var left : Number = _tr.x - _bounds.width * 0.5 * _tr.scaleX;
 			var right : Number = _tr.x + _bounds.width * 0.5 * _tr.scaleX;
 			var top : Number = _tr.y - _bounds.height * 0.5 * _tr.scaleY;
 			var bottom : Number = _tr.y + _bounds.height * 0.5 * _tr.scaleY;
 			
-			return t.x + tWidth > left && t.x - tWidth < right
-				&& t.y + tHeight > top && t.y - tHeight < bottom;
+			return x + width > left && x - width < right
+				&& y + height > top && y - height < bottom;
 		}
 		
 		/**

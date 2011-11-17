@@ -54,6 +54,14 @@ package com.battalion.flashpoint.core
 		public static var world : GameObject;
 		
 		/**
+		 * This is clearly obvious.
+		 */
+		public final function get isDestroyed() : Boolean
+		{
+			return !_gameObject;
+		}
+		
+		/**
 		 * This GameObject.
 		 */
 		public final function get gameObject() : GameObject
@@ -301,12 +309,14 @@ package com.battalion.flashpoint.core
 				for each(var before : Array in _gameObject._before[message])
 				{
 					sendMessage.apply(this, before);
+					if (!_gameObject || !_gameObject._parent) return;
 				}
 				delete _gameObject._before[message];
 			}
 			for each(var receiver : Function in receivers)
 			{
 				receiver.apply(this, args);
+				if (!_gameObject || !_gameObject._parent) return;
 			}
 			if (_gameObject._after.hasOwnProperty(message))
 			{
@@ -318,11 +328,13 @@ package com.battalion.flashpoint.core
 						for each(var f : Function in msg[after])
 						{
 							f(message);
+							if (!_gameObject || !_gameObject._parent) return;
 						}
 					}
 					else
 					{
 						sendMessage.apply(this, msg[after]);
+						if (!_gameObject || !_gameObject._parent) return;
 					}
 				}
 				delete _gameObject._after[message]
@@ -367,7 +379,7 @@ package com.battalion.flashpoint.core
 				if (message == null) throw new Error("Message must be non null.");
 				if (target == null) throw new Error("Target must be non null.");
 			}
-
+			
 			args.unshift(message);
 			if (!_gameObject._before.hasOwnProperty(target))
 			{

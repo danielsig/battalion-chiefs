@@ -85,7 +85,7 @@ trace(myChild);//WORLD.foo.bar
 		 */
 		public function get isDestroyed() : Boolean
 		{
-			return _parent == null;
+			return !_parent;
 		}
 		/**
 		 * The parent GameObject.
@@ -517,16 +517,38 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (this == WORLD) throw new Error("\r\tI was just chilling, minding my own business when suddenly you call this method:\r\t\t\"GameObject.world.destroy();\"\r\tOMG you're such a NOOB!");
 			}
-			/*for each(var compObj : Object in _components)
-			{
-				if (compObj.hasOwnProperty("onDestroy") && compObj.onDestroy is Function)
-				{
-					compObj.onDestroy();
-				}
-			}*/
 			sendMessage("onDestroy");
 			_parent.unparentChild(this);
+			
+			for each(var compObj : Component in _components)
+			{
+				compObj._gameObject = null;
+			}
+			
+			_children.length = 0;
+			_components.length = 0;
+			_fixedUpdate.length = 0;
+			_start.length = 0;
+			_update.length = 0;
+			
 			_parent = null;
+			_children = null;
+			_components = null;
+			_fixedUpdate = null;
+			_messages = null;
+			_after = null;
+			_before = null;
+			_start = null;
+			_update = null;
+			_name = null;
+			CONFIG::debug
+			{
+				_transform = null;
+			}
+			CONFIG::release
+			{
+				transform = null;
+			}
 		}
 		
 		public function clone() : GameObject
@@ -1097,62 +1119,349 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				}
 			}
 		}
+		
+		private static var _stackLength : uint = 1;
+		private static var _callStack : Vector.<GameObject> = new Vector.<GameObject>(_stackLength);
+		private static var _countStack : Vector.<int> = new Vector.<int>(_stackLength);
+		
 		/** @private **/
-		internal function update() : void
+		internal static function updateAll() : void
 		{
+			var position : int = _countStack[0] = 0;
+			var target : GameObject = _callStack[0] = WORLD;
+			
+			//***********************************************************************
 			//START
-			if (_start.length)
+			startLoop: while (position > -1)
 			{
-				for each(var f : Function in _start)
+				if (!target._parent)//is it destroyed
 				{
-					f();
-					if (!_parent) return;
+					//go back up
+					target = _callStack[--position];
+					continue;
 				}
-				_start.length = 0;
+				//PERFORM START ON COMPONENTS
+				if (!_countStack[position] && target._start.length)
+				{
+					for each(var f : Function in target._start)
+					{
+						f();
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue startLoop;
+						}
+					}
+					target._start.length = 0;
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					
+					//ADDING TO STACK
+					if (_stackLength <= position)
+					{
+						_stackLength = _callStack.push(target);
+						_countStack.push(0);
+					}
+					else
+					{
+						_callStack[position] = target;
+						_countStack[position] = 0;
+					}
+				}
+				else if(position-- > 0)
+				{
+					target = _callStack[position];
+				}
 			}
+			
+			
+			_callStack[0] = target = WORLD;
+			_countStack[0] = position = 0;
+			
+			//===========================================================================================================
 			//BEFORE UPDATE
-			if (_before.update)
+			beforeUpdateLoop: while (position > -1)
 			{
-				for each(var before : Array in _before.update)
+				if (!target._parent)//is it destroyed
 				{
-					sendMessage.apply(this, before);
-					if (!_parent) return;
+					//go back up
+					target = _callStack[--position];
+					continue;
 				}
-				delete _before.update;
+				//PERFORM BEFORE UPDATE ON COMPONENTS
+				if (!_countStack[position] && target._before.update)
+				{
+					for each(var args : Array in target._before.update)
+					{
+						target.sendMessage.apply(null, args);
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue beforeUpdateLoop;
+						}
+					}
+					delete target._before.update;
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					//ADDING TO STACK
+					_callStack[position] = target;
+					_countStack[position] = 0;
+				}
+				else if(position-- > 0)
+				{
+					target = _callStack[position];
+				}
 			}
+			
+			
+			_callStack[0] = target = WORLD;
+			_countStack[0] = position = 0;
+			
+			//------------------------------------------------------------------------------
 			//UPDATE
-			for each(f in _update)
+			updateLoop: while (position > -1)
 			{
-				f();
-				if (!_parent) return;
-			}
-			//AFTER UPDATE
-			if (_after.update)
-			{
-				for each(var after : Array in _after.update)
+				if (!target._parent)//is it destroyed
 				{
-					sendMessage.apply(this, after);
-					if (!_parent) return;
+					//go back up
+					target = _callStack[--position];
+					continue;
 				}
-				delete _after.update;
+				//PERFORM UPDATE ON COMPONENTS
+				if (!_countStack[position] && target._update)
+				{
+					for each(f in target._update)
+					{
+						f();
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue updateLoop;
+						}
+					}
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					//ADDING TO STACK
+					_callStack[position] = target;
+					_countStack[position] = 0;
+				}
+				else if(position-- > 0)
+				{
+					target = _callStack[position];
+				}
 			}
-			//REPEAT ON CHILDREN
-			for each(var child : GameObject in _children)
+			
+			
+			
+			
+			_callStack[0] = target = WORLD;
+			_countStack[0] = position = 0;
+			
+			//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			//AFTER UPDATE
+			afterUpdateLoop: while (position > -1)
 			{
-				child.update();
-				if (!_parent) return;
-			}
-			CONFIG::debug
-			{
-				_transform.flush();
-			}
-			CONFIG::release
-			{
-				transform.flush();
+				if (!target._parent)//is it destroyed
+				{
+					//go back up
+					target = _callStack[--position];
+					continue;
+				}
+				//PERFORM AFTER UPDATE ON COMPONENTS
+				if (!_countStack[position] && target._after.update)
+				{
+					for each(args in target._after.update)
+					{
+						target.sendMessage.apply(null, args);
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue afterUpdateLoop;
+						}
+					}
+					delete target._after.update;
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					//ADDING TO STACK
+					_callStack[position] = target;
+					_countStack[position] = 0;
+				}
+				else if(position-- > 0)
+				{
+					CONFIG::debug
+					{
+						target._transform.flush();
+					}
+					CONFIG::release
+					{
+						target.transform.flush();
+					}
+					target = _callStack[position];
+				}
 			}
 		}
+		
+		
+		
 		/** @private **/
-		internal function fixedUpdate() : void
+		internal static function fixedUpdateAll() : void
+		{
+			var position : int = _countStack[0] = 0;
+			var target : GameObject = _callStack[0] = WORLD;
+			
+			//===========================================================================================================
+			//BEFORE FIXED UPDATE
+			beforeFixedUpdateLoop: while (position > -1)
+			{
+				if (!target._parent)//is it destroyed
+				{
+					//go back up
+					target = _callStack[--position];
+					continue;
+				}
+				//PERFORM BEFORE FIXED UPDATE ON COMPONENTS
+				if (!_countStack[position] && target._before.fixedUpdate)
+				{
+					for each(var args : Array in target._before.fixedUpdate)
+					{
+						target.sendMessage.apply(null, args);
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue beforeFixedUpdateLoop;
+						}
+					}
+					delete target._before.fixedUpdate;
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					//ADDING TO STACK
+					if (_stackLength <= position)
+					{
+						_stackLength = _callStack.push(target);
+						_countStack.push(0);
+					}
+					else
+					{
+						_callStack[position] = target;
+						_countStack[position] = 0;
+					}
+				}
+				else if(position-- > 0)
+				{
+					target = _callStack[position];
+				}
+			}
+			
+			
+			_callStack[0] = target = WORLD;
+			_countStack[0] = position = 0;
+			
+			//------------------------------------------------------------------------------
+			//FIXED UPDATE
+			fixedUpdateLoop: while (position > -1)
+			{
+				if (!target._parent)//is it destroyed
+				{
+					//go back up
+					target = _callStack[--position];
+					continue;
+				}
+				//PERFORM FIXED UPDATE ON COMPONENTS
+				if (!_countStack[position] && target._fixedUpdate && target._fixedUpdate.length)
+				{
+					for each(var f : Function in target._fixedUpdate)
+					{
+						f();
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue fixedUpdateLoop;
+						}
+					}
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					//ADDING TO STACK
+					_callStack[position] = target;
+					_countStack[position] = 0;
+				}
+				else if(position-- > 0)
+				{
+					target = _callStack[position];
+				}
+			}
+			
+			
+			
+			
+			_callStack[0] = target = WORLD;
+			_countStack[0] = position = 0;
+			
+			//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			//AFTER FIXED UPDATE
+			afterFixedUpdateLoop: while (position > -1)
+			{
+				if (!target._parent)//is it destroyed
+				{
+					//go back up
+					target = _callStack[--position];
+					continue;
+				}
+				//PERFORM AFTER FIXED UPDATE ON COMPONENTS
+				if (!_countStack[position] && target._after.fixedUpdate)
+				{
+					for each(args in target._after.fixedUpdate)
+					{
+						target.sendMessage.apply(null, args);
+						if (!target._parent)//is it destroyed
+						{
+							//go back up
+							target = _callStack[--position];
+							continue afterFixedUpdateLoop;
+						}
+					}
+					delete target._after.fixedUpdate;
+				}
+				//REPEAT ON CHILDREN
+				if (_countStack[position] < target._children.length)
+				{
+					target = target._children[_countStack[position++]++];
+					//ADDING TO STACK
+					_callStack[position] = target;
+					_countStack[position] = 0;
+				}
+				else if(position-- > 0)
+				{
+					target = _callStack[position];
+				}
+			}
+		}
+		
+		/** @private **/
+		/*internal function fixedUpdate() : void
 		{
 			//BEFORE FIXED UPDATE
 			if (_before.fixedUpdate)
@@ -1186,6 +1495,6 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				child.fixedUpdate();
 				if (!_parent) return;
 			}
-		}
+		}*/
 	}
 }

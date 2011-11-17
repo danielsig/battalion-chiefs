@@ -128,6 +128,8 @@ package com.battalion.powergrid
 		private static var _wallTop : AbstractRigidbody = new AbstractRigidbody();
 		private static var _wallBottom : AbstractRigidbody = new AbstractRigidbody();
 		
+		private static var colInfo : Vector.<Number> = new Vector.<Number>(4);
+		
 		/**
 		 * Call this to initiate the PowerGrid.
 		 * @param	grid
@@ -659,7 +661,7 @@ package com.battalion.powergrid
 									}
 									else if (otherTriangle)
 									{
-										var colInfo : Vector.<Number> = resolveTriangleVsCircle(otherTriangle, circle, timeScale);
+										resolveTriangleVsCircle(otherTriangle, circle, timeScale);
 										if (colInfo)
 										{
 											contact1x = colInfo[0] - circle.x;
@@ -896,7 +898,7 @@ package com.battalion.powergrid
 									
 									if (otherCircle)
 									{
-										colInfo = resolveTriangleVsCircle(triangle,otherCircle, timeScale);
+										resolveTriangleVsCircle(triangle,otherCircle, timeScale);
 										if (colInfo)
 										{
 											contact1x = colInfo[0] - triangle.x;
@@ -909,7 +911,7 @@ package com.battalion.powergrid
 									}
 									else if (otherTriangle && otherTriangle != triangle)
 									{
-										colInfo = resolveTriangles(triangle, otherTriangle, timeScale);
+										resolveTriangles(triangle, otherTriangle, timeScale);
 										if (colInfo)
 										{
 											//the other triangle is sleeping, let's wake it up											
@@ -1835,7 +1837,11 @@ package com.battalion.powergrid
 					stage.graphics.drawCircle(-nx * circle.radius + circle.x,  -ny * circle.radius + circle.y, 4);
 					stage.graphics.endFill();
 					*/
-					return new <Number>[-nx * circle.radius + circle.x, -ny * circle.radius + circle.y, nx, ny];
+					colInfo[0] = -nx * circle.radius + circle.x;
+					colInfo[1] = -ny * circle.radius + circle.y;
+					colInfo[2] = nx;
+					colInfo[3] = ny;
+					return colInfo;
 				}
 			}
 			return null;
@@ -2010,7 +2016,11 @@ package com.battalion.powergrid
 			stage.graphics.moveTo( colX - axisY * 100, colY + axisX * 100);
 			stage.graphics.lineTo( colX + axisY * 100, colY - axisX * 100);
 			*/
-			return new <Number>[colX, colY, axisX, axisY];
+			colInfo[0] = colX;
+			colInfo[1] = colY;
+			colInfo[2] = axisX;
+			colInfo[3] = axisY;
+			return colInfo;
 			
 		}
 		public static function addBody(body : AbstractRigidbody, ...rest) : void
@@ -2095,7 +2105,6 @@ package com.battalion.powergrid
 			}
 			body._added = false;
 
-			//(GameObject.world.cam.addComponent(TextRenderer) as TextRenderer).text = "" + body;
 			//remove previous nodes
 			for (var node : BodyNode = body.nodes; node;)
 			{
