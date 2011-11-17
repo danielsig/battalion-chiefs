@@ -22,6 +22,14 @@
       <name>CONFIG::unoptimized</name>
       <value> false</value>
     </define>
+    <define append="true">
+      <name>CONFIG::flashPlayer11</name>
+      <value>false</value>
+    </define>
+    <define append="true">
+      <name>CONFIG::flashPlayer10</name>
+      <value>!CONFIG::flashPlayer11</value>
+    </define>
     <optimize>true</optimize>
     <omit-trace-statements>true</omit-trace-statements>
     <verbose-stacktraces>false</verbose-stacktraces>
