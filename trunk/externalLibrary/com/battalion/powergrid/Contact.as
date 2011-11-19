@@ -12,6 +12,7 @@ package com.battalion.powergrid
 		public var other : Contact;
 		public var next : Contact;
 		public var prev : Contact;
+		public var entering : Boolean = true;
 		
 		public var nx : Number;
 		public var ny : Number;
@@ -24,6 +25,12 @@ package com.battalion.powergrid
 		
 		private static var _pool : Contact;
 		private static var _head : Contact;
+		
+		public function get staying() : Boolean
+		{
+			return _contactStay;
+		}
+		
 		/*
 		public static function get poolArr() : Vector.<Contact>
 		{
@@ -104,7 +111,11 @@ package com.battalion.powergrid
 				var next : Contact = currentPoint._nextPoint;
 				var b1 : AbstractRigidbody = currentPoint.thisBody;
 				var b2 : AbstractRigidbody = currentPoint.other.thisBody;
-				if (b1.sleeping > PowerGrid.sleepTime && b2.sleeping > PowerGrid.sleepTime) currentPoint._contactStay = true;
+				if (b1.sleeping > PowerGrid.sleepTime && b2.sleeping > PowerGrid.sleepTime)
+				{
+					currentPoint._contactStay = true;
+					currentPoint.entering = false;
+				}
 				if (!currentPoint._contactStay) currentPoint.dispose();
 				currentPoint._contactStay = false;
 			}

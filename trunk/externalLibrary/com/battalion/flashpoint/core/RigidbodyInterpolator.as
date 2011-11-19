@@ -29,6 +29,12 @@ package com.battalion.flashpoint.core
 			_prevY = _nextY = _transform.y;
 			_prevA = _nextA = _transform.rotation;
 		}
+		public function setPrevious(prevX : Number = NaN, prevY : Number = NaN, prevA : Number = NaN) : void
+		{
+			if(!isNaN(prevX)) _prevX = prevX;
+			if(!isNaN(prevY)) _prevY = prevY;
+			if(!isNaN(prevA)) _prevA = prevA;
+		}
 		
 		public function update() : void
 		{

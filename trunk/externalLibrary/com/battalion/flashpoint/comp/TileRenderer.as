@@ -29,18 +29,6 @@ package com.battalion.flashpoint.comp
 	 */
 	public final class TileRenderer extends Component implements IExclusiveComponent 
 	{
-		
-		public var offset : Matrix = null;
-		public var tileMap : BitmapData;
-		public var tileSet : Vector.<BitmapData>;
-		
-		/**
-		 * A Boolean indicating if the TileMap and TileSet of this TileRenderer have been loaded
-		 */
-		public function get loaded() : Boolean { return _loaded > 1; }
-		
-		private var _loaded : uint = 0;
-		
 		private static var _mapLoaders : Dictionary = new Dictionary();
 		private static var _setLoaders : Dictionary = new Dictionary();
 		private static var _subscribers : Object = new Object();
@@ -50,6 +38,39 @@ package com.battalion.flashpoint.comp
 		
 		private static var _layerMask : Array = null;
 		private static var _collisionMap : TileRenderer = null;
+		
+		
+		
+		public var offset : Matrix = null;
+		public var tileMap : BitmapData;
+		public var tileSet : Vector.<BitmapData>;
+		private var _loaded : uint = 0;
+		
+		/** @private **/
+		public function onDestroy() : Boolean
+		{
+			offset = null;
+			tileMap = null;
+			tileSet = null;
+			
+			CONFIG::flashPlayer10
+			{
+				View.removeTilesFromView(this);
+			}
+			CONFIG::flashPlayer11
+			{
+				ViewFlash11.removeTilesFromView(this);
+			}
+			return false;
+		}
+		
+		/**
+		 * A Boolean indicating if the TileMap and TileSet of this TileRenderer have been loaded
+		 */
+		public function get loaded() : Boolean { return _loaded > 1; }
+		
+		
+		
 		
 		/**
 		 * Call this method in order to load a tile map and use it multiple times in your game
@@ -225,19 +246,6 @@ package com.battalion.flashpoint.comp
 			{
 				ViewFlash11.addTilesToView(this);
 			}
-		}
-		/** @private **/
-		public function onDestroy() : Boolean
-		{
-			CONFIG::flashPlayer10
-			{
-				View.removeTilesFromView(this);
-			}
-			CONFIG::flashPlayer11
-			{
-				ViewFlash11.removeTilesFromView(this);
-			}
-			return false;
 		}
 		
 		private function onComplete() : void

@@ -24,9 +24,22 @@ package com.battalion.flashpoint.core
 		/**
 		 * A bitmask indicating what layers this collider can collide with.
 		 * Each bit is a single layer.
+		 * @see groupLayers
 		 */
 		public function get layers() : uint { return body.layers; }
 		public function set layers(value : uint) : void { body.layers = value; }
+		
+		/**
+		 * A bitmask indicating all the layers on every collider on this GameObject and it's children.
+		 * Each bit is a single layer.
+		 * @see layers
+		 */
+		public function get groupLayers() : uint { return _this.group ? _this.group.groupLayers : body.layers; }
+		public function set groupLayers(value : uint) : void
+		{
+			if (_this.group) _this.group.groupLayers = value;
+			else body.layers = value;
+		}
 		
 		public function get material() : PhysicMaterial { return _material; }
 		public function set material(value : PhysicMaterial) : void
@@ -159,6 +172,15 @@ package com.battalion.flashpoint.core
 				root.addConcise(UpdatePhysics, "updatePhysics");
 				root.sendBefore("updatePhysics", "update");
 			}
+			
+			_material = null;
+			_name = null;
+			_this = null;
+			_transform = null;
+			body = null;
+			_next = null;
+			_prev = null;
+			
 			return false;
 		}
 		

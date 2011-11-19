@@ -1,5 +1,6 @@
 package comp.particles 
 {
+	import comp.GameCore;
 	import com.battalion.flashpoint.comp.misc.PhysicsDebugger;
 	import com.battalion.flashpoint.core.*;
 	import flash.geom.Matrix;
@@ -31,7 +32,8 @@ package comp.particles
 			_body.drag = 0.005;
 			_col = gameObject.circleCollider as CircleCollider;
 			_col.material = _jetMaterial;
-			_col.layers = uint.MAX_VALUE - 3;
+			_col.layers = Layers.OBJECTS_VS_WATER;
+			if(GameCore.difficulty == GameCore.EASY) _col.layers |= Layers.WATER_VS_FIRE;
 			gameObject.transform.forward = _body.velocity;
 			gameObject.renderer.offset = new Matrix(4, 0, 0, 0.7, 30, 0);
 		}
@@ -62,11 +64,35 @@ package comp.particles
 				for each(contact in contacts)
 				{
 					var other : Collider = contact.otherCollider;
-					if (other && other is CircleCollider && !other.isDestroyed && other.gameObject.flameParticle && !other.gameObject.flameParticle.extinguished)
+					if (other && !other.isDestroyed)
 					{
-						other.gameObject.flameParticle.extinguish();
-						destroy();
-						return;
+						var heat : Heat = contact.otherCollider.gameObject.heat;
+						if (heat)
+						{
+							if (heat.heat > heat.flashPoint)
+							{
+								gameObject.animation.gotoAndPlay(gameObject.animation.playhead *  0.3, "SteamAnimation");
+								gameObject.renderer.optimized = true;
+								_col.layers = Layers.STEAM_AND_SMOKE;
+								_body.affectedByGravity = false;
+								destroy();
+							}
+							
+							heat.addHeat((100 - heat.heat) * 0.3);
+							
+							return;
+						}
+						else if (other is CircleCollider && other.gameObject.flameParticle)
+						{
+							other.gameObject.flameParticle.extinguish();
+							gameObject.animation.gotoAndPlay(gameObject.animation.playhead *  0.3, "SteamAnimation");
+							gameObject.renderer.optimized = true;
+							_col.layers = Layers.STEAM_AND_SMOKE;
+							_body.affectedByGravity = false;
+							_body.drag = 0.1;
+							destroy();
+							return;
+						}
 					}
 				}
 			}
@@ -76,13 +102,13 @@ package comp.particles
 		public function splash() : void
 		{
 			gameObject.transform.rotation = Math.random() * 360 - 180;
-			//_body.addForce(new Point(Math.random() * 2 - 1, Math.random() * 2 - 1));
+			_body.addForce(new Point(Math.random() * 2 - 1, Math.random() * 2 - 1));
 			_splashed = true;
 			gameObject.animation.playhead = 40;
 			_body.drag = 0.05;
 			_body.mass *= 0.1;
 			_col.radius *= 2;
-			_col.layers |= 2;
+			_col.layers |= Layers.WATER_VS_FIRE;
 			_col.material = _splashMaterial;
 			gameObject.renderer.offset = null;
 		}

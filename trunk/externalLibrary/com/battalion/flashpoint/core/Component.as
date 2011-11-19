@@ -341,6 +341,77 @@ package com.battalion.flashpoint.core
 			}
 		}
 		/**
+		 * Use this method to determine if there's any component added to this
+		 * GameObject that can receive a specific message. Useful for optimizations where the information sent with .
+		 * @param	message, the message to check for in every component on this GameObject.
+		 * @return true if there's a component that would listen to the specified message, otherwise false.
+		 */
+		public final function haveReceiver(message : String) : Boolean
+		{
+			CONFIG::debug
+			{
+				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
+				if (message == null) throw new Error("Message must be non null.");
+			}
+			var msg : Object = _gameObject._messages;
+			var receivers : Vector.<Function> = msg[message];
+			if (receivers)
+			{
+				return receivers.length > 0;
+			}
+			else
+			{
+				var indexOfUnderScore : int = message.indexOf("_");
+				if (indexOfUnderScore > 0)
+				{
+					var functionName : String = message.slice(indexOfUnderScore + 1);
+					var className : String = message.slice(0, indexOfUnderScore);
+					className = className.charAt(0).toLowerCase() + className.slice(1);
+					if (_gameObject.hasOwnProperty(className))
+					{
+						var targetClass : Class = getDefinitionByName(getQualifiedClassName(_gameObject[className])) as Class;
+					}
+					else
+					{
+						targetClass = null;
+					}
+				}
+				else
+				{
+					functionName = message;
+					targetClass = Component;
+				}
+				
+				receivers = new Vector.<Function>();
+				for each(var component : Component in _gameObject._components)
+				{
+					if (component is targetClass && component.hasOwnProperty(functionName) && component[functionName] is Function)
+					{
+						receivers.push(component[functionName]);
+					}
+				}
+				msg[message] = receivers;
+				return receivers.length > 0;
+			}
+			/*
+			var underScore : int = message.indexOf("_");
+			if (underScore >= 0)
+			{
+				var name : String = message.charAt(0).toLowerCase() + message.slice(1, underScore);
+				if (_gameObject[name] && _gameObject[name].hasOwnProperty(message.slice(underScore + 1))) return true;
+				return false;
+			}
+			for each(var comp : Object in _gameObject._components)
+			{
+				if (comp.hasOwnProperty(message))
+				{
+					return true;
+				}
+			}
+			return false;
+			*/
+		}
+		/**
 		 * Use this to communicate with other Components in this GameObject.
 		 * Like <a href="../core/Component.html#sendMessage()"><code>sendMessage()</code></a> except it differs the call until the target message has been sent.
 		 * 

@@ -10,17 +10,25 @@ package comp.particles
 	 */
 	public class Fire extends Component implements IExclusiveComponent 
 	{
-		
-		public static function createFire(x : Number = 0, y : Number = 0) : GameObject
+		public static function createFire(x : Number = 0, y : Number = 0, objOnFire : GameObject = null) : GameObject
 		{
-			var fire : GameObject = new GameObject("fire", Fire, ParticleGenerator);
-			fire.transform.x = x;
-			fire.transform.y = y;
-			return fire;
+			if (!objOnFire)
+			{
+				objOnFire = new GameObject("fire", Fire, ParticleGenerator);
+			}
+			else
+			{
+				objOnFire.addComponent(Fire);
+				var collider : Collider = (objOnFire.circleCollider || objOnFire.boxCollider || objOnFire.triangleCollider) as Collider;
+				if(collider) collider.groupLayers &= ~Layers.OBJECTS_VS_FIRE;
+			}
+			objOnFire.transform.x = x;
+			objOnFire.transform.y = y;
+			return objOnFire;
 		}
 		
-		internal var heat : Number = 1000;
 		private var _gen : ParticleGenerator;
+		private var _heat : Heat;
 		private var _emitting : Boolean = true;
 		private static var _init : Boolean = true;
 		private static var _fireMaterial : PhysicMaterial = new PhysicMaterial(0.0, 0.8);
@@ -36,31 +44,44 @@ package comp.particles
 				Animation.load("SmokeAnimation", "assets/img/smoke.png~0-62~");
 				Animation.addLabel("SmokeAnimation", "destroyer", 62);
 			}
+			_heat = requireComponent(Heat) as Heat;
+			_heat.heat = _heat.firePoint;
+			
 			_gen = requireComponent(ParticleGenerator) as ParticleGenerator;
 			_gen.graphicsName = "FireAnimation";
 			_gen.isAnimation = true;
 			_gen.randomVelocity = new Point(10, 10);
 			_gen.radius = 23;
 			_gen.mass = 0.5;
-			_gen.hz = 24;
+			_gen.hz = _heat.combustionRate;
 			_gen.maxParticleCount = uint.MAX_VALUE;
 		}
 		
-		public function emitting(particle : GameObject) : void
+		public function onEmit(particle : GameObject) : void
 		{
 			particle.addComponent(FlameParticle);
-			particle.flameParticle.source = this;
+			particle.flameParticle.heat = _heat;
 			particle.circleCollider.material = _fireMaterial;
 			particle.addConcise(Destroyer, "destroyer");
-			if (heat < 1000) heat += 50;
+			if (_heat.heat < _heat.firePoint) _heat.heat += 50;
 		}
 		public function fixedUpdate() : void
 		{
 			_gen.emitting = FlameParticle.particleCounter < FlameParticle.MAX_PARTICLES && (world.cam.camera as Camera).inSight(gameObject.transform.x, gameObject.transform.y - 400, 600, 1200) && _emitting;
-			if (heat < 300)
+			if (_heat.heat < _heat.flashPoint)
 			{
-				destroy();
-				_gen.destroy();
+				var collider : Collider = (gameObject.circleCollider || gameObject.boxCollider || gameObject.triangleCollider) as Collider;
+				if(collider) collider.groupLayers |= Layers.OBJECTS_VS_FIRE;
+				
+				if (gameObject.name == "fire")
+				{
+					gameObject.destroy();
+				}
+				else
+				{
+					destroy();
+					_gen.destroy();
+				}
 			}
 		}
 		public function toggleFire() : void

@@ -206,6 +206,17 @@ myObj.animation.play("myAnimation");
 		private var _loops : uint = 0;
 		private var _pingPongPlayback : Boolean = false;
 		
+		/** @private **/
+		public function onDestroy() : Boolean
+		{
+			if (_cloned) _frames.length = 0;
+			_frames = null;
+			_messages = null;
+			_animationName = null;
+			_renderer = null;
+			return false;
+		}
+		
 		/**
 		 * Determines if audio playback should reverse every time it reaches an end.
 		 */
@@ -235,6 +246,7 @@ myObj.animation.play("myAnimation");
 		{
 			_renderer = requireComponent(Renderer) as Renderer;
 		}
+		
 		
 		/**
 		 * The direction of the animation relative to the original direction of the animation.
@@ -419,6 +431,8 @@ myObj.animation.play("myAnimation");
 When selecting another animation, set the <code>animationName</code> to the desired animation. The animation will play starting from the first frame of that animation.</pre>
 		 * </p>
 		 * @see #currentAnimation
+		 * @param animationName, the name of the animation to play
+		 * @param loops, the number of loops to perform, 0 means it will loop forever, 1 means it will only play once, etc.
 		 */
 		public function play(animationName : String = null, loops : uint = 0) : void
 		{

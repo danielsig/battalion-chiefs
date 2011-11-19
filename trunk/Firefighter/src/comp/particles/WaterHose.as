@@ -19,7 +19,7 @@ package comp.particles
 			return hose;
 		}
 		
-		public var thrust : Number = 200;
+		public var thrust : Number = 500;
 		
 		private var _gen : ParticleGenerator;
 		private var _tr : Transform;
@@ -34,17 +34,19 @@ package comp.particles
 				_init = false;
 				Animation.load("WaterAnimation", "assets/img/water.png~0-71~");
 				Animation.addLabel("WaterAnimation", "destroyer", 71);
+				Animation.load("SteamAnimation", "assets/img/steam.png~0-62~");
+				Animation.addLabel("SteamAnimation", "destroyer", 62);
 			}
 			_gen = requireComponent(ParticleGenerator) as ParticleGenerator;
 			_gen.graphicsName = "WaterAnimation";
 			_gen.isAnimation = true;
 			_gen.radius = 8;
-			_gen.mass = 20;
-			_gen.hz = 48;
+			_gen.mass = 5;
+			_gen.hz = 100;
 			_gen.maxParticleCount = uint.MAX_VALUE;
 		}
 		
-		public function emitting(particle : GameObject) : void
+		public function onEmit(particle : GameObject) : void
 		{
 			particle.addComponent(WaterParticle);
 			particle.addConcise(Destroyer, "destroyer");

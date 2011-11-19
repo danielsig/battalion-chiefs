@@ -260,7 +260,7 @@ package com.battalion.flashpoint.display
 								if (renderer.rendererInFrontOfThis)
 								{
 									var onFront : Sprite = renderer.rendererInFrontOfThis.sprites[_name];
-									if (onFront)
+									if (onFront && onFront.parent == _dynamicLayer)
 									{
 										var back : int = _dynamicLayer.getChildIndex(_sprites[i]);
 										var front : int = _dynamicLayer.getChildIndex(onFront);

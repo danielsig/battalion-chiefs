@@ -69,12 +69,17 @@ package com.battalion.flashpoint.comp.misc
 			_debugGraphics.beginFill(sleeping ? 0x666666 : ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			_debugGraphics.drawCircle(circle.x, circle.y, circle.radius);
 			_debugGraphics.endFill();
-			/*_debugGraphics.beginFill(0x00FF00);
+			
+			_debugGraphics.beginFill(ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
+			_debugGraphics.lineStyle(1, 0x00FFFF);
 			for each(var contact : Contact in circle.contacts)
 			{
-				_debugGraphics.drawCircle(contact.x, contact.y, 4);
+				_debugGraphics.drawCircle(contact.x, contact.y, 1);
+				_debugGraphics.moveTo(contact.x, contact.y);
+				_debugGraphics.lineTo(contact.x + contact.nx * 10, contact.y + contact.ny * 10);
 			}
-			_debugGraphics.beginFill(0x22BB22, 0.3);*/
+			_debugGraphics.lineStyle(1, 0, 0);
+			_debugGraphics.endFill();
 		}
 		/** @private */
 		public function drawTriangle(triangle : Triangle, sleeping : Boolean = false) : void
@@ -129,12 +134,18 @@ package com.battalion.flashpoint.comp.misc
 			_debugGraphics.moveTo(group.x, group.y);
 			_debugGraphics.lineTo(group.x + group.vx * 10, group.y + group.vy * 10);
 			_debugGraphics.lineStyle(1, 0, 1);
-			/*_debugGraphics.beginFill(ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
+			
+			
+			_debugGraphics.beginFill(ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
+			_debugGraphics.lineStyle(1, 0x00FFFF);
 			for each(var contact : Contact in group.contacts)
 			{
-				_debugGraphics.drawCircle(contact.x, contact.y, 4);
+				_debugGraphics.drawCircle(contact.x, contact.y, 1);
+				_debugGraphics.moveTo(contact.x, contact.y);
+				_debugGraphics.lineTo(contact.x + contact.nx * 10, contact.y + contact.ny * 10);
 			}
-			_debugGraphics.beginFill(0x22BB22, 0.3);*/
+			_debugGraphics.lineStyle(1, 0, 0);
+			_debugGraphics.endFill();
 		}
 		private function drawGrid(onlySleepingBodies : Boolean) : void
 		{

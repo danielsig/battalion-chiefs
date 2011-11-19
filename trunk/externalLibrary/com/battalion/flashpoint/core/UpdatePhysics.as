@@ -87,6 +87,9 @@ package com.battalion.flashpoint.core
 					body.vx = v.x;
 					body.vy = v.y;
 					body.va = physics.rigidbody.angularVelocity;
+					v = physics.rigidbody.gameObject.transform.position;
+					body.lastX = v.x - Physics.gridOffset.x;
+					body.lastY = v.y - Physics.gridOffset.y;
 					
 					physics.rigidbody.body = body;
 					

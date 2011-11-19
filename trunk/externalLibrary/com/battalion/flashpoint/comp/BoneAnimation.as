@@ -27,6 +27,19 @@ package com.battalion.flashpoint.comp
 		private var _playback : Number = 1;
 		private var _pingPongPlayback : Boolean = false;
 		
+		/** @private **/
+		public function onDestroy() : Boolean
+		{
+			_animation = null;
+			for (var boneName : String in _bones)
+			{
+				delete _bones[boneName];
+			}
+			_bones = null;
+			_boneAnimName = null;
+			return false;
+		}
+		
 		/**boneAnimName = Tekur inn nafn á animation
 		*frameInterval = hversu fljótt animationið fer á milli ramma
 		*definition = dynamic object fyrir animationið
@@ -180,6 +193,8 @@ package com.battalion.flashpoint.comp
 When selecting another animation, set the <code>boneAnimName</code> to the desired animation. The animation will play starting from the first frame of that animation.</pre>
 		 * </p>
 		 * @see #currentAnimation
+		 * @param animationName, the name of the animation to play
+		 * @param loops, the number of loops to perform, 0 means it will loop forever, 1 means it will only play once, etc.
 		 */
 		public function play(boneAnimName : String = null, loops : uint = 0) : void
 		{
@@ -233,12 +248,18 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 			_p = frame < 0 ? _length + frame / _length : frame / _length;
 			_playing = true;
 		}
-
+		
+		/** @private **/
 		public function update() : void
 		{
 			if (_playing)
 			{
 				// UPDATE PLAYHEAD
+				
+				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
+				var frameLength : Number = localTimeScale / _length;
+				if (_loops == 1) _p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
+					
 				if (_p >= 1 || _p < 0)
 				{
 					if (_loops > 0 && _loops-- == 1)
@@ -249,12 +270,11 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					if (_pingPongPlayback) _playback = -_playback;
 					else _p = _pFixed = (_p < 0 ? 1 : 0);
 				}
-				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
-				var frameLength : Number = localTimeScale / _length;
-				_p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
+				
+				if (_loops != 1) _p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
 				
 				if (_p > 1) _p %= 1;
-				else if (_p < 0) _p = 0;
+				else if (_p < 0) _p %= 1;
 				
 				if (!FlashPoint.frameInterpolationRatio)
 				{

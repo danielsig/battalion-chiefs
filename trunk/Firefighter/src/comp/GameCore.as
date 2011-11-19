@@ -25,9 +25,17 @@ package comp
 	 */
 	public class GameCore extends Component implements IExclusiveComponent
 	{
+		
+		public static const EASY : uint = 0;
+		public static const NORMAL : uint = 1;
+		public static const HARD : uint = 2;
+		
+		public static var difficulty : uint = EASY;
+		
 		public function start() : void 
 		{
 			Physics.maxSize = 300;
+			Physics.restingSpeed = 0.002;
 			Physics.gravityVector = new Point(0, 0.9);
 			Physics.iterations = 3;
 			

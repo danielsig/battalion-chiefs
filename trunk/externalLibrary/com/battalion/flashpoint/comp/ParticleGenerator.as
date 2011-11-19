@@ -63,7 +63,10 @@ package com.battalion.flashpoint.comp
 		
 		private var _random : Number = 0;
 		
-		private var _hzCount : Number = 0;
+		private var _hzCount : Number = 0.000001;
+		
+		private var _prevVelocityX : Number = 0;
+		private var _prevVelocityY : Number = 0;
 		
 		public function start() : void
 		{
@@ -81,18 +84,15 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		public function fixedUpdate() : void
 		{
-			if (emitting) _hzCount++;
-		}
-		/** @private **/
-		public function update() : void
-		{
 			if (emitting)
 			{
+				_hzCount++;
 				var framesPerGen : Number = FlashPoint.fixedFPS / hz;
 				while (_hzCount > framesPerGen)
 				{
 					_hzCount -= framesPerGen;
 					_counter++;
+					logOn("waterHose", _hzCount.toPrecision(3));
 					
 					var particle : GameObject = new GameObject(gameObject.name + "Particle" + _counter);
 					particle.transform.x = gameObject.transform.gx;
@@ -113,13 +113,16 @@ package com.battalion.flashpoint.comp
 					if (velocity || randomVelocity || mass || inertia)
 					{
 						var body : Rigidbody = particle.addComponent(Rigidbody) as Rigidbody;
-						if (velocity) body.velocity = velocity;
+						if (velocity) body.velocity = new Point(velocity.x * (1 - _hzCount) + _prevVelocityX * _hzCount, velocity.y * (1 - _hzCount) + _prevVelocityY * _hzCount);
 						if (randomVelocity)
 						{
 							var randomVel : Point = body.velocity;
 							randomVel.offset((_random = ((1 + (_random * 12414)) % 43231)) * 0.0000462630982 * randomVelocity.x - randomVelocity.x, (_random = ((1 + (_random * 12414)) % 43231)) * 0.0000462630982 * randomVelocity.y - randomVelocity.y);
 							body.velocity = randomVel;
 						}
+						particle.sendBefore("RigidbodyInterpolator_setPrevious", "update", particle.transform.x, particle.transform.y);
+						particle.transform.x += body.velocity.x * _hzCount * 0.16;
+						particle.transform.y += body.velocity.y * _hzCount * 0.16;
 						if (mass) body.mass = mass;
 						if (inertia) body.inertia = inertia;
 					}
@@ -135,9 +138,22 @@ package com.battalion.flashpoint.comp
 					}
 					
 					//particle.log();
-					sendMessage("emitting", particle);
+					sendMessage("onEmit", particle);
 				}
 			}
+			if (velocity)
+			{
+				_prevVelocityX = velocity.x;
+				_prevVelocityY = velocity.y;
+			}
+		}
+		/** @private **/
+		public function onDestroy() : Boolean
+		{
+			velocity = randomVelocity = null;
+			graphicsName = null;
+			_latestParticle = null;
+			return false;
 		}
 	}
 }

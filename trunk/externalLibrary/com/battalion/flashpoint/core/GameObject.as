@@ -840,24 +840,21 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			instance._gameObject = null;
 			
-			var deleteComponent : Boolean = true;
 			var type : Class = Class(getDefinitionByName(getQualifiedClassName(instance)))
+			
+			var name : String = getQualifiedClassName(instance);
+			name = name.slice(name.lastIndexOf("::") + 2);
+			name = name.charAt(0).toLowerCase() + name.slice(1);
+			
 			for each(var component : Component in _components)
 			{
 				if (component is type)
 				{
-					var name : String = getQualifiedClassName(component);
-					name = name.slice(name.lastIndexOf("::") + 2);
-					name = name.charAt(0).toLowerCase() + name.slice(1);
 					this[name] = component;
-					deleteComponent = false;
-					break;
+					return;
 				}
 			}
-			if(deleteComponent)
-			{
-				delete this[name];
-			}
+			delete this[name];
 		}
 		/**
 		 * Use this to communicate with Components in this GameObject.
@@ -1459,42 +1456,5 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				}
 			}
 		}
-		
-		/** @private **/
-		/*internal function fixedUpdate() : void
-		{
-			//BEFORE FIXED UPDATE
-			if (_before.fixedUpdate)
-			{
-				for each(var before : Array in _before.fixedUpdate)
-				{
-					sendMessage.apply(this, before);
-					if (!_parent) return;
-				}
-				delete _before.fixedUpdate;
-			}
-			//FIXED UPDATE
-			for each(var f : Function in _fixedUpdate)
-			{
-				f();
-				if (!_parent) return;
-			}
-			//AFTER FIXED UPDATE
-			if (_after.fixedUpdate)
-			{
-				for each(var after : Array in _after.fixedUpdate)
-				{
-					sendMessage.apply(this, after);
-					if (!_parent) return;
-				}
-				delete _after.fixedUpdate;
-			}
-			//REPEAT ON CHILDREN
-			for each(var child : GameObject in _children)
-			{
-				child.fixedUpdate();
-				if (!_parent) return;
-			}
-		}*/
 	}
 }
