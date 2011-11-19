@@ -163,31 +163,72 @@ package com.battalion.flashpoint.comp
 			
 			if (alpha > 0 && (outlineThickness < 0 || outlineAlpha <= 0))
 			{
-				Renderer.draw(bitmapName, "fill", { color:"0x" + color.toString(16), alpha:alpha},
-				-width * 0.5, -height * 0.5,
-				width * 0.5, -height * 0.5,
-				width * 0.5, height * 0.5,
-				-width * 0.5, height * 0.5);
+				if (alpha * outlineAlpha == 1)
+				{
+					Renderer.draw(bitmapName, "background", 0,
+					"fill", { color:"0x" + color.toString(16), alpha:alpha},
+					-width * 0.5, -height * 0.5,
+					width * 0.5, -height * 0.5,
+					width * 0.5, height * 0.5,
+					-width * 0.5, height * 0.5);
+				}
+				else
+				{
+					Renderer.draw(bitmapName,
+					"fill", { color:"0x" + color.toString(16), alpha:alpha},
+					-width * 0.5, -height * 0.5,
+					width * 0.5, -height * 0.5,
+					width * 0.5, height * 0.5,
+					-width * 0.5, height * 0.5);
+				}
 			}
 			else if (alpha <= 0 && outlineThickness > -1 && outlineAlpha > 0)
 			{
-				Renderer.draw(bitmapName, "line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
-				-width * 0.5, -height * 0.5,
-				width * 0.5, -height * 0.5,
-				width * 0.5, height * 0.5,
-				-width * 0.5, height * 0.5,
-				-width * 0.5, -height * 0.5);
+				if (alpha * outlineAlpha == 1)
+				{
+					Renderer.draw(bitmapName, "background", 0,
+					"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+					-width * 0.5, -height * 0.5,
+					width * 0.5, -height * 0.5,
+					width * 0.5, height * 0.5,
+					-width * 0.5, height * 0.5,
+					-width * 0.5, -height * 0.5);
+				}
+				else
+				{
+					Renderer.draw(bitmapName,
+					"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+					-width * 0.5, -height * 0.5,
+					width * 0.5, -height * 0.5,
+					width * 0.5, height * 0.5,
+					-width * 0.5, height * 0.5,
+					-width * 0.5, -height * 0.5);
+				}
 			}
 			else
 			{
-				Renderer.draw(bitmapName,
-				"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
-				"fill", { color:"0x" + color.toString(16), alpha:alpha },
-				-width * 0.5, -height * 0.5,
-				width * 0.5, -height * 0.5,
-				width * 0.5, height * 0.5,
-				-width * 0.5, height * 0.5,
-				-width * 0.5, -height * 0.5);
+				if (alpha * outlineAlpha == 1)
+				{
+					Renderer.draw(bitmapName, "background", 0,
+					"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+					"fill", { color:"0x" + color.toString(16), alpha:alpha },
+					-width * 0.5, -height * 0.5,
+					width * 0.5, -height * 0.5,
+					width * 0.5, height * 0.5,
+					-width * 0.5, height * 0.5,
+					-width * 0.5, -height * 0.5);
+				}
+				else
+				{
+					Renderer.draw(bitmapName,
+					"line", { thickness:outlineThickness, color:"0x" + outlineColor.toString(16), alpha:outlineAlpha},
+					"fill", { color:"0x" + color.toString(16), alpha:alpha },
+					-width * 0.5, -height * 0.5,
+					width * 0.5, -height * 0.5,
+					width * 0.5, height * 0.5,
+					-width * 0.5, height * 0.5,
+					-width * 0.5, -height * 0.5);
+				}
 			}
 		}
 		
@@ -205,6 +246,8 @@ package com.battalion.flashpoint.comp
 		 * Strings tells the Renderer what to do with the next instruction(s).
 		 * Here are valid instructions and their effect:
 		 * <ul>
+		 * <li><b>"background"</b>, must be followed by a color code value representing the background color.
+		 * Note that having a background means that it will have no transparancy (and therefor faster).</li>
 		 * <li><b>"circle"</b>, must be followed by an Object containing the properties to be used as parameters
 		 * for a <code>drawCircle()</code> or a <code>drawEllipse()</code> call.
 		 * Specifying either width or height makes it an ellipse.</li>
@@ -281,6 +324,9 @@ Renderer.draw("myWeirdArrow",
 		{
 			var shape : Shape = new Shape();
 			var graphics : Graphics = shape.graphics;
+			var backgroundColor : int = -1;
+			
+			var background : Boolean = false;
 			var moveTo : Boolean = true;
 			var fill : Boolean = false;
 			var line : Boolean = false;
@@ -290,7 +336,8 @@ Renderer.draw("myWeirdArrow",
 			var prevNumber : Number = NaN;
 			var prevPoint : Point = new Point(0, 0);
 			var prevFill : Object = null;
-			var prevLine : Object = {};
+			var prevLine : Object = { };
+			
 			for each(var instruction : * in instructions)
 			{
 				if (instruction is Number)
@@ -305,6 +352,11 @@ Renderer.draw("myWeirdArrow",
 						instruction = new Point(prevNumber, instruction as Number);
 					}
 				}
+				else if (instruction is uint && background)
+				{
+					backgroundColor = instruction;
+				}
+				background = false;
 				prevNumber = NaN;
 				var point : Point = instruction as Point;
 				if (instruction is String)
@@ -329,6 +381,9 @@ Renderer.draw("myWeirdArrow",
 							break;
 						case "circle":
 							circle = true;
+							break;
+						case "background":
+							background = true;
 							break;
 					}
 				}
@@ -437,7 +492,7 @@ Renderer.draw("myWeirdArrow",
 					}
 				}
 			}
-			bake(bitmapName, shape, { smoothing:true } );
+			bake(bitmapName, shape, { smoothing:true , transparent:backgroundColor < 0, backgroundColor:backgroundColor < 0 ? null : backgroundColor} );
 		}
 		/**
 		 * Call this method in order to load a bitmap and use it multiple times in your game
@@ -605,6 +660,10 @@ Renderer.draw("myWeirdArrow",
 		public function onDestroy() : Boolean
 		{
 			bitmapData = null;
+			offset = null;
+			pixelSnapping = null;
+			_url = null;
+			_transform = null;
 			sprites = { };
 			rendererInFrontOfThis = null;
 			CONFIG::flashPlayer10

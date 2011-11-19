@@ -9,6 +9,9 @@ package com.battalion.flashpoint.core
 	
 	/**
 	 * A Rigidbody, add this alone with a Collider to a GameObject to make it react to collisions.
+	 * Messages Sent:
+		 * onCollisionEnter(contactPoints : Vector.<ContactPoint>)
+		 * onCollisionStay(contactPoints : Vector.<ContactPoint>)
 	 * @author Battalion Chiefs
 	 */
 	public final class Rigidbody extends Component implements IExclusiveComponent, IPhysicsSyncable
@@ -95,6 +98,7 @@ package com.battalion.flashpoint.core
 			_vanDerWaals = value;
 			if (body) body.vanDerWaals = value;
 		}
+		
 		/**
 		 * The velocity of the rigidbody in pixels per fixedUpdate.
 		 */
@@ -188,6 +192,30 @@ package com.battalion.flashpoint.core
 			}
 			return points;
 		}
+		public function get collisions() : Vector.<ContactPoint>
+		{
+			if (!body) return null;
+			var contacts : Vector.<Contact> = body.contacts;
+			if (!contacts) return null;
+			var insert : uint = 0;
+			var length : uint = contacts.length;
+			for (var i : uint = 0; i < length; i++)
+			{
+				var contact : Contact = contacts[i];
+				var collider : Collider = contact.other.thisBody.userData as Collider;
+				if ((!collider || collider._gameObject) && !contact.staying)
+				{
+					contacts[insert++] = contact;
+				}
+			}
+			if (!insert) return null;
+			var points : Vector.<ContactPoint> = new Vector.<ContactPoint>(insert);
+			while(insert--)
+			{
+				points[insert] = new ContactPoint(contacts[insert]);
+			}
+			return points;
+		}
 		public function touchingInDirection(normal : Point, thresholdSquared : Number) : Vector.<ContactPoint>
 		{
 			if (!body) return null;
@@ -200,9 +228,11 @@ package com.battalion.flashpoint.core
 			var length : uint = contacts.length;
 			for (var i : uint = 0; i < length; i++)
 			{
-				if (contacts[i].nx * nx + contacts[i].ny * ny > thresholdSquared)
+				var contact : Contact = contacts[i];
+				var collider : Collider = contact.other.thisBody.userData as Collider;
+				if ((!collider || collider._gameObject) && contact.nx * nx + contact.ny * ny > thresholdSquared)
 				{
-					contacts[insert++] = contacts[i];
+					contacts[insert++] = contact;
 				}
 			}
 			if (!insert) return null;
@@ -215,7 +245,7 @@ package com.battalion.flashpoint.core
 		}
 		public function touching(collider : Collider) : Vector.<ContactPoint>
 		{
-			if (!body) return null;
+			if (!body || !collider._gameObject) return null;
 			var contacts : Vector.<Contact> = body.contacts;
 			if (!contacts) return null;
 			var insert : uint = 0;
@@ -315,6 +345,9 @@ package com.battalion.flashpoint.core
 				if (_gameObject.parent) throw new Error("Rigidbodies can only be added to GameObjects with no parent.");
 			}
 			
+			haveReceiver("onCollisionEnter");
+			haveReceiver("onCollisionStay");
+			
 			_transform = _gameObject.transform;
 			
 			if (_gameObject._physicsComponents) _this = _gameObject._physicsComponents;
@@ -343,6 +376,9 @@ package com.battalion.flashpoint.core
 					sendBefore("updatePhysics", "update");
 				}
 			}
+			body = null;
+			_transform = null;
+			_this = null;
 			return false;
 		}
 		
@@ -465,6 +501,57 @@ package com.battalion.flashpoint.core
 				}
 				if (groupChange) _this.body.computeCenterOfMass();
 			}
+			var enter : Boolean = _gameObject._messages["onCollisionEnter"].length;
+			var stay : Boolean = _gameObject._messages["onCollisionStay"].length;
+			if (enter || stay)
+			{
+				var contacts : Vector.<Contact> = bod.contacts;
+				if (contacts)
+				{
+					var enterContacts : Vector.<Contact> = enter ? contacts : null;
+					var stayContacts : Vector.<Contact> = stay ? (enter ? contacts.concat() : contacts) : null;
+					
+					var insertEnter : uint = 0;
+					var insertStay : uint = 0;
+					
+					var length : uint = contacts.length;
+					for (var i : uint = 0; i < length; i++)
+					{
+						var contact : Contact = contacts[i];
+						collider = contact.other.thisBody.userData as Collider;
+						if (!collider || collider._gameObject)
+						{
+							if (enter && contact.entering)
+							{
+								enterContacts[insertEnter++] = contact;
+							}
+							else if (stay && !contact.entering)
+							{
+								stayContacts[insertStay++] = contact;
+							}
+						}
+					}
+					if (insertEnter)
+					{
+						var points : Vector.<ContactPoint> = new Vector.<ContactPoint>(insertEnter);
+						while(insertEnter--)
+						{
+							points[insertEnter] = new ContactPoint(enterContacts[insertEnter]);
+						}
+						sendMessage("onCollisionEnter", points)
+					}
+					if (insertStay)
+					{
+						points = new Vector.<ContactPoint>(insertStay);
+						while(insertStay--)
+						{
+							points[insertStay] = new ContactPoint(stayContacts[insertStay]);
+						}
+						sendMessage("onCollisionStay", points)
+					}
+				}
+			}
+			
 			//continue
 			return _next;
 		}

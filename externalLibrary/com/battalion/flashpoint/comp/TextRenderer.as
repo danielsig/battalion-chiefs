@@ -53,6 +53,9 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		public function onDestroy() : Boolean
 		{
+			text = font = htmlText = null;
+			offset = null;
+			
 			CONFIG::flashPlayer10
 			{
 				View.removeTextFromView(this);

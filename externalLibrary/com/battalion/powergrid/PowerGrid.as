@@ -600,7 +600,7 @@ package com.battalion.powergrid
 									var otherCircle : Circle = other as Circle;
 									var otherTriangle : Triangle = other as Triangle;
 									var contact1x:Number = NaN;
-									if (otherCircle && otherCircle != circle)
+									if (otherCircle && otherCircle != circle && otherCircle.layers & circle.layers && (!circle.group || circle.group != otherCircle.group))
 									{
 										var dx : Number = circle.x - otherCircle.x;
 										var dy : Number = circle.y - otherCircle.y;
@@ -659,7 +659,7 @@ package com.battalion.powergrid
 											otherCircle.vy += ny * circle._mass * invMass;
 										}
 									}
-									else if (otherTriangle)
+									else if (otherTriangle && otherTriangle.layers & circle.layers && (!circle.group || circle.group != otherTriangle.group))
 									{
 										resolveTriangleVsCircle(otherTriangle, circle, timeScale);
 										if (colInfo)
@@ -896,7 +896,7 @@ package com.battalion.powergrid
 									otherTriangle = other as Triangle;
 									contact1x = NaN;
 									
-									if (otherCircle)
+									if (otherCircle && otherCircle.layers & triangle.layers && (!triangle.group || triangle.group != otherCircle.group))
 									{
 										resolveTriangleVsCircle(triangle,otherCircle, timeScale);
 										if (colInfo)
@@ -909,7 +909,7 @@ package com.battalion.powergrid
 											ny = colInfo[3];
 										}
 									}
-									else if (otherTriangle && otherTriangle != triangle)
+									else if (otherTriangle && otherTriangle != triangle && otherTriangle.layers & triangle.layers && (!triangle.group || triangle.group != otherTriangle.group))
 									{
 										resolveTriangles(triangle, otherTriangle, timeScale);
 										if (colInfo)
@@ -1468,7 +1468,7 @@ package com.battalion.powergrid
 			var absDy : Number = dy > 0 ? dy : -dy;
 			
 			
-			if (p1x > tileLeft && p1x <= tileRight && p1y >= tileTop && p1y <= tileBottom)
+			if (p1x > tileLeft && p1x < tileRight && p1y > tileTop && p1y < tileBottom)
 			{
 				var colX : Number = tileLeft, colY : Number = tileTop;
 				if (dx < 0) colX = tileRight;
@@ -1493,7 +1493,7 @@ package com.battalion.powergrid
 					pointX = p1x; pointY = p1y;
 				}
 			}
-			if (p2x > tileLeft && p2x <= tileRight && p2y >= tileTop && p2y <= tileBottom)
+			if (p2x > tileLeft && p2x < tileRight && p2y > tileTop && p2y < tileBottom)
 			{
 				colX = tileLeft; colY = tileTop;
 				if (dx < 0) colX = tileRight;
@@ -1518,7 +1518,7 @@ package com.battalion.powergrid
 					pointX = p2x; pointY = p2y;
 				}
 			}
-			if (p3x > tileLeft && p3x <= tileRight && p3y >= tileTop && p3y <= tileBottom)
+			if (p3x > tileLeft && p3x < tileRight && p3y > tileTop && p3y < tileBottom)
 			{
 				colX = tileLeft; colY = tileTop;
 				if (dx < 0) colX = tileRight;
@@ -1555,6 +1555,11 @@ package com.battalion.powergrid
 				var right : Number = tileRight - triangle.x;
 				var top : Number = tileTop - triangle.y;
 				var bottom : Number = tileBottom - triangle.y;
+				
+				if (tileOnLeft) left -= unit;
+				if (tileOnRight) right += unit;
+				if (tileOnTop) top -= unit;
+				if (tileOnBottom) bottom += unit;
 				
 				var dot1a : Number = triangle.gn12x * left + triangle.gn12y * top - triangle.n12d;
 				var dot2a : Number = triangle.gn23x * left + triangle.gn23y * top - triangle.n23d;

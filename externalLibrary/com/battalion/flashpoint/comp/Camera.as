@@ -24,6 +24,15 @@ package com.battalion.flashpoint.comp
 		private var _tr : Transform = null;
 		
 		/** @private **/
+		public function onDestroy() : Boolean
+		{
+			colorMatrix = null;
+			_bounds = null;
+			_tr = null;
+			return false;
+		}
+		
+		/** @private **/
 		public function awake() : void
 		{
 			_tr = gameObject.transform;

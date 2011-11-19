@@ -1,11 +1,12 @@
 package com.battalion.powergrid 
 {
+	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	/**
 	 * The Abstract class for the Cirlce, Triangle and Group classes.
 	 * @author Battalion Chiefs
 	 */
-	public class AbstractRigidbody 
+	public class AbstractRigidbody
 	{
 		
 		public function get volume() : Number { return 1; }
@@ -148,10 +149,18 @@ package com.battalion.powergrid
 		/** @private **/
 		internal var resting : Number = 1;
 		
-		/** @private **/
-		internal var lastX : Number = 0;
-		/** @private **/
-		internal var lastY : Number = 0;
+		/**
+		 * The position along the x-axis that the rigidbody will be moved to
+		 * in case it is instantiated inside a tile and it can't compute a quick way out.
+		 * Use with caution.
+		 */
+		public var lastX : Number = 0;
+		/**
+		 * The position along the y-axis that the rigidbody will be moved to
+		 * in case it is instantiated inside a tile and it can't compute a quick way out.
+		 * Use with caution.
+		 */
+		public var lastY : Number = 0;
 		
 		/**
 		 * If the rigidbody is sleeping, call this method before changing the velocity or angular velocity directly.

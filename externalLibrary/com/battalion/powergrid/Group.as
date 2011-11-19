@@ -26,10 +26,6 @@ package com.battalion.powergrid
 				{
 					if(target.body._contacts) vector = vector.concat(target.body._contacts.vector);
 				}
-				if (vector.length != numContacts)
-				{
-					trace("WHHHAAAAAAT!!!");
-				}
 				if (!vector.length) return null;
 				return vector;
 			}
@@ -174,6 +170,37 @@ package com.battalion.powergrid
 			var target : BodyNode = bodies;
 			while ((index--) && (target = target.next)){};
 			return target.body;
+		}
+		/**
+		 * The layer mask of every collider in this group merged together with a bitwize OR operator.
+		 * Setting this property will assign that layer mask to every collider in this group.
+		 */
+		public function get groupLayers() : uint
+		{
+			layers = 0;
+			var target : BodyNode = bodies;
+			if (target)
+			{
+				do
+				{
+					layers |= target.body.layers;
+				}
+				while ((target = target.next));
+			}
+			return layers;
+		}
+		public function set groupLayers(value : uint) : void
+		{
+			layers = value;
+			var target : BodyNode = bodies;
+			if (target)
+			{
+				do
+				{
+					target.body.layers = value;
+				}
+				while ((target = target.next));
+			}
 		}
 		public function get empty() : Boolean
 		{

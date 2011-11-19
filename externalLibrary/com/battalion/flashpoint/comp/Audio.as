@@ -30,6 +30,16 @@ package com.battalion.flashpoint.comp
 		private var _transform : Transform;
 		
 		/** @private **/
+		public function onDestroy() : Boolean 
+		{
+			_player.dispose();
+			_player = null;
+			_soundName = null;
+			_transform = null;
+			return false;
+		}
+		
+		/** @private **/
 		public function awake() : void 
 		{
 			_transform = gameObject.transform;
