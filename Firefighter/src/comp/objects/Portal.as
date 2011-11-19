@@ -15,24 +15,25 @@ package comp.objects
 		public static const OPEN_KEY : String = "e";
 		public static const BREAK_KEY : String = "q"; 
 		
-		public var height : Number;
-		public var width : Number;
-		public var target : Transform;
-		public var otherPortal : Portal;
+		public var height : Number = 0;
+		public var width : Number = 0;
+		public var strength : Number = 1;
+		public var target : Transform = null;
+		public var otherPortal : Portal = null;
+		public var locked : Boolean = false;
+		
 		private var _canPort : Boolean = true;
 		private var _atPortal : Boolean = false;
-		private var _doorLocked : Boolean;
-		private var _bar : GameObject;
-		private var _strength : Number;
+		private var _bar : GameObject = null;
 		
 		public function lock () : void
 		{
-			_doorLocked = otherPortal._doorLocked = true;
+			locked = otherPortal.locked = true;
 		}
 		
 		public function unlock () : void
 		{
-			_doorLocked = otherPortal._doorLocked = false;
+			locked = otherPortal.locked = false;
 		}
 		
 		public function start() : void
@@ -48,8 +49,8 @@ package comp.objects
 			portal1.width = portal2.width = width;
 			portal1.height = portal2.height = height;
 			portal1.target = portal2.target = target;
-			portal1._doorLocked = portal2._doorLocked = doorLocked;
-			portal1._strength = portal2._strength = strength;
+			portal1.locked = portal2.locked = doorLocked;
+			portal1.strength = portal2.strength = strength;
 			portal1.otherPortal = portal2;
 			portal2.otherPortal = portal1;
 		}
@@ -86,10 +87,10 @@ package comp.objects
 					target.sendMessage("isAtPortal", this);
 					if (Input.pressButton("openPortal"))
 					{
-						if (_doorLocked)
+						if (locked)
 						{
 							log("The door is locked");
-							sendMessage("portalLocked", target.gameObject, this,  _strength);
+							sendMessage("portalLocked", target.gameObject, this,  strength);
 						}
 						else
 						{
@@ -104,7 +105,7 @@ package comp.objects
 							log(otherPortal.gameObject.name);
 						}
 					}
-					if (_doorLocked)
+					if (locked)
 					{
 						if (!_bar && Input.pressButton("breakPortal"))
 						{
@@ -115,14 +116,14 @@ package comp.objects
 						}
 						else if (_bar && Input.holdButton("breakPortal"))
 						{
-							if (_bar.loadingBar.value  < 1 )
+							if (_bar.progressBar.value  < 1 )
 							{
-								_bar.loadingBar.value +=  1 / _strength;
+								_bar.progressBar.value +=  1 / strength;
 							}
-							else if (_bar.loadingBar.value > 1)
+							else if (_bar.progressBar.value > 1)
 							{
 								log("door unlocked");
-								_doorLocked = otherPortal._doorLocked = false;
+								locked = otherPortal.locked = false;
 								_bar.destroy();
 								_bar = null;
 							}

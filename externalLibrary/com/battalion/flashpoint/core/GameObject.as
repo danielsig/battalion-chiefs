@@ -127,6 +127,7 @@ trace(myChild);//WORLD.foo.bar
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (value == null) throw new Error("Name must be non-null.");
 			}
+			
 			_parent.updateNameOf(this, value);
 			_name = value;
 		}
@@ -236,12 +237,13 @@ trace(myChild);//WORLD.foo.bar
 			delete this[oldName];
 			for each(var otherChild : GameObject in _children)
 			{
-				if (otherChild._name == oldName)
+				if (otherChild._name == oldName && otherChild != child)
 				{
 					this[oldName] = otherChild;
 					break;
 				}
 			}
+			this[newName] = child;
 		}
 		/** Add multiple children.
 		 * @see #addChild()

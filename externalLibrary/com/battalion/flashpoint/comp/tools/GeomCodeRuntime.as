@@ -90,13 +90,13 @@ package com.battalion.flashpoint.comp.tools
 		{
 			if (discrete)
 			{
-				var gx : Number = obj.transform.gx;
+				/*var gx : Number = obj.transform.gx;
 				var gy : Number = obj.transform.gy;
-				var ga : Number = obj.transform.globalRotation;
+				var ga : Number = obj.transform.globalRotation;*/
 				obj.parent = null;
-				obj.transform.x = gx;
+				/*obj.transform.x = gx;
 				obj.transform.y = gy;
-				obj.transform.rotation = ga;
+				obj.transform.rotation = ga;*/
 			}
 			if (obj.density || obj.massDistribution || obj.mass || obj.inertia)
 			{

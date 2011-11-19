@@ -635,7 +635,7 @@ Renderer.draw("myWeirdArrow",
 		 */
 		public function putBehind(other : Renderer) : void
 		{
-			if (rendererInFrontOfThis && rendererInFrontOfThis.gameObject)
+			if (rendererInFrontOfThis && rendererInFrontOfThis.isDestroyed)
 			{
 				other.putBehind(rendererInFrontOfThis);
 			}
