@@ -2,6 +2,7 @@ package comp
 {
 	import comp.particles.*;
 	import comp.human.*;
+	import comp.objects.*;
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.display.ColorMatrix;
 	import flash.display.BitmapData;
@@ -55,12 +56,14 @@ package comp
 			var player : GameObject = PlayerController.createPlayer(4200, 1260);
 			
 			
-			/*
+			
 			var geomCode : GeomCodeRuntime = world.addComponent(GeomCodeRuntime) as GeomCodeRuntime;
 			world.addComponent(GeomCodePrimitives);
-			geomCode.source = "assets/geomcode/Main.gmc";
-			geomCode.construct("BrickWall", { pos:new Point(223.5, 311.9), broken:false, height:6} );
-			*/
+			world.addComponent(GeomCodeDoors);
+			geomCode.source = "assets/geomcode/Level1.gmc";
+			
+			geomCode.construct("Level1");
+			
 			
 			/*
 			var samusObj : GameObject = new GameObject("samus", Renderer, Animation, Audio, PlayerController, BoxCollider, Rigidbody);
