@@ -14,19 +14,21 @@ package comp.objects
 		
 		private static const GRAPHICS : Vector.<String> = new <String>["doorFront", "doorBack", "doorLeft", "doorRight"];
 		
-		private static var _initialized : Boolean = false;
+		private static var _init : Boolean = init();
+		
+		private static function init() : Boolean
+		{
+			Renderer.drawBox(GRAPHICS[0], 80, 140, 0xFF0000);
+			Renderer.drawBox(GRAPHICS[1], 80, 140, 0xFFFFFF);
+			Renderer.drawBox(GRAPHICS[2], 20, 140, 0x00FF00);
+			Renderer.drawBox(GRAPHICS[3], 20, 140, 0x0000FF);
+			return true;
+		}
 		private static var _counter : uint = 0;
 		
 		/** @private **/
 		public function awake() : void
 		{
-			if (!_initialized)
-			{
-				Renderer.drawBox(GRAPHICS[0], 80, 140, 0xFF0000);
-				Renderer.drawBox(GRAPHICS[1], 80, 140, 0xFFFFFF);
-				Renderer.drawBox(GRAPHICS[2], 20, 140, 0x00FF00);
-				Renderer.drawBox(GRAPHICS[3], 20, 140, 0x0000FF);
-			}
 			requireComponent(GeomCodeRuntime);
 		}
 		//{::::::::::::::::::::::::: DOORS ::::::::::::::::::::::::::
@@ -47,7 +49,6 @@ package comp.objects
 			{
 				portal.otherPortal = params.other.portal;
 				params.other.portal.otherPortal = portal;
-				sendAfter("logALL", "fixedUpdate");
 				
 				door.name = portal.otherPortal.gameObject.name + "B";
 				portal.otherPortal.gameObject.name += "A";
@@ -56,11 +57,6 @@ package comp.objects
 			{
 				door.name = "door" + ++_counter;
 			}
-		}
-		public function logALL() : void
-		{
-			world.door1A.log();
-			world.door1B.log();
 		}
 	}
 }
