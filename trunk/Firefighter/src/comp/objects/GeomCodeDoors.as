@@ -3,6 +3,7 @@ package comp.objects
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.comp.Renderer;
 	import com.battalion.flashpoint.comp.tools.*;
+	import flash.geom.Matrix;
 	
 	/**
 	 * 
@@ -10,6 +11,8 @@ package comp.objects
 	 */
 	public final class GeomCodeDoors extends Component implements IExclusiveComponent 
 	{
+		
+		private static const GRAPHICS : Vector.<String> = new <String>["doorFront", "doorBack", "doorLeft", "doorRight"];
 		
 		private static var _initialized : Boolean = false;
 		private static var _counter : uint = 0;
@@ -19,7 +22,10 @@ package comp.objects
 		{
 			if (!_initialized)
 			{
-				Renderer.drawBox("doorGraphics", 80, 140);
+				Renderer.drawBox(GRAPHICS[0], 80, 140, 0xFF0000);
+				Renderer.drawBox(GRAPHICS[1], 80, 140, 0xFFFFFF);
+				Renderer.drawBox(GRAPHICS[2], 20, 140, 0x00FF00);
+				Renderer.drawBox(GRAPHICS[3], 20, 140, 0x0000FF);
 			}
 			requireComponent(GeomCodeRuntime);
 		}
@@ -28,13 +34,14 @@ package comp.objects
 		{
 			var portal : Portal = door.addComponent(Portal) as Portal;
 			portal.height = 140;
-			portal.width = params.dir < 2 ? 80 : 40;//can change
+			portal.width = 100;
 			portal.locked = params.locked;
 			portal.strength = params.strength;
 			portal.target = world.player.transform;
 			
 			var graphics : Renderer = door.addComponent(Renderer) as Renderer;
-			graphics.setBitmapByName("doorGraphics");
+			graphics.setBitmapByName(GRAPHICS[params.dir]);
+			if (params.dir > 1) graphics.offset = new Matrix(1, 0, 0, 1, ((params.dir * 2) - 5) * 40);
 			
 			if (params.other && params.other.portal)
 			{

@@ -25,7 +25,15 @@ Level1()
 {
 	discrete
 	{
+		Door(pos = (2100, 370), dir = 0);
+		Door(pos = (4700, 1200), other = prev, dir = 1);
+		
+		Door(pos = (1800, 370), dir = 2);
+		Door(pos = (4400, 1200), other = prev, dir = 3);
+		/*
 		Door(pos = (4200, 1200));
 		Door(pos = (4700, 1200), other = prev);
+		*/
+		
 	}
 }
