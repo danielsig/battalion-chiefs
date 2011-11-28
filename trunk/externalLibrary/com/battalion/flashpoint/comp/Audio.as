@@ -24,7 +24,7 @@ package com.battalion.flashpoint.comp
 		public static var panningMultiplier : Number = 1;
 		public static var listenerZoomFactor : Number = 1;
 		
-		private var _player : AudioPlayer = new AudioPlayer(null, 1, -1);
+		private var _player : AudioPlayer = new AudioPlayer();
 		private var _soundName : String;
 		private var _playing : Boolean = false;
 		private var _transform : Transform;
