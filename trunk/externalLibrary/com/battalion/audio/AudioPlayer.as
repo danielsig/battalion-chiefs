@@ -40,27 +40,27 @@ package com.battalion.audio
 		/**
 		 * TimeScale that is applied to only this AudioPlayer.
 		 */
-		public var timeScale : Number;
+		public var timeScale : Number = 1;
 		
 		/**
 		 * Determines if audio playback should reverse every time it reaches an end.
 		 */
 		public var pingPongPlayback : Boolean = false;
 		
-		private var _data : AudioData;
+		private var _data : AudioData = null;
 		
-		private var _transform : SoundTransform;
-		private var _pan : Number;
+		private var _transform : SoundTransform = null;
+		private var _pan : Number = 0;
 		
-		private var _p : uint;
-		private var _start : uint;
-		private var _end : uint;
+		private var _p : uint = 0;
+		private var _start : uint = 0;
+		private var _end : uint = uint.MAX_VALUE;
 		private var _reverse : Boolean = false;
 		
-		private var _loops : int;
+		private var _loops : int = 0;
 		
-		private var _sound:Sound;
-		private var _channel:SoundChannel;
+		private var _sound:Sound = null;
+		private var _channel:SoundChannel = null;
 
 		public function get isPlaying() : Boolean
 		{
@@ -98,7 +98,8 @@ package com.battalion.audio
 		{
 			_data = value;
 			_start = _data._start * 705.6;
-			_end = _data._end * 705.6;
+			if (_data._end == Number.MAX_VALUE) _end = uint.MAX_VALUE;
+			else _end = _data._end * 705.6;
 		}
 		/**
 		 * The number of loops to perform, 0 plays forever, 1 plays once, 2 plays twice etc.
@@ -218,7 +219,8 @@ package com.battalion.audio
 			{
 				_data = audioData;
 				_start = _data._start * 705.6;
-				_end = _data._end * 705.6;
+				if (_data._end == Number.MAX_VALUE) _end = uint.MAX_VALUE;
+				else _end = _data._end * 705.6;
 			}
 			
 			_p = _start;
@@ -278,7 +280,7 @@ package com.battalion.audio
 				if (!reverse && end - _data._bytes.position < 8 || reverse && _data._bytes.position - _start < 8)
 				{
 					if (pingPongPlayback) reverse = !reverse;
-					_data._bytes.position = reverse ? _end : _start;
+					_data._bytes.position = reverse ? end : _start;
 					if (_loops > 0 && _loops-- == 1)
 					{
 						_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
