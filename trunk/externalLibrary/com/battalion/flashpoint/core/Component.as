@@ -281,7 +281,7 @@ package com.battalion.flashpoint.core
 					}
 					else
 					{
-						targetClass = null;
+						return;
 					}
 				}
 				else

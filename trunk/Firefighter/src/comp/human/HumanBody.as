@@ -158,6 +158,10 @@ package comp.human
 				}
 			);
 			
+			//Audio.load("test", "assets/sound/samus.mp3");
+			//BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test");
+			
+			
 			ta = 16;
 			
 			//weight
@@ -650,6 +654,7 @@ package comp.human
 			
 			//TORSO
 			var torso : GameObject = gameObject.torso as GameObject || new GameObject("torso", gameObject, BoneAnimation);
+			torso.addComponent(Audio);
 			
 			//setting animation
 			_animation = torso.boneAnimation;
