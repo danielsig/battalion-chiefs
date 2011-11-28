@@ -15,7 +15,7 @@ package com.battalion.flashpoint.comp.misc
 		private var _zoom : Number = 1;
 		
 		public var lowerLimit : Number = 0.1;
-		public var upperLimit : Number = 20;
+		public var upperLimit : Number = 10;
 		
 		/** @private **/
 		public function fixedUpdate() : void 

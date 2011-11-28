@@ -25,15 +25,57 @@ Level1()
 {
 	discrete
 	{
+		//Door outside - connected into the first floor
 		Door(pos = (2100, 370), dir = 0);
-		Door(pos = (4700, 1200), other = prev, dir = 1);
+		Door(pos = (4051, 1202), other = prev, dir = 2);
 		
-		Door(pos = (1800, 370), dir = 2);
-		Door(pos = (4400, 1200), other = prev, dir = 3);
-		/*
-		Door(pos = (4200, 1200));
-		Door(pos = (4700, 1200), other = prev);
-		*/
+		//Door inside the first floor hallway - connected to the first appartment
+		Door(pos = (4200, 1202), dir = 0);
+		Door(pos = (5150, 1841), other = prev, dir = 3);
+		
+		//Door insde the first appartment - connected to the bathroom
+		Door(pos = (4180, 1841), dir = 0);
+		Door(pos = (6865, 882), other = prev, dir = 2);
+		
+		//Door insde the first appartment - connected to the bedroom 1
+		Door(pos = (4415, 1841), dir = 0);
+		Door(pos = (6865, 1714), other = prev, dir = 2);
+		
+		//Door insde the first appartment - connected to the bedroom 2
+		Door(pos = (4630, 1841), dir = 0);
+		Door(pos = (6865, 2354), other = prev, dir = 2);
+		
+		//Door insde the first appartment - connected to the kitchen  area
+		Door(pos = (4930, 1841), dir = 0);
+		Door(pos = (6865, 2994), other = prev, dir = 2);
+		
+		//Door inside the first floor hallway - connected to the staircase
+		Door(pos = (4830, 1202), dir = 3);
+		Door(pos = (5714, 627), other = prev, dir = 2);
+		
+		//Door inside the staircase - connected to the second floor hallway
+		Door(pos = (4830, 498), dir = 3);
+		Door(pos = (5714, 242), other = prev, dir = 2);
+		
+		//Door inside the second floor hallway - connected to the second appartment
+		Door(pos = (4200, 500), dir = 0);
+		Door(pos = (5150, 2611), other = prev, dir = 3);
+		
+		//Door insde the second appartment - connected to the living room
+		Door(pos = (4180, 2611), dir = 0);
+		Door(pos = (5714, 1714), other = prev, dir = 2);
+		
+		//Door insde the second appartment - connected to the bathroom
+		Door(pos = (4480, 2611), dir = 0);
+		Door(pos = (5714, 2354), other = prev, dir = 2);
+		
+		//Door insde the second appartment - connected to the bedroom
+		Door(pos = (4880, 2611), dir = 0);
+		Door(pos = (5714, 2993), other = prev, dir = 2);
+		
+		//Door inside the staircase - connected to the basement
+		Door(pos = (5714, 1010), dir = 2);
+		Door(pos = (2654, 1651), other = prev, dir = 3);
 		
 	}
 }
