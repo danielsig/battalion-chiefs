@@ -859,6 +859,10 @@ Renderer.draw("myWeirdArrow",
 			var height : Number = (sin * bitmapData.width) + (cos * bitmapData.height);
 			return new Rectangle(m.tx - width * 0.5, m.ty - height * 0.5, width, height);
 		}
+		public function setOffset(x : Number, y : Number, scale : Number = 1) : void
+		{
+			offset = new Matrix(scale, 0, 0, scale, x, y);
+		}
 	}
 	
 }
