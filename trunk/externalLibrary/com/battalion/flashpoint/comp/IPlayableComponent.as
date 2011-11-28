@@ -13,6 +13,8 @@ package com.battalion.flashpoint.comp
 		function reverse() : void;
 		function gotoAndPlay(time : Number, name : String = null) : void;
 		function gotoAndPause(time : Number, name : String = null) : void;
+		function get playing() : Boolean;
+		function set playing(value : Boolean) : void;
 		function get playhead() : Number;
 		function set playhead(value : Number) : void;
 		function get pingPongPlayback() : Boolean;

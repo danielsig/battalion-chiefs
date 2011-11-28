@@ -274,6 +274,16 @@ myObj.animation.play("myAnimation");
 				_p = _length + _p - 1;
 			}
 		}
+		
+		public function get playing() : Boolean
+		{
+			return _playing;
+		}
+		public function set playing(value : Boolean) : void
+		{
+			if(_animationName) _playing = value;
+		}
+		
 		/**
 		 * The current playhead position in the current animation, can be used for jumping to a specific frame.
 		 * Setting this to a negative number will make it jump to a frame counting backwards from the end of the animation.

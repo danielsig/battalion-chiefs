@@ -4,6 +4,7 @@ package com.battalion.flashpoint.comp
 	CONFIG::flashPlayer10
 	{
 		import com.battalion.flashpoint.display.View;
+		import starling.display.Image;
 	}
 	CONFIG::flashPlayer11
 	{
@@ -43,6 +44,13 @@ package com.battalion.flashpoint.comp
 		internal static var _bitmaps : Object = { };
 		/** @private **/
 		internal static var _filterQueue : Object = { };
+		/** @private **/
+		internal static var _splitVerticalQueue : Object = { };
+		/** @private **/
+		internal static var _splitHorizontalQueue : Object = { };
+		
+		private static var _head : Renderer = null;
+		private static var _tail : Renderer = null;
 		
 		public static function filterWhite(bitmapName : String) : void
 		{
@@ -62,6 +70,71 @@ package com.battalion.flashpoint.comp
 		public static function getBitmap(bitmapName : String) : BitmapData
 		{
 			return _bitmaps[bitmapName];
+		}
+		
+		public static function splitVertical(srcBitmapName : String, dstBitmapName1 : String, dstBitmapName2 : String, cut : Number = 0.5) : void
+		{
+			var source : BitmapData = _bitmaps[srcBitmapName] as BitmapData;
+			if (source)
+			{
+				var subscriptions1 : ImageLoader = 	_bitmaps[dstBitmapName1] as ImageLoader;
+				var subscriptions2 : ImageLoader = 	_bitmaps[dstBitmapName2] as ImageLoader;
+				
+				_bitmaps[dstBitmapName1] = new BitmapData(source.width * cut, source.height, source.transparent);
+				_bitmaps[dstBitmapName2] = new BitmapData(source.width * (1 - cut), source.height, source.transparent);
+				(_bitmaps[dstBitmapName1] as BitmapData).copyPixels(source, new Rectangle(0, 0, source.width * cut, source.height), new Point());
+				(_bitmaps[dstBitmapName2] as BitmapData).copyPixels(source, new Rectangle(cut * source.width, 0, source.width * (1 - cut), source.height), new Point());
+				
+				if (subscriptions1) subscriptions1.onNamedBitmapLoaded();
+				if (subscriptions2) subscriptions2.onNamedBitmapLoaded();
+			}
+			else
+			{
+				if (!_splitVerticalQueue[srcBitmapName]) _splitVerticalQueue[srcBitmapName] = new <Object>[{ d1:dstBitmapName1, d2:dstBitmapName2, c:cut }];
+				else _splitVerticalQueue[srcBitmapName].push( { d1:dstBitmapName1, d2:dstBitmapName2, c:cut } );
+				if (!_bitmaps[dstBitmapName1])
+				{
+					_bitmaps[dstBitmapName1] = new ImageLoader();
+					_bitmaps[dstBitmapName1].name = dstBitmapName1;
+				}
+				if (!_bitmaps[dstBitmapName2])
+				{
+					_bitmaps[dstBitmapName2] = new ImageLoader();
+					_bitmaps[dstBitmapName2].name = dstBitmapName2;
+				}
+			}
+		}
+		public static function splitHorizontal(srcBitmapName : String, dstBitmapName1 : String, dstBitmapName2 : String, cut : Number = 0.5) : void
+		{
+			var source : BitmapData = _bitmaps[srcBitmapName] as BitmapData;
+			if (source)
+			{
+				var subscriptions1 : ImageLoader = 	_bitmaps[dstBitmapName1] as ImageLoader;
+				var subscriptions2 : ImageLoader = 	_bitmaps[dstBitmapName2] as ImageLoader;
+				
+				_bitmaps[dstBitmapName1] = new BitmapData(source.width, source.height * cut, source.transparent);
+				_bitmaps[dstBitmapName2] = new BitmapData(source.width, source.height * (1 - cut), source.transparent);
+				(_bitmaps[dstBitmapName1] as BitmapData).copyPixels(source, new Rectangle(0, 0, source.width, source.height * cut), new Point());
+				(_bitmaps[dstBitmapName2] as BitmapData).copyPixels(source, new Rectangle(0, cut * source.height, source.width, source.height * (1 - cut)), new Point());
+				
+				if (subscriptions1) subscriptions1.onNamedBitmapLoaded();
+				if (subscriptions2) subscriptions2.onNamedBitmapLoaded();
+			}
+			else
+			{
+				if (!_splitHorizontalQueue[srcBitmapName]) _splitHorizontalQueue[srcBitmapName] = new <Object>[{ d1:dstBitmapName1, d2:dstBitmapName2, c:cut }];
+				else _splitHorizontalQueue[srcBitmapName].push( { d1:dstBitmapName1, d2:dstBitmapName2, c:cut } );
+				if (!_bitmaps[dstBitmapName1])
+				{
+					_bitmaps[dstBitmapName1] = new ImageLoader();
+					_bitmaps[dstBitmapName1].name = dstBitmapName1;
+				}
+				if (!_bitmaps[dstBitmapName2])
+				{
+					_bitmaps[dstBitmapName2] = new ImageLoader();
+					_bitmaps[dstBitmapName2].name = dstBitmapName2;
+				}
+			}
 		}
 		
 		/**
@@ -550,9 +623,21 @@ Renderer.draw("myWeirdArrow",
 		 */
 		public var updateBitmap : Boolean = false;
 		
-		/** @private **/
+		/** 
+		 * Read only!!!
+		 * @private
+		 */
 		public var rendererInFrontOfThis : Renderer = null;
-		/** @private **/
+		/** 
+		 * Read only!!!
+		 * @private
+		 */
+		public var rendererBehindThis : Renderer = null;
+		
+		/** 
+		 * Do NOT read nor alter this except if you're a masochistic "bugphile"!
+		 * @private
+		 */
 		public var sprites : Object = {};
 
 		
@@ -562,8 +647,13 @@ Renderer.draw("myWeirdArrow",
 		/** @private **/
 		public function awake() : void
 		{
-			var front : Renderer = gameObject.findComponentUpwards(Renderer);
-			if (front) putInFrontOf(front);
+			if (_head)
+			{
+				_head.rendererInFrontOfThis = this;
+				rendererBehindThis = _head;
+			}
+			else _tail = this;
+			_head = this;
 			
 			_transform = gameObject.transform;
 			CONFIG::flashPlayer10
@@ -621,13 +711,51 @@ Renderer.draw("myWeirdArrow",
 			}
 		}
 		/**
+		 * Puts this Renderer in front of everything
+		 */
+		public function sendToFront() : void
+		{
+			putInFrontOf(_head);
+		}
+		/**
+		 * Puts this Renderer in behind everything
+		 */
+		public function sendToBack() : void
+		{
+			putBehind(_tail);
+		}
+		/**
 		 * Puts this Renderer in front of the <code>other</code> Renderer.
 		 * @param	other, the Renderer that should be behind this.
 		 */
 		public function putInFrontOf(other : Renderer) : void
 		{
-			other.putBehind(this);
+			CONFIG::debug
+			{
+				if (!other)
+				{
+					throw new Error("other renderer must be non-null!");
+				}
+			}
+			if (other == this || rendererBehindThis == other) return;
+			if (other == _head) _head = this;
+			else if (this == _head) _head = this.rendererBehindThis;
+			if (this == _tail) _tail = this.rendererInFrontOfThis;
+			
+			var oldBehind : Renderer = rendererBehindThis;
+			var oldOnFront : Renderer = rendererInFrontOfThis;
+			
+			if (rendererBehindThis) rendererBehindThis.rendererInFrontOfThis = rendererInFrontOfThis;
+			if (rendererInFrontOfThis) rendererInFrontOfThis.rendererBehindThis = rendererBehindThis;
+			
+			if (other.rendererInFrontOfThis) other.rendererInFrontOfThis.rendererBehindThis = this;
+			rendererInFrontOfThis = other.rendererInFrontOfThis;
+			other.rendererInFrontOfThis = this;
+			rendererBehindThis = other;
+			
 			updateBitmap = true;
+			if (oldBehind) oldBehind.updateBitmap = true;
+			else if (oldOnFront) oldOnFront.updateBitmap = true;
 		}
 		/**
 		 * Puts this Renderer behind the <code>other</code> Renderer.
@@ -635,12 +763,32 @@ Renderer.draw("myWeirdArrow",
 		 */
 		public function putBehind(other : Renderer) : void
 		{
-			if (rendererInFrontOfThis && rendererInFrontOfThis.isDestroyed)
+			CONFIG::debug
 			{
-				other.putBehind(rendererInFrontOfThis);
+				if (!other)
+				{
+					throw new Error("other renderer must be non-null!");
+				}
 			}
+			if (other == this || rendererInFrontOfThis == other) return;
+			if (other == _tail) _tail = this;
+			else if (this == _tail) _tail = this.rendererInFrontOfThis;
+			if (this == _head) _head = this.rendererBehindThis;
+			
+			var oldBehind : Renderer = rendererBehindThis;
+			var oldOnFront : Renderer = rendererInFrontOfThis;
+			
+			if (rendererBehindThis) rendererBehindThis.rendererInFrontOfThis = rendererInFrontOfThis;
+			if (rendererInFrontOfThis) rendererInFrontOfThis.rendererBehindThis = rendererBehindThis;
+			
+			if (other.rendererBehindThis) other.rendererBehindThis.rendererInFrontOfThis = this;
+			rendererBehindThis = other.rendererBehindThis;
+			other.rendererBehindThis = this;
 			rendererInFrontOfThis = other;
+			
 			updateBitmap = true;
+			if (oldBehind) oldBehind.updateBitmap = true;
+			else if (oldOnFront) oldOnFront.updateBitmap = true;
 		}
 		
 		private function startLoading() : void 
@@ -665,7 +813,27 @@ Renderer.draw("myWeirdArrow",
 			_url = null;
 			_transform = null;
 			sprites = { };
-			rendererInFrontOfThis = null;
+			
+			if (rendererInFrontOfThis)
+			{
+				rendererInFrontOfThis.rendererBehindThis = rendererBehindThis;
+			}
+			else if (_head == this)
+			{
+				_head = rendererBehindThis;
+			}
+			
+			if (rendererBehindThis)
+			{
+				rendererBehindThis.rendererInFrontOfThis = rendererInFrontOfThis;
+			}
+			else if (_tail == this)
+			{
+				_tail = rendererInFrontOfThis;
+			}
+			
+			rendererBehindThis = rendererInFrontOfThis = null;
+			
 			CONFIG::flashPlayer10
 			{
 				View.removeFromView(this);

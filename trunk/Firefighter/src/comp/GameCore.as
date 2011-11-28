@@ -53,8 +53,6 @@ package comp
 				0,   0,   0,   0
 			);
 			
-			var player : GameObject = PlayerController.createPlayer(4200, 1260);
-			
 			
 			
 			var geomCode : GeomCodeRuntime = world.addComponent(GeomCodeRuntime) as GeomCodeRuntime;
@@ -83,6 +81,11 @@ package comp
 			samusObj.transform.x = 4200;
 			samusObj.transform.y = 1260;
 			*/
+		}
+		public function tilesLoaded() : void 
+		{
+			var player : GameObject = PlayerController.createPlayer(4200, 1200);
+			var human : GameObject = Civilian.createCivilian(4600, 1200);
 		}
 	}
 }

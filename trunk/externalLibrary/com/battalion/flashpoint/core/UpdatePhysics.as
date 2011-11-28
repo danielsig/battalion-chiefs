@@ -83,6 +83,7 @@ package com.battalion.flashpoint.core
 					body.mass = isNaN(physics.rigidbody._density) ? physics.rigidbody.mass : physics.rigidbody.density * body.volume;
 					body.inertia = isNaN(physics.rigidbody._massDistribution) ? (physics.rigidbody.freezeRotation ? Infinity : physics.rigidbody.inertia) : (physics.rigidbody.massDistribution * body.volume);
 					body.affectedByGravity = physics.rigidbody.affectedByGravity;
+					body.vanDerWaals = physics.rigidbody.vanDerWaals;
 					var v : Point = physics.rigidbody.velocity;
 					body.vx = v.x;
 					body.vy = v.y;

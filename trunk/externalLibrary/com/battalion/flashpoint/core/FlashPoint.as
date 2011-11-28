@@ -10,6 +10,7 @@ package com.battalion.flashpoint.core
 	import flash.events.KeyboardEvent;
 	import flash.display.Stage;
 	import flash.geom.Rectangle;
+	import flash.ui.Keyboard;
 	
 	CONFIG::flashPlayer11
 	{
@@ -40,7 +41,7 @@ package com.battalion.flashpoint.core
 		 * Setting the fixedFPS (fixed frames per second) will take effect on the next fixed update.
 		 * This is the number of FixedUpdate() calls per second.
 		 * This effects the <code>fixedInterval</code> property.
-		 * @see fixedInterval
+		 * @see #fixedInterval
 		 */
 		public static function get fixedFPS() : Number
 		{
@@ -53,11 +54,13 @@ package com.battalion.flashpoint.core
 		/**
 		 * Setting the fixedInterval will take effect on the next fixed update.
 		 * This interval is the amount of milliseconds between FixedUpdate() calls
-		 * on Components with respect to timeScale.
-		 * @see fixedFPS
+		 * on Components with respect to timeScale, in other words, the
+		 * fixedInterval will stay the same even if timeScale changes.
+		 * @see #fixedFPS
 		 */
 		public static var fixedInterval : Number = 20;
 		/**
+		 * [Read Only] 
 		 * A ratio between 0 and 1 determining how much the current <code>update</code>
 		 * frame is between the last <code>fixedUpdate</code> frame and the next estimated <code>fixedUpdate</code> frame.
 		 * <p>
@@ -75,24 +78,40 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		
 		
 		/**
-		 * Milliseconds since the last fixedUpdate.
+		 * [Read Only] Milliseconds since the last fixedUpdate.
 		 * During a fixedUpdate frame, this is the milliseconds
 		 * since the preveious fixedUpdate not the current one.
+		 */
+		public static var fixedDeltaTime : Number = 0;
+		
+		/**
+		 * [Read Only] Milliseconds since the last update.
 		 */
 		public static var deltaTime : Number = 0;
 		
 		/**
-		 * Milliseconds since FlashPoint initialized.
+		 * [Read Only] a number between 0 and 1 and it's is basicly <code>deltatime</code> / (<code>fixedInterval</code> * <code>timeScale</code>).
+		 */
+		public static var deltaRatio : Number = 0;
+		
+		/**
+		 * [Read Only] Milliseconds since FlashPoint initialized.
 		 */
 		public static var time : Number = 0;
 		
 		private static var _timer : AccurateTimer = new AccurateTimer(fixedInterval / timeScale);
 		private static var _prevTime : Number = new Date().time;
 		private static var _prevTime2 : Number = _prevTime;
+		private static var _prevUpdateTime : Number = _prevTime;
 		private static var _initTime : Number;
 		private static var _dynamicInterval : Number = fixedInterval / timeScale;
 		private static var _stage : Stage;
 		private static var _prevTimeScale : Number = 1;
+		
+		private static var _deltaRatioSum : Number = 0;
+		private static var _updatesPerFixedUpdates : Number = 0;
+		private static var _deltaMultiplier : Number = 1;
+		private static var _useDynamicInterval : Boolean = false;
 		
 		CONFIG::flashPlayer11
 		{
@@ -132,18 +151,33 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 		{
 			if (timeScale == 1) timeScaleSqrt = 1;
 			else if (timeScaleSqrt * timeScaleSqrt != timeScale) timeScaleSqrt = Math.sqrt(timeScale);
-			
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
 			var now : Number = new Date().time;
-			deltaTime = now - _prevTime2;
+			
+			//fixedDeltaTime
+			fixedDeltaTime = now - _prevTime2;
+			//time
 			time = now - _initTime;
+			
 			
 			GameObject.updateAll();
 			Transform.flushGlobal();
 			
+			//frameInterpolationRatio
 			now = new Date().time;
-			frameInterpolationRatio = (now - _prevTime) / _dynamicInterval;
+			if (_useDynamicInterval) var estimatedInterval : Number = _dynamicInterval;
+			else estimatedInterval = _timer.currentDelay * _deltaMultiplier;
+			frameInterpolationRatio = (now - _prevTime) / estimatedInterval;
 			if (frameInterpolationRatio > 1) frameInterpolationRatio = 1;
+			
+			//deltaTime
+			deltaTime = now - _prevUpdateTime;
+			_prevUpdateTime = now;
+			//deltaRatio
+			deltaRatio = deltaTime / estimatedInterval;
+			if (deltaRatio > 1) deltaRatio = 1;
+			_deltaRatioSum += deltaRatio;
+			_updatesPerFixedUpdates++;
 		}
 		private static function fixedUpdate(event : Event = null) : void
 		{
@@ -151,22 +185,28 @@ update..........|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|--- x ---|---
 			Physics.step(interval * 0.001 * timeScale);
 			
 			var now : Number = new Date().time;
-			deltaTime = now - _prevTime2;
+			fixedDeltaTime = now - _prevTime2;
 			time = now - _initTime;
 			_prevTime2 = now;
 			
 			AudioPlayer.globalTimeScale = timeScale;
 			GameObject.fixedUpdateAll();
 			
+			_dynamicInterval = new Date().time - _prevTime;
+			frameInterpolationRatio = 0;
+			_prevTime = new Date().time;
+			
+			if (_updatesPerFixedUpdates > 0) _deltaMultiplier = 1 + (_deltaRatioSum / _updatesPerFixedUpdates)
+			else _deltaMultiplier = 1;
+			_deltaRatioSum = _updatesPerFixedUpdates = 0;
+			_deltaMultiplier *= _timer.currentDelay / _dynamicInterval;
+			_useDynamicInterval = 60 % (1000.0 / fixedInterval) < 0.001;
+
 			if (interval != _timer.delay)
 			{
 				_timer.delay = fixedInterval / timeScale;
 				_timer.start();
 			}
-			_dynamicInterval = new Date().time - _prevTime;
-			frameInterpolationRatio = 0;
-			_prevTime = new Date().time;
-			//trace("------------ " + _dynamicInterval + " / " + fixedInterval + " -------------");
 		}
 		
 	}

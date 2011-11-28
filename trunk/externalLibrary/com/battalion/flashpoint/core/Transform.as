@@ -261,8 +261,9 @@ package com.battalion.flashpoint.core
 		 * RotateTowards another globalPoint. Make sure the <code>point</code> has both an x property and an y property.
 		 * @param	point, the global coordinates to look at.
 		 * @param	angleOffset, the offset of rotation in degrees.
+		 * @param	amount, the amount to rotate towards the point, 0 means no rotation, 1 means full rotation
 		 */
-		public function rotateTowards(globalPoint : *, angleOffset : Number = 0) : void
+		public function rotateTowards(globalPoint : *, angleOffset : Number = 0, amount : Number = 1) : void
 		{
 			CONFIG::debug
 			{
@@ -285,7 +286,14 @@ package com.battalion.flashpoint.core
 			else if(angle > 0) angle = -9.4 / ((angle + 2.44) * (angle + 2.44)) + 1.57079633;
 			else angle = 9.4 / ((angle - 2.44) * (angle - 2.44)) - 1.57079633;
 			
-			rotation = 180 - ((180 - angle * 57.2957795 + angleOffset) % 360);
+			if (amount == 1) rotation = 180 - ((180 - angle * 57.2957795 + angleOffset) % 360);
+			else
+			{
+				angle = (180 - ((180 - angle * 57.2957795 + angleOffset) % 360)) - rotation;
+				if (angle > 180) angle -= 360;
+				else if (angle < -180) angle += 360;
+				rotation += angle * amount;
+			}
 		}
 		public function setMatrix(a : Number = 1, b : Number = 0, c : Number = 0, d : Number = 1, tx : Number = 0, ty : Number = 0) : void
 		{

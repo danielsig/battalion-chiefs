@@ -14,6 +14,10 @@ package com.battalion.flashpoint.comp
 		private static var _animations: Object = { };
 		
 		public var localTimeScale : Number = 1;
+		/**
+		 * The time in milliseconds it takes for this BoneAnimation to transition between different animations.
+		 */
+		public var transitionTime : Number = 0;
 		
 		private var _pFixed : Number = 0;
 		private var _p : Number = 0;//playhead
@@ -26,6 +30,8 @@ package com.battalion.flashpoint.comp
 		private var _loops : uint = 0;
 		private var _playback : Number = 1;
 		private var _pingPongPlayback : Boolean = false;
+		private var _multiplier : Number = 1;
+		private var _multiplierChangeAmount : Number = 0;
 		
 		/** @private **/
 		public function onDestroy() : Boolean
@@ -141,16 +147,22 @@ package com.battalion.flashpoint.comp
 			_playback = 1 - (int(value) << 1);
 		}
 		
+		public function get playing() : Boolean
+		{
+			return _playing;
+		}
+		public function set playing(value : Boolean) : void
+		{
+			if(_boneAnimName) _playing = value;
+		}
+		
 		public function get playhead() : Number
 		{
 			return _p * _length;
 		}
 		public function set playhead(value : Number) : void
 		{
-			CONFIG::debug
-			{
-				if (value <= -_length || value >= _length) throw new Error("Can not set the playhead to " + value + " for it is out of range [" + -_length + " - " + _length + "]");
-			}
+			value %= _length;
 			_p = value < 0 ? _length + value / _length : value / _length;
 		}
 		
@@ -175,6 +187,9 @@ package com.battalion.flashpoint.comp
 			_length = _animation.length;
 			_framesPerSecond = _animation.framesPerSecond;
 			_p = _pFixed = 0;
+			_multiplierChangeAmount = FlashPoint.fixedInterval / transitionTime;
+			_multiplier = 0;
+			_playback = 1;
 			
 			for (var boneName : String in _animation)
 			{
@@ -212,6 +227,14 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 		{
 			_playing = false;
 		}
+		/**
+		 * Sets the current animation to the given animation (if not omitted)
+		 * and then puts the playhead at the given frame.
+		 * @see #currentAnimation
+		 * @see #pause
+		 * @param frame, the frame number to put the playhead at
+		 * @param boneAnimName, the name of the new animation to set as the current animatuon (optional)
+		 */
 		public function gotoAndPause(frame : Number, boneAnimName : String = null): void
 		{
 			CONFIG::release
@@ -227,9 +250,17 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				else if (!_boneAnimName) throw new Error("You must define a bone animation before calling this method!");
 				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
-			_p = frame < 0 ? _length + frame / _length : frame / _length;
+			_p = _pFixed = frame < 0 ? _length + frame / _length : frame / _length;
 			_playing = false;
 		}
+		/**
+		 * Sets the current animation to the given animation (if not omitted)
+		 * and then start playback beginning at the given frame.
+		 * @see #currentAnimation
+		 * @see #play
+		 * @param Number, frame the frame number to start playing from
+		 * @param String, boneAnimName the name of the new animation to play (optional)
+		 */
 		public function gotoAndPlay(frame : Number, boneAnimName : String = null): void
 		{
 			CONFIG::release
@@ -243,9 +274,9 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					if(boneAnimName != _boneAnimName) currentName = boneAnimName;
 				}
 				else if (!_boneAnimName) throw new Error("You must define a bone animation before calling this method!");
-				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
-			_p = frame < 0 ? _length + frame / _length : frame / _length;
+			frame %= _length;
+			_p = _pFixed = frame < 0 ? _length + frame / _length : frame / _length;
 			_playing = true;
 		}
 		
@@ -274,7 +305,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				if (_loops != 1) _p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
 				
 				if (_p > 1) _p %= 1;
-				else if (_p < 0) _p %= 1;
+				else if (_p < 0) _p = (_p % 1) + 1;
 				
 				if (!FlashPoint.frameInterpolationRatio)
 				{
@@ -291,18 +322,26 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				var ceilRatio : Number = currentFrame - floorFrame;
 				var floorRatio : Number = 1 - ceilRatio;
 				
+				if (_multiplierChangeAmount)
+				{
+					_multiplier += _multiplierChangeAmount * FlashPoint.deltaRatio;
+					if (_multiplier > 1)
+					{
+						_multiplier = 1;
+						_multiplierChangeAmount = 0;
+					}
+				}
 				for (var boneName : String in _bones)
 				{
-					_bones[boneName].x =  _animation[boneName].xPos[floorFrame] * floorRatio
-										+ _animation[boneName].xPos[ceilFrame]  * ceilRatio;
-					_bones[boneName].y =  _animation[boneName].yPos[floorFrame] * floorRatio
-										+ _animation[boneName].yPos[ceilFrame]  * ceilRatio;
+					_bones[boneName].x +=  (_animation[boneName].xPos[floorFrame] * floorRatio
+										+ _animation[boneName].xPos[ceilFrame]  * ceilRatio - _bones[boneName].x) * _multiplier;
+					_bones[boneName].y +=  (_animation[boneName].yPos[floorFrame] * floorRatio
+										+ _animation[boneName].yPos[ceilFrame]  * ceilRatio - _bones[boneName].y) * _multiplier;
 					var a1 : Number = _animation[boneName].angles[floorFrame];
 					var a2 : Number = _animation[boneName].angles[ceilFrame];
 					if (a2 - a1 > 180) a1 += 360;
 					if (a2 - a1 < -180) a1 -= 360;
-					_bones[boneName].rotation = a1 * floorRatio
-											  + a2  * ceilRatio;
+					_bones[boneName].rotation += (a1 * floorRatio + a2  * ceilRatio - _bones[boneName].rotation) * _multiplier;
 				}
 			}
 		}

@@ -246,6 +246,15 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 			_player.reverse = value;
 		}
 		
+		public function get playing() : Boolean
+		{
+			return _playing;
+		}
+		public function set playing(value : Boolean) : void
+		{
+			if(_soundName) _playing = value;
+		}
+		
 		/**
 		 * The position of the playhead, in milliseconds.
 		 */

@@ -2,6 +2,7 @@ package com.battalion.flashpoint.comp.misc
 {
 	
 	import com.battalion.flashpoint.core.*;
+	import flash.ui.Keyboard;
 	import com.battalion.Input;
 	import com.greensock.TweenMax;
 	
@@ -11,26 +12,38 @@ package com.battalion.flashpoint.comp.misc
 	 */
 	public class Zoomer extends Component implements IExclusiveComponent
 	{
-		
-		public static var zoomKey : * = "e";
 		private var _zoom : Number = 1;
 		
-		/** @private **/
-		public function awake() : void 
-		{
-			Input.assignButton("zoomButton", zoomKey);
-		}
+		public var lowerLimit : Number = 0.1;
+		public var upperLimit : Number = 20;
 		
 		/** @private **/
-		public function update() : void 
+		public function fixedUpdate() : void 
 		{
-			if (!Input.toggledButton("zoomButton"))
+			var scroll : int = Input.scroll;
+			if (scroll)
 			{
-				if (_zoom > Input.scroll * 0.1 && Input.scroll > 0 || _zoom < 20 + Input.scroll * 0.1 && Input.scroll < 0)
+				CONFIG::debug
 				{
-					_zoom -= Input.scroll * 0.06;
-					TweenMax.to(world.cam.transform, 0.3, { scale:_zoom } );
+					if (lowerLimit <= 0) throw new Error("lowerLimit must be greater than 0");
+					if (upperLimit <= lowerLimit) throw new Error("upperLimit must be greater than lowerLimit");
 				}
+				while (scroll)
+				{
+					if (scroll < 0 && _zoom >= lowerLimit)
+					{
+						_zoom *= 1.1;
+						scroll++;
+					}
+					else if (scroll > 0 && _zoom <= upperLimit)
+					{
+						_zoom /= 1.1;
+						scroll--;
+					}
+				}
+				if (_zoom < lowerLimit) _zoom = lowerLimit;
+				if (_zoom > upperLimit) _zoom = upperLimit;
+				TweenMax.to(world.cam.transform, 0.3, { scale:_zoom } );
 			}
 		}
 		public function zoom(amount : Number) : void
