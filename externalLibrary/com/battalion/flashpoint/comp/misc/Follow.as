@@ -39,7 +39,7 @@ package com.battalion.flashpoint.comp.misc
 					if (!offset) throw new Error("The offset must be non-null.");
 					if (isNaN(speed)) throw new Error("Speed is NaN(Not a Number)!");
 				}
-				var scale : Number = speed * FlashPoint.timeScaleSqrt;
+				var scale : Number = speed * FlashPoint.deltaRatio;
 				_transform.x += (offset.x + target.x - _transform.x) * scale;
 				_transform.y += (offset.y + target.y - _transform.y) * scale;
 			}

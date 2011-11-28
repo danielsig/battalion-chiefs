@@ -18,11 +18,11 @@ package comp.particles
 		
 		private var _body : Rigidbody;
 		private var _col : CircleCollider;
-		private var _rotationOffset : Number = Math.random() * 360;
+		private var _rotationOffset : Number = (Math.random() * 360) - 180;
 		private var _tr : Transform;
 		private var _optimized : Boolean = false;
 		
-		public var fluctuation : Number = 30;
+		public var fluctuation : Number = 20;
 		public var upDraft : Number = 10;
 		internal var heat : Heat = null;
 		
@@ -33,6 +33,7 @@ package comp.particles
 			requireComponent(RigidbodyInterpolator);
 			_body = gameObject.rigidbody;
 			_body.affectedByGravity = false;
+			_body.vanDerWaals = -1.5;
 			_body.drag = 0.01;
 			
 			_col = gameObject.circleCollider as CircleCollider;
@@ -51,6 +52,7 @@ package comp.particles
 		}
 		public function extinguish() : void
 		{
+			_body.vanDerWaals = 0;
 			var frame : uint = gameObject.animation.playhead;
 			heat.heat -= (80 - gameObject.animation.playhead) * (5 - GameCore.difficulty) * 0.28;
 			gameObject.animation.gotoAndPlay(frame *  0.3, "SmokeAnimation");

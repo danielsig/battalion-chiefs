@@ -92,7 +92,6 @@ package com.battalion.flashpoint.comp
 				{
 					_hzCount -= framesPerGen;
 					_counter++;
-					logOn("waterHose", _hzCount.toPrecision(3));
 					
 					var particle : GameObject = new GameObject(gameObject.name + "Particle" + _counter);
 					particle.transform.x = gameObject.transform.gx;

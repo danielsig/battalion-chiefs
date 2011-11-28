@@ -27,7 +27,6 @@ package comp.particles
 		{
 			requireComponent(RigidbodyInterpolator);
 			_body = gameObject.rigidbody;
-			_body.vanDerWaals = 2200;
 			
 			_body.drag = 0.005;
 			_col = gameObject.circleCollider as CircleCollider;
@@ -38,7 +37,7 @@ package comp.particles
 			gameObject.renderer.offset = new Matrix(4, 0, 0, 0.7, 30, 0);
 		}
 		public function fixedUpdate() : void
-		{
+		{	
 			var contacts : Vector.<ContactPoint> = _body.contacts;
 			if (!_splashed)
 			{
@@ -89,6 +88,7 @@ package comp.particles
 							gameObject.renderer.optimized = true;
 							_col.layers = Layers.STEAM_AND_SMOKE;
 							_body.affectedByGravity = false;
+							_body.vanDerWaals = -2;
 							_body.drag = 0.1;
 							destroy();
 							return;
@@ -106,6 +106,7 @@ package comp.particles
 			_splashed = true;
 			gameObject.animation.playhead = 40;
 			_body.drag = 0.05;
+			_body.vanDerWaals = -1;
 			_body.mass *= 0.1;
 			_col.radius *= 2;
 			_col.layers |= Layers.WATER_VS_FIRE;

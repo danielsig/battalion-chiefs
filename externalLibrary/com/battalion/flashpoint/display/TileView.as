@@ -126,7 +126,7 @@ package com.battalion.flashpoint.display
 				{
 					for (var y : uint = prevTop; y < prevBottom; y++)
 					{
-						removeChild(_tiles[x][y]);
+						if(_tiles[x][y].parent == this) removeChild(_tiles[x][y]);
 					}
 				}
 				prevLeft = left;
@@ -149,7 +149,7 @@ package com.battalion.flashpoint.display
 				{
 					for (y = prevTop; y < prevBottom; y++)
 					{
-						removeChild(_tiles[x][y]);
+						if(_tiles[x][y].parent == this) removeChild(_tiles[x][y]);
 					}
 				}
 				prevRight = right;
@@ -171,7 +171,7 @@ package com.battalion.flashpoint.display
 				{
 					for (x = prevLeft; x < prevRight; x++)
 					{
-						removeChild(_tiles[x][y]);
+						if(_tiles[x][y].parent == this) removeChild(_tiles[x][y]);
 					}
 				}
 				prevTop = top;
@@ -194,7 +194,7 @@ package com.battalion.flashpoint.display
 				{
 					for (x = prevLeft; x < prevRight; x++)
 					{
-						removeChild(_tiles[x][y]);
+						if(_tiles[x][y].parent == this) removeChild(_tiles[x][y]);
 					}
 				}
 				prevBottom = bottom;

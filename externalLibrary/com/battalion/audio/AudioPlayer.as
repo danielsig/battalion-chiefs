@@ -141,7 +141,7 @@ package com.battalion.audio
 		/**
 		 * A Number between -1 and 1, -1 is to the far left, 0 is center, 1 is to the far right.
 		 * 
-		 * @see headphones
+		 * @see #headphones
 		 */
 		public function get panning() : Number
 		{
@@ -173,7 +173,7 @@ package com.battalion.audio
 		 * True is headphones setting which is designed for headphones where panning is simulated using <b>delay</b> in the left-right channels.
 		 * </li>
 		 * </ul>
-		 * @see panning
+		 * @see #panning
 		 */
 		public static function get headphones() : Boolean
 		{

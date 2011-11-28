@@ -242,7 +242,7 @@ package com.battalion.flashpoint.display
 					{
 						if (_sprites[i] && !_sprites[i].visible)
 						{
-							_dynamicLayer.addChild(_sprites[i]);
+							//_dynamicLayer.addChild(_sprites[i]);
 							_sprites[i].visible = true;
 						}
 						if (renderer.updateBitmap)
@@ -264,9 +264,26 @@ package com.battalion.flashpoint.display
 									{
 										var back : int = _dynamicLayer.getChildIndex(_sprites[i]);
 										var front : int = _dynamicLayer.getChildIndex(onFront);
-										if (back > front)
+										if (back != front - 1)
 										{
-											_dynamicLayer.swapChildren(_sprites[i], onFront);
+											if (back + 1 < _dynamicLayer.numChildren) _dynamicLayer.setChildIndex(onFront, back + 1);
+											else _dynamicLayer.addChild(onFront);
+											renderer.rendererInFrontOfThis.updateBitmap = true;
+										}
+									}
+								}
+								if (renderer.rendererBehindThis)
+								{
+									var behind : Sprite = renderer.rendererBehindThis.sprites[_name];
+									if (behind && behind.parent == _dynamicLayer)
+									{
+										front = _dynamicLayer.getChildIndex(_sprites[i]);
+										back = _dynamicLayer.getChildIndex(behind);
+										if (back != front - 1)
+										{
+											if (front > 0) _dynamicLayer.setChildIndex(behind, front - 1);
+											else _dynamicLayer.addChildAt(behind, 0);
+											renderer.rendererBehindThis.updateBitmap = true;
 										}
 									}
 								}
@@ -281,9 +298,26 @@ package com.battalion.flashpoint.display
 									{
 										back = _dynamicLayer.getChildIndex(_sprites[i]);
 										front = _dynamicLayer.getChildIndex(onFront);
-										if (back > front)
+										if (back != front - 1)
 										{
-											_dynamicLayer.swapChildren(_sprites[i], onFront);
+											if (back + 1 < _dynamicLayer.numChildren) _dynamicLayer.setChildIndex(onFront, back + 1);
+											else _dynamicLayer.addChild(onFront);
+											renderer.rendererInFrontOfThis.updateBitmap = true;
+										}
+									}
+								}
+								if (renderer.rendererBehindThis)
+								{
+									behind = renderer.rendererBehindThis.sprites[_name];
+									if (behind && behind.parent == _dynamicLayer)
+									{
+										front = _dynamicLayer.getChildIndex(_sprites[i]);
+										back = _dynamicLayer.getChildIndex(behind);
+										if (back != front - 1)
+										{
+											if (front > 0) _dynamicLayer.setChildIndex(behind, front - 1);
+											else _dynamicLayer.addChildAt(behind, 0);
+											renderer.rendererBehindThis.updateBitmap = true;
 										}
 									}
 								}
@@ -311,7 +345,7 @@ package com.battalion.flashpoint.display
 					}
 					else if (_sprites[i] && _sprites[i].visible)
 					{
-						_dynamicLayer.removeChild(_sprites[i]);
+						//_dynamicLayer.removeChild(_sprites[i]);
 						_sprites[i].visible = false;
 					}
 				}

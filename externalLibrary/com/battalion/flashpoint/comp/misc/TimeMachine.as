@@ -11,36 +11,36 @@ package com.battalion.flashpoint.comp.misc
 	 */
 	public class TimeMachine extends Component implements IExclusiveComponent
 	{
-		
-		public static var timeMachineKey : * = "e";
-		
 		public var lowerLimit : Number = 0.06;
 		public var upperLimit : Number = 1;
-		public var step : Number = 0.05;
 		
 		/** @private **/
 		public function awake() : void 
 		{
-			Input.assignButton("timeButton", timeMachineKey);
+			Input.assignButton("slowDown", Keyboard.PAGE_DOWN);
+			Input.assignButton("speedUp", Keyboard.PAGE_UP);
 		}
+		
 		/** @private **/
 		public function fixedUpdate() : void 
 		{
 			CONFIG::debug
 			{
-				if (step <= 0) throw new Error("step must be greater than 0");
-				if (lowerLimit <= step) throw new Error("lowerLimit must be greater than step");
-				if (upperLimit < lowerLimit) throw new Error("upperLimit must be greater than lowerLimit");
+				if (lowerLimit <= 0) throw new Error("lowerLimit must be greater than 0");
+				if (upperLimit <= lowerLimit) throw new Error("upperLimit must be greater than lowerLimit");
 			}
-			if (Input.toggledButton("timeButton"))
+			
+			if (Input.pressButton("slowDown") && FlashPoint.timeScale >= lowerLimit)
 			{
-				if (FlashPoint.timeScale > lowerLimit && Input.scroll < 0 || FlashPoint.timeScale < upperLimit && Input.scroll > 0)
-				{
-					FlashPoint.timeScale += Input.scroll * step;
-				}
-				if (FlashPoint.timeScale < lowerLimit) FlashPoint.timeScale = lowerLimit + step * 0.1;
-				if (FlashPoint.timeScale > upperLimit) FlashPoint.timeScale = upperLimit - step * 0.1;
+				FlashPoint.timeScale /= 1.5;
 			}
+			else if (Input.pressButton("speedUp") && FlashPoint.timeScale <= upperLimit)
+			{
+				FlashPoint.timeScale *= 1.5;
+			}
+			
+			if (FlashPoint.timeScale < lowerLimit) FlashPoint.timeScale = lowerLimit;
+			if (FlashPoint.timeScale > upperLimit) FlashPoint.timeScale = upperLimit;
 		}
 		
 	}

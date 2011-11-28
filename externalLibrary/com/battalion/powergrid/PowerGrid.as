@@ -84,6 +84,8 @@ package com.battalion.powergrid
 		public static var maxVelocityY : Number = Number.POSITIVE_INFINITY;
 		public static var maxVelocityA : Number = Number.POSITIVE_INFINITY;
 		public static var maxIterations : uint = 2;
+		
+		public static var stopNOW : Boolean = false;
 		/**
 		 * Determines how fast a rigidbody will start resting, resting is used to minimize jitter in an efficient way.
 		 * Consider using this instead of more iterations.
@@ -206,7 +208,7 @@ package com.battalion.powergrid
 		 * @param	timeElapsed, the time elapsed since the last step in milliseconds.
 		 */
 		public static function step(timeElapsed : Number = 33.3333333) : void
-		{
+		{	
 			var timeScale : Number = timeElapsed * _milliHz;
 			var deltaTimeElapsed : Number = timeScale * _invHz;
 			if ((gravityX > 0 ? gravityX : -gravityX) < (gravityY > 0 ? gravityY : -gravityY))
@@ -457,6 +459,13 @@ package com.battalion.powergrid
 				var nextCircles : BodyNode = null;
 				var nextTriangles : BodyNode = null;
 				
+				/*  
+				 *   @@@@@  @@@@  @@@@@    @@@@@  @@     @@@@@   @@@@
+				 *  @@       @@   @@  @@  @@      @@     @@     @@   @
+				 *  @@       @@   @@@@@   @@      @@     @@@@     @@
+				 *  @@       @@   @@  @@  @@      @@     @@     @   @@
+				 *   @@@@@  @@@@  @@  @@   @@@@@  @@@@@  @@@@@   @@@@
+				 */
 				for(; body; body = body.next)
 				{
 					
@@ -517,7 +526,7 @@ package com.battalion.powergrid
 					lowerIndex = (left >> _unitLog2) + (top >> _unitLog2) * _width;
 					upperIndex = (right >> _unitLog2) + 1 + (bottom >> _unitLog2) * _width;
 					
-					if (lowerIndex != circle.prevLower || upperIndex != circle.prevUpper)
+					if ((circle.vx || circle.vy || (circle.x != circle.prevX) || (circle.y != circle.prevY)) && lowerIndex != circle.prevLower || upperIndex != circle.prevUpper)
 					{
 						var collision : Boolean = false;
 						var touching : Boolean = false;
@@ -661,8 +670,7 @@ package com.battalion.powergrid
 									}
 									else if (otherTriangle && otherTriangle.layers & circle.layers && (!circle.group || circle.group != otherTriangle.group))
 									{
-										resolveTriangleVsCircle(otherTriangle, circle, timeScale);
-										if (colInfo)
+										if (resolveTriangleVsCircle(otherTriangle, circle, timeScale))
 										{
 											contact1x = colInfo[0] - circle.x;
 											contact1y = colInfo[1] - circle.y;
@@ -714,7 +722,24 @@ package com.battalion.powergrid
 					}
 				}
 				
-				
+				/*  
+				 *  @@@@@@  @@@@@   @@@@   @@@@   @@  @@   @@@@@  @@     @@@@@   @@@@
+				 *    @@    @@  @@   @@   @@  @@  @@@ @@  @@      @@     @@     @@   @
+				 *    @@    @@@@@    @@   @@  @@  @@@@@@  @@  @@  @@     @@@@     @@
+				 *    @@    @@  @@   @@   @@@@@@  @@ @@@  @@   @  @@     @@     @   @@
+				 *    @@    @@  @@  @@@@  @@  @@  @@  @@   @@@@@  @@@@@  @@@@@   @@@@
+				 */
+					
+				 
+				 if (stopNOW)
+				{
+					stopNOW = false;
+				}
+				else
+				{
+					stopNOW = false;
+				}
+				 
 				for(body = triangleBody; body; body = body.next)
 				{
 					if(!body.body) continue;
@@ -811,7 +836,8 @@ package com.battalion.powergrid
 					upperIndex = (right >> _unitLog2) + 1 + (bottom >> _unitLog2) * _width;
 					if (upperIndex > _length) upperIndex = _length;
 					
-					if ((triangle.vx || triangle.vy || triangle.va) && (lowerIndex != triangle.prevLower || upperIndex != triangle.prevUpper))
+					if ((triangle.vx || triangle.vy || triangle.va || (triangle.x != triangle.prevX) || (triangle.y != triangle.prevY) || (triangle.a != triangle.prevA))
+					&& (lowerIndex != triangle.prevLower || upperIndex != triangle.prevUpper))
 					{
 						
 						collision = false;
@@ -898,8 +924,7 @@ package com.battalion.powergrid
 									
 									if (otherCircle && otherCircle.layers & triangle.layers && (!triangle.group || triangle.group != otherCircle.group))
 									{
-										resolveTriangleVsCircle(triangle,otherCircle, timeScale);
-										if (colInfo)
+										if (resolveTriangleVsCircle(triangle,otherCircle, timeScale))
 										{
 											contact1x = colInfo[0] - triangle.x;
 											contact1y = colInfo[1] - triangle.y;
@@ -911,8 +936,7 @@ package com.battalion.powergrid
 									}
 									else if (otherTriangle && otherTriangle != triangle && otherTriangle.layers & triangle.layers && (!triangle.group || triangle.group != otherTriangle.group))
 									{
-										resolveTriangles(triangle, otherTriangle, timeScale);
-										if (colInfo)
+										if (resolveTriangles(triangle, otherTriangle, timeScale))
 										{
 											//the other triangle is sleeping, let's wake it up											
 											contact1x = colInfo[0] - triangle.x;
@@ -926,11 +950,6 @@ package com.battalion.powergrid
 									if (!isNaN(contact1x))
 									{
 										touching = true;
-										/*
-										stage.graphics.beginFill(0x00FF00);
-										stage.graphics.drawCircle(contact1x + triangle.x, contact1y + triangle.y, 4);
-										stage.graphics.endFill();
-										*/
 										if(other.mass > 0) resolveCollision(triangle, other, contact1x, contact1y, contact2x, contact2y, nx, ny, timeScale);
 										else resolveWallCollision(triangle, contact1x, contact1y, -nx, -ny, timeScale);
 									}
@@ -987,24 +1006,6 @@ package com.battalion.powergrid
 				
 				body = nextCircles;
 				triangleBody = nextTriangles;
-				
-				//Contact.removeOldContacts();
-				/*
-				for (contact = Contact._head; contact; contact = contact._nextPoint)
-				{
-					stage.graphics.beginFill(0x00FF00);
-					stage.graphics.drawCircle(contact.x, contact.y, 2);
-					stage.graphics.endFill();
-					
-					stage.graphics.lineStyle(0, 0x00FF00);
-					stage.graphics.moveTo(contact.thisBody.x, contact.thisBody.y);
-					stage.graphics.lineTo(contact.x, contact.y);
-					
-					stage.graphics.lineStyle(0, 0x0000FF);
-					stage.graphics.moveTo(contact.other.thisBody.x, contact.other.thisBody.y);
-					stage.graphics.lineTo(contact.x, contact.y);
-				}
-				*/
 			}
 			Contact.removeOldContacts();
 		}
@@ -1397,6 +1398,8 @@ package com.battalion.powergrid
 		}
 		private static function resolveTriangleVsTile(triangle : Triangle, tile : uint, timeScale : Number) : Boolean
 		{
+			stopNOW = true;
+			
 			var unit : uint = 1 << _unitLog2;
 			var tileX : uint = tile % _widthUint;
 			var tileY : uint = tile / _widthUint;
@@ -1693,14 +1696,15 @@ package com.battalion.powergrid
 				var body : AbstractRigidbody = triangle.group || triangle;
 				if ((axisX == 1 || axisX == -1) && body.vx * axisX > 0 || (axisY == 1 || axisY == -1) && body.vy * axisY > 0) return true;
 				resolveWallCollision(triangle, pointX - triangle.x, pointY - triangle.y, axisX, axisY, timeScale);
+				
 				return true;
 			}
 			
 			return false;
 		}
-		private static function resolveTriangleVsCircle(triangle : Triangle, circle : Circle, timeScale : Number) : Vector.<Number>
+		private static function resolveTriangleVsCircle(triangle : Triangle, circle : Circle, timeScale : Number) : Boolean
 		{
-			if (!(circle.layers & triangle.layers) || circle.group == triangle.group && triangle.group) return null;//in the same group;
+			if (!(circle.layers & triangle.layers) || circle.group == triangle.group && triangle.group) return false;//in the same group;
 			var dx : Number = circle.x - triangle.x;
 			var dy : Number = circle.y - triangle.y;
 			var nx : Number, ny : Number, length : Number;
@@ -1837,23 +1841,18 @@ package com.battalion.powergrid
 					circle.x -= nx * length * triangleMass * invMass;
 					circle.y -= ny * length * triangleMass * invMass;
 					
-					/*
-					stage.graphics.beginFill(0x00FF00);
-					stage.graphics.drawCircle(-nx * circle.radius + circle.x,  -ny * circle.radius + circle.y, 4);
-					stage.graphics.endFill();
-					*/
 					colInfo[0] = -nx * circle.radius + circle.x;
 					colInfo[1] = -ny * circle.radius + circle.y;
 					colInfo[2] = nx;
 					colInfo[3] = ny;
-					return colInfo;
+					return true;
 				}
 			}
-			return null;
+			return false;
 		}
-		private static function resolveTriangles(triangle : Triangle, other : Triangle, timeScale : Number) : Vector.<Number>
+		private static function resolveTriangles(triangle : Triangle, other : Triangle, timeScale : Number) : Boolean
 		{
-			if (!(other.layers & triangle.layers) || other.group == triangle.group && triangle.group) return null;//not in the same layers or in the same group
+			if (!(other.layers & triangle.layers) || other.group == triangle.group && triangle.group) return false;//not in the same layers or in the same group
 			var dot1 : Number, dot2 : Number, dot3 : Number;
 			var minDot : Number = Number.NEGATIVE_INFINITY;
 			var axisX : Number, axisY : Number;
@@ -1874,7 +1873,7 @@ package com.battalion.powergrid
 		 	dot1 = p1X * other.gn12x + p1Y * other.gn12y - other.n12d;
 			dot2 = p2X * other.gn12x + p2Y * other.gn12y - other.n12d;
 			dot3 = p3X * other.gn12x + p3Y * other.gn12y - other.n12d;
-			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return null;//if they're separated along this axis, there's no collision.
+			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return false;//if they're separated along this axis, there's no collision.
 			if (dot1 < dot2 && dot1 < dot3)
 			{
 				if (dot1 > minDot) { minDot = dot1; axisX = -other.gn12x; axisY = -other.gn12y; colX = p1X + other.x; colY = p1Y + other.y; }
@@ -1890,7 +1889,7 @@ package com.battalion.powergrid
 			dot1 = p1X * other.gn23x + p1Y * other.gn23y - other.n23d;
 			dot2 = p2X * other.gn23x + p2Y * other.gn23y - other.n23d;
 			dot3 = p3X * other.gn23x + p3Y * other.gn23y - other.n23d;
-			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return null;//if they're separated along this axis, there's no collision.
+			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return false;//if they're separated along this axis, there's no collision.
 			if (dot1 < dot2 && dot1 < dot3)
 			{
 				if (dot1 > minDot) { minDot = dot1; axisX = -other.gn23x; axisY = -other.gn23y; colX = p1X + other.x; colY = p1Y + other.y; }
@@ -1907,7 +1906,7 @@ package com.battalion.powergrid
 			dot1 = p1X * other.gn31x + p1Y * other.gn31y - other.n31d;
 			dot2 = p2X * other.gn31x + p2Y * other.gn31y - other.n31d;
 			dot3 = p3X * other.gn31x + p3Y * other.gn31y - other.n31d;
-			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return null;//if they're separated along this axis, there's no collision.
+			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return false;//if they're separated along this axis, there's no collision.
 			if (dot1 < dot2 && dot1 < dot3)
 			{
 				if (dot1 > minDot) { minDot = dot1; axisX = -other.gn31x; axisY = -other.gn31y; colX = p1X + other.x; colY = p1Y + other.y; }
@@ -1931,7 +1930,7 @@ package com.battalion.powergrid
 		 	dot1 = p1X * triangle.gn12x + p1Y * triangle.gn12y - triangle.n12d;
 			dot2 = p2X * triangle.gn12x + p2Y * triangle.gn12y - triangle.n12d;
 			dot3 = p3X * triangle.gn12x + p3Y * triangle.gn12y - triangle.n12d;
-			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return null;//if they're separated along this axis, there's no collision.
+			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return false;//if they're separated along this axis, there's no collision.
 			if (dot1 < dot2 && dot1 < dot3)
 			{
 				if (dot1 > minDot) { minDot = dot1; axisX = triangle.gn12x; axisY = triangle.gn12y; colX = p1X + triangle.x; colY = p1Y + triangle.y; }
@@ -1947,7 +1946,7 @@ package com.battalion.powergrid
 			dot1 = p1X * triangle.gn23x + p1Y * triangle.gn23y - triangle.n23d;
 			dot2 = p2X * triangle.gn23x + p2Y * triangle.gn23y - triangle.n23d;
 			dot3 = p3X * triangle.gn23x + p3Y * triangle.gn23y - triangle.n23d;
-			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return null;//if they're separated along this axis, there's no collision.
+			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return false;//if they're separated along this axis, there's no collision.
 			if (dot1 < dot2 && dot1 < dot3)
 			{
 				if (dot1 > minDot) { minDot = dot1; axisX = triangle.gn23x; axisY = triangle.gn23y; colX = p1X + triangle.x; colY = p1Y + triangle.y; }
@@ -1964,7 +1963,7 @@ package com.battalion.powergrid
 			dot1 = p1X * triangle.gn31x + p1Y * triangle.gn31y - triangle.n31d;
 			dot2 = p2X * triangle.gn31x + p2Y * triangle.gn31y - triangle.n31d;
 			dot3 = p3X * triangle.gn31x + p3Y * triangle.gn31y - triangle.n31d;
-			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return null;//if they're separated along this axis, there's no collision.
+			if (dot1 > 0 && dot2 > 0 && dot3 > 0) return false;//if they're separated along this axis, there's no collision.
 			if (dot1 < dot2 && dot1 < dot3)
 			{
 				if (dot1 > minDot) { minDot = dot1; axisX = triangle.gn31x; axisY = triangle.gn31y; colX = p1X + triangle.x; colY = p1Y + triangle.y; }
@@ -2012,20 +2011,11 @@ package com.battalion.powergrid
 			other.x -= axisX * triangleMass * invMass;
 			other.y -= axisY * triangleMass * invMass;
 			
-			/*
-			stage.graphics.beginFill(0x00FF00);
-			stage.graphics.drawCircle(colX, colY, 4);
-			stage.graphics.endFill();
-			
-			stage.graphics.lineStyle(2);
-			stage.graphics.moveTo( colX - axisY * 100, colY + axisX * 100);
-			stage.graphics.lineTo( colX + axisY * 100, colY - axisX * 100);
-			*/
 			colInfo[0] = colX;
 			colInfo[1] = colY;
 			colInfo[2] = axisX;
 			colInfo[3] = axisY;
-			return colInfo;
+			return true;
 			
 		}
 		public static function addBody(body : AbstractRigidbody, ...rest) : void

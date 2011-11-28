@@ -88,7 +88,7 @@ package com.battalion.flashpoint.comp.misc
  			if (density > _maxDensity) _maxDensity = density;
 			if (triangle.parent) density = triangle.parent.mass / triangle.parent.volume;
 			
-			_debugGraphics.lineStyle(1, 0x000000);
+			_debugGraphics.lineStyle(0, 0x000000);
 			_debugGraphics.beginFill(sleeping ? 0x666666 : ColorFactory.CreateRGBThermalScale(density * _maxInvDensity), alpha);
 			_debugGraphics.moveTo(triangle.gx1 + triangle.x, triangle.gy1 + triangle.y);
 			_debugGraphics.lineTo(triangle.gx2 + triangle.x, triangle.gy2 + triangle.y);

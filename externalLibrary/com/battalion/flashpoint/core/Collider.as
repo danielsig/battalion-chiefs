@@ -24,7 +24,7 @@ package com.battalion.flashpoint.core
 		/**
 		 * A bitmask indicating what layers this collider can collide with.
 		 * Each bit is a single layer.
-		 * @see groupLayers
+		 * @see #groupLayers
 		 */
 		public function get layers() : uint { return body.layers; }
 		public function set layers(value : uint) : void { body.layers = value; }
@@ -32,7 +32,7 @@ package com.battalion.flashpoint.core
 		/**
 		 * A bitmask indicating all the layers on every collider on this GameObject and it's children.
 		 * Each bit is a single layer.
-		 * @see layers
+		 * @see #layers
 		 */
 		public function get groupLayers() : uint { return _this.group ? _this.group.groupLayers : body.layers; }
 		public function set groupLayers(value : uint) : void
