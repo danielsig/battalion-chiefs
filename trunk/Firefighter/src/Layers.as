@@ -14,6 +14,8 @@ package
 		public static const OBJECTS_VS_WATER : uint = 4;
 		public static const WATER_VS_FIRE : uint = 8;
 		public static const STEAM_AND_SMOKE : uint = 16;
+		public static const OBJECTS_VS_HUMANS : uint = 32;
+		public static const FIRE_VS_HUMANS : uint = 64;
 		
 		public static const ALL : uint = uint.MAX_VALUE;
 		

@@ -647,7 +647,7 @@ package comp.human
 			//PHSYICS
 			box.dimensions = new Point(62, 126);
 			box.material = new PhysicMaterial(0.3, 0);
-			box.layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_FIRE;
+			box.layers = Layers.FIRE_VS_HUMANS | Layers.OBJECTS_VS_HUMANS;
 			_rigidbody.mass = 100;
 			_rigidbody.drag = 0;
 			_rigidbody.freezeRotation = true;

@@ -1,4 +1,5 @@
 using assets.geomcode.Primitives;
+using assets.geomcode.Props;
 
 BrickWall
 (
@@ -77,5 +78,7 @@ Level1()
 		Door(pos = (5714, 1010), dir = 2);
 		Door(pos = (2654, 1651), other = prev, dir = 3);
 		
+		//TVtest
+		TV( pos = (4400, 1200));
 	}
 }

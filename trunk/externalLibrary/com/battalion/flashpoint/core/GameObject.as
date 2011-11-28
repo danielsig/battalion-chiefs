@@ -83,6 +83,27 @@ trace(myChild);//WORLD.foo.bar
 		/**
 		 * This is clearly obvious.
 		 */
+		public function get children() : Vector.<GameObject>
+		{
+			return _children.concat();
+		}
+		/**
+		 * This is clearly obvious.
+		 */
+		public function get numChildren() : uint
+		{
+			return _children.length;
+		}
+		/**
+		 * This is clearly obvious.
+		 */
+		public function get numComponents() : uint
+		{
+			return _components.length;
+		}
+		/**
+		 * This is clearly obvious.
+		 */
 		public function get isDestroyed() : Boolean
 		{
 			return !_parent;

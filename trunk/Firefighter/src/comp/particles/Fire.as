@@ -20,13 +20,18 @@ package comp.particles
 			{
 				objOnFire.addComponent(Fire);
 				var collider : Collider = (objOnFire.circleCollider || objOnFire.boxCollider || objOnFire.triangleCollider) as Collider;
-				if(collider) collider.groupLayers &= ~Layers.OBJECTS_VS_FIRE;
+				if (collider)
+				{
+					objOnFire.fire._preLayers = collider.groupLayers;
+					collider.groupLayers &= ~(Layers.OBJECTS_VS_FIRE | Layers.FIRE_VS_HUMANS);
+				}
 			}
 			objOnFire.transform.x = x;
 			objOnFire.transform.y = y;
 			return objOnFire;
 		}
 		
+		private var _preLayers : uint = 0;
 		private var _gen : ParticleGenerator;
 		private var _heat : Heat;
 		private var _emitting : Boolean = true;
@@ -71,7 +76,7 @@ package comp.particles
 			if (_heat.heat < _heat.flashPoint)
 			{
 				var collider : Collider = (gameObject.circleCollider || gameObject.boxCollider || gameObject.triangleCollider) as Collider;
-				if(collider) collider.groupLayers |= Layers.OBJECTS_VS_FIRE;
+				if (collider) collider.groupLayers = _preLayers;
 				
 				if (gameObject.name == "fire")
 				{

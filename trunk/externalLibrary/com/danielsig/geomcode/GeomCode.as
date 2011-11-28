@@ -108,6 +108,8 @@ package com.danielsig.geomcode
 		
 		private var _urls : Dictionary = new Dictionary();
 		
+		private var _loadCounter : int = 1;
+		
 		/** @private **/
 		internal var create : Function;
 		/** @private **/
@@ -359,6 +361,7 @@ package com.danielsig.geomcode
 		private function onLoadComplete(e : Event) : void
 		{
 			e.target.removeEventListener(Event.COMPLETE, onLoadComplete);
+			_loadCounter--;
 			CONFIG::debug
 			{
 				var errorMessage : String = checkSyntax(e.target.data);
@@ -389,15 +392,17 @@ package com.danielsig.geomcode
 			if (using.length)
 			{
 				_source = _source.replace(/using [^;]+;[ \t\n\r\v]*/g, "");
+				_loadCounter += using.length;
 				for each(var url : String in using)
 				{
 					load(url);
 				}
 			}
-			else compile();
+			else if(!_loadCounter) compile();
 		}
 		private function compile() : void
 		{
+			trace(_source);
 			_source = _source.replace(/\/\*([^\*]|\*[^\/])*\*\/|\/\/[^\n\r\v]*/g, "");//remove comments
 			_source = _source.replace(/[\t\n\r\v ]+/g, " ");//remove extra spaces
 			_source = _source.replace(/( ?)([^0-9a-zA-Z ])( ?)/g, removeSpace);//remove unnecessary spaces
