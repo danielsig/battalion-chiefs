@@ -5,6 +5,7 @@ package com.battalion.flashpoint.comp
 	import com.battalion.flashpoint.core.FlashPoint;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
 	import flash.xml.XMLNode;
+	import flash.utils.Dictionary;
 	/**
 	 *	A BoneANimation component, AHA!
 	 * @author Battalion Chiefs
@@ -12,6 +13,7 @@ package com.battalion.flashpoint.comp
 	public final class BoneAnimation extends Component implements IExclusiveComponent, IPlayableComponent
 	{
 		private static var _animations: Object = { };
+		private static var _labels: Object = { };
 		
 		public var localTimeScale : Number = 1;
 		/**
@@ -32,6 +34,7 @@ package com.battalion.flashpoint.comp
 		private var _pingPongPlayback : Boolean = false;
 		private var _multiplier : Number = 1;
 		private var _multiplierChangeAmount : Number = 0;
+		private var _messages : Dictionary = null;
 		
 		/** @private **/
 		public function onDestroy() : Boolean
@@ -44,6 +47,44 @@ package com.battalion.flashpoint.comp
 			_bones = null;
 			_boneAnimName = null;
 			return false;
+		}
+		
+		/**
+		 * This comes in handy when you want something to happen at a specific frame.
+		 * <p>
+		 * A BoneAnimation component playing an animation named <code>boneAnimName</code>
+		 * will send a message named <code>label</code> with paramerts <code>...params</code>
+		 * when it reaches a frame index <code>frame</code>.
+		 * </p>
+		 * @see Animation.addLabel()
+		 * @param	boneAnimName
+		 * @param	label
+		 * @param	frame
+		 * @param	...params
+		 */
+		public static function addLabel(boneAnimName : String, label : String, frame : Number, ...params) : void
+		{
+			var labels : Dictionary = _labels[boneAnimName];
+			CONFIG::debug
+			{
+				if (!_labels.hasOwnProperty(boneAnimName))
+				{
+					throw new Error("Either the boneAnimName you specified is not correct or you're trying to assign labels to a bone animation before defining it.");
+				}
+				if (!(frame is int || frame is uint || frame is Number))
+				{
+					throw new Error(frame + " is not a valid label index.");
+				}
+				if (frame <= -labels.length || frame >= labels.length)
+				{
+					throw new Error("labels index " + frame + " is out of range [" + -labels.length + "-" + labels.length + "] of " + boneAnimName + ".");
+				}
+				if (!label || !(label is String))
+				{
+					throw new Error(label + " is not a valid label name.");
+				}
+			}
+			_labels[boneAnimName][frame < 0 ? labels.length + frame - 1 : frame] = [label].concat(params);
 		}
 		
 		/**boneAnimName = Tekur inn nafn á animation
@@ -112,6 +153,7 @@ package com.battalion.flashpoint.comp
 			definedAnimation.length = values.length;
 			
 			_animations[boneAnimName] = definedAnimation;
+			_labels[boneAnimName] = new Dictionary();
 		}
 		
 		/**
@@ -190,6 +232,7 @@ package com.battalion.flashpoint.comp
 			_multiplierChangeAmount = FlashPoint.fixedInterval / transitionTime;
 			_multiplier = 0;
 			_playback = 1;
+			_messages = _labels[value];
 			
 			for (var boneName : String in _animation)
 			{
@@ -289,7 +332,8 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				
 				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
 				var frameLength : Number = localTimeScale / _length;
-				if (_loops == 1) _p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
+				var step : Number = frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
+				if (_loops == 1) _p = _pFixed + step;
 					
 				if (_p >= 1 || _p < 0)
 				{
@@ -311,6 +355,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				{
 					_pFixed = _p;
 				}
+				
 				
 				// UPDATE BONES
 				
@@ -342,6 +387,16 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					if (a2 - a1 > 180) a1 += 360;
 					if (a2 - a1 < -180) a1 -= 360;
 					_bones[boneName].rotation += (a1 * floorRatio + a2  * ceilRatio - _bones[boneName].rotation) * _multiplier;
+				}
+				var curFrame : Number = _p * _length;
+				var preFrame : Number = curFrame - (step * _length);
+				
+				for (var fr : Object in _messages)
+				{
+					if (curFrame > fr && preFrame < fr)
+					{
+						sendMessage.apply(this, _messages[fr]);
+					}
 				}
 			}
 		}
