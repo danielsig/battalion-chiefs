@@ -52,6 +52,12 @@ package com.battalion.flashpoint.comp
 		private static var _head : Renderer = null;
 		private static var _tail : Renderer = null;
 		
+		/** @private **/
+		public static function get tail() : Renderer
+		{
+			return _tail;
+		}
+		
 		public static function filterWhite(bitmapName : String) : void
 		{
 			filter(bitmapName, 0xFFFEFEFE, 0x00000000);
@@ -589,6 +595,52 @@ Renderer.draw("myWeirdArrow",
 			loader.load(new URLRequest(url), null, true);
 		}
 		
+		public static function sendGameObjectToFront(obj : GameObject) : void
+		{
+			var renderers : Vector.<Renderer> = getRenderers(obj);
+			if (renderers)
+			{
+				var length : uint = renderers.length;
+				var indexes : Vector.<uint> = new Vector.<uint>(length);
+				for ( var i : uint = 0; i < length; i++)
+				{
+					indexes[i] = renderers[i].index;
+				}
+				for (i = 0; i < length; i++)
+				{
+					for (var j : uint = 0; j < length; j++)
+					{
+						if (indexes[i] > indexes[j])
+						{
+							var tempIndex : uint = indexes[i]
+							indexes[i] = indexes[j];
+							indexes[j] = tempIndex;
+							var temp : Renderer = renderers[i];
+							renderers[i] = renderers[j];
+							renderers[j] = temp;
+						}
+					}
+				}
+				for (i = 0; i < length; i++)
+				{
+					renderers[i].sendToFront();
+				}
+			}
+		}
+		public static function getRenderers(obj : GameObject) : Vector.<Renderer>
+		{
+			var renderers : Vector.<Renderer> = null;
+			if (obj.renderer) renderers = new <Renderer>[obj.renderer];
+			if (obj.numChildren)
+			{
+				for each(var child : GameObject in obj.children)
+				{
+					var childRenderers : Vector.<Renderer> = getRenderers(child);
+					if(childRenderers) renderers = (renderers || new <Renderer>[]).concat(childRenderers);
+				}
+			}
+			return renderers;
+		}
 		/**
 		 * In case you don't want the bitmap to be centered about the GameObject's center.
 		 */
@@ -645,6 +697,12 @@ Renderer.draw("myWeirdArrow",
 		private var _transform : Transform;//just for convenience
 		
 		/** @private **/
+		public function update() : void
+		{
+			updateBitmap = true;
+		}
+		
+		/** @private **/
 		public function awake() : void
 		{
 			if (_head)
@@ -656,14 +714,21 @@ Renderer.draw("myWeirdArrow",
 			_head = this;
 			
 			_transform = gameObject.transform;
-			CONFIG::flashPlayer10
-			{
-				View.addToView(this);
-			}
+			
 			CONFIG::flashPlayer11
 			{
 				ViewFlash11.addToView(this);
 			}
+		}
+		/**
+		 * Caution! slow!!!
+		 */
+		public function get index() : uint
+		{
+			var target : Renderer = this;
+			var counter : uint = 0;
+			while ((target = target.rendererBehindThis)) counter++;
+			return counter;
 		}
 		/**
 		 * URL of the bitmap image to render. Can be both an individual image url or a spritesheet url.
@@ -753,7 +818,7 @@ Renderer.draw("myWeirdArrow",
 			other.rendererInFrontOfThis = this;
 			rendererBehindThis = other;
 			
-			updateBitmap = true;
+			updateBitmap = other.updateBitmap = true;
 			if (oldBehind) oldBehind.updateBitmap = true;
 			else if (oldOnFront) oldOnFront.updateBitmap = true;
 		}
@@ -786,7 +851,7 @@ Renderer.draw("myWeirdArrow",
 			other.rendererBehindThis = this;
 			rendererInFrontOfThis = other;
 			
-			updateBitmap = true;
+			updateBitmap = other.updateBitmap = true;
 			if (oldBehind) oldBehind.updateBitmap = true;
 			else if (oldOnFront) oldOnFront.updateBitmap = true;
 		}
@@ -812,7 +877,6 @@ Renderer.draw("myWeirdArrow",
 			pixelSnapping = null;
 			_url = null;
 			_transform = null;
-			sprites = { };
 			
 			if (rendererInFrontOfThis)
 			{
@@ -842,6 +906,7 @@ Renderer.draw("myWeirdArrow",
 			{
 				ViewFlash11.removeFromView(this);
 			}
+			sprites = { };
 			return false;
 		}
 		/**

@@ -58,6 +58,7 @@ package comp
 			var geomCode : GeomCodeRuntime = world.addComponent(GeomCodeRuntime) as GeomCodeRuntime;
 			world.addComponent(GeomCodePrimitives);
 			world.addComponent(GeomCodeDoors);
+			world.addComponent(GeomCodeProps);
 			geomCode.source = "assets/geomcode/Level1.gmc";
 			
 			geomCode.construct("Level1");
@@ -85,7 +86,8 @@ package comp
 		public function tilesLoaded() : void 
 		{
 			var player : GameObject = PlayerController.createPlayer(4200, 1200);
-			var human : GameObject = Civilian.createCivilian(4600, 1200);
+			//Renderer.sendGameObjectToFront(player);
+			//var human : GameObject = Civilian.createCivilian(4600, 1200);
 		}
 	}
 }

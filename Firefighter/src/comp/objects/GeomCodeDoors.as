@@ -43,6 +43,7 @@ package comp.objects
 			
 			var graphics : Renderer = door.addComponent(Renderer) as Renderer;
 			graphics.setBitmapByName(GRAPHICS[params.dir]);
+			graphics.sendToBack();
 			if (params.dir > 1) graphics.offset = new Matrix(1, 0, 0, 1, ((params.dir * 2) - 5) * 40);
 			
 			if (params.other && params.other.portal)

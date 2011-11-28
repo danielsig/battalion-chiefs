@@ -34,14 +34,12 @@ package com.battalion.flashpoint.display
 	public final class View extends Sprite 
 	{
 		
-		private static var _renderers : Vector.<Renderer> =  new Vector.<Renderer>();
 		private static var _texts : Vector.<TextRenderer> =  new Vector.<TextRenderer>();
 		private static var _tiles : Vector.<TileRenderer> =  new Vector.<TileRenderer>();
 		
 		private static var _views : Vector.<View> =  new Vector.<View>();
 		private static var _viewCounter : int = 0;
 		
-		private var _sprites : Vector.<Sprite> =  new Vector.<Sprite>();
 		private var _textFields : Vector.<TextField> = new Vector.<TextField>();
 		private var _tileViews : Vector.<TileView> = new Vector.<TileView>();
 		
@@ -55,15 +53,6 @@ package com.battalion.flashpoint.display
 		private var _textLayer : Sprite = new Sprite();
 		private var _name : String;
 		
-		/** @private **/
-		public static function addToView(renderer : Renderer) : void
-		{
-			_renderers.push(renderer);
-			for each(var view : View in _views)
-			{
-				view._sprites.push(null);
-			}
-		}
 		/** @private **/
 		public static function addTilesToView(tiles : TileRenderer) : void
 		{
@@ -85,33 +74,13 @@ package com.battalion.flashpoint.display
 		/** @private **/
 		public static function removeFromView(renderer : Renderer) : void
 		{
-			var index : int = _renderers.indexOf(renderer);
-			if (index < 0) return;
-			
-			if (index < _renderers.length - 1)
-			{
-				_renderers[index] = _renderers.pop();
-			}
-			else if (_renderers.length)
-			{
-				_renderers.length--;
-			}
-			
 			for each(var view : View in _views)
 			{
-				var sprite : Sprite = view._sprites[index];
+				var sprite : Sprite = renderer.sprites[view._name];
 				if (sprite && sprite.parent)
 				{
 					sprite.removeChildAt(0);
 					sprite.parent.removeChild(sprite);
-				}
-				if (index < view._sprites.length - 1)
-				{
-					view._sprites[index] = view._sprites.pop();
-				}
-				else if (view._sprites.length)
-				{
-					view._sprites.length--;
 				}
 			}
 		}
@@ -231,131 +200,77 @@ package com.battalion.flashpoint.display
 			var top : Number = tr.y - _bounds.height * 0.5 * tr.scaleY;
 			var bottom : Number = tr.y + _bounds.height * 0.5 * tr.scaleY;
 			
-			var i : int = _renderers.length;
-			while(i--)
+			var i : uint = 0;
+			var renderer : Renderer = Renderer.tail;
+			if (renderer)
 			{
-				var renderer : Renderer = _renderers[i];
-				if (renderer.bitmapData)
+				do
 				{
-					var rect : Rectangle = renderer.bounds;
-					if (rect.right > left && rect.left < right && rect.bottom > top && rect.top < bottom)
+					var rendererSprite : Sprite = renderer.sprites[_name];
+					if (renderer.bitmapData)
 					{
-						if (_sprites[i] && !_sprites[i].visible)
+						var rect : Rectangle = renderer.bounds;
+						if (rect.right > left && rect.left < right && rect.bottom > top && rect.top < bottom)
 						{
-							//_dynamicLayer.addChild(_sprites[i]);
-							_sprites[i].visible = true;
-						}
-						if (renderer.updateBitmap)
-						{
-							if (!_sprites[i])
+							if (rendererSprite && !rendererSprite.visible)
 							{
-								_sprites[i] = new Sprite();
-								var bitmap : Bitmap = new Bitmap((renderer.bitmapData as BitmapData), renderer.pixelSnapping, renderer.smoothing)
-								bitmap.x = -bitmap.width * 0.5;
-								bitmap.y = -bitmap.height * 0.5;
-								_sprites[i].addChild(bitmap);
-								_dynamicLayer.addChild(_sprites[i]);
-								renderer.sprites[_name] = _sprites[i];
-								
-								if (renderer.rendererInFrontOfThis)
+								_dynamicLayer.addChild(rendererSprite);
+								rendererSprite.visible = true;
+							}
+							if (renderer.updateBitmap)
+							{
+								if (!rendererSprite)
 								{
-									var onFront : Sprite = renderer.rendererInFrontOfThis.sprites[_name];
-									if (onFront && onFront.parent == _dynamicLayer)
-									{
-										var back : int = _dynamicLayer.getChildIndex(_sprites[i]);
-										var front : int = _dynamicLayer.getChildIndex(onFront);
-										if (back != front - 1)
-										{
-											if (back + 1 < _dynamicLayer.numChildren) _dynamicLayer.setChildIndex(onFront, back + 1);
-											else _dynamicLayer.addChild(onFront);
-											renderer.rendererInFrontOfThis.updateBitmap = true;
-										}
-									}
+									rendererSprite = renderer.sprites[_name] = new Sprite();
+									var bitmap : Bitmap = new Bitmap((renderer.bitmapData as BitmapData), renderer.pixelSnapping, renderer.smoothing)
+									bitmap.x = -bitmap.width * 0.5;
+									bitmap.y = -bitmap.height * 0.5;
+									rendererSprite.addChild(bitmap);
+									if (_dynamicLayer.numChildren > i) _dynamicLayer.addChildAt(rendererSprite, i);
+									else _dynamicLayer.addChild(rendererSprite);
 								}
-								if (renderer.rendererBehindThis)
+								else
 								{
-									var behind : Sprite = renderer.rendererBehindThis.sprites[_name];
-									if (behind && behind.parent == _dynamicLayer)
-									{
-										front = _dynamicLayer.getChildIndex(_sprites[i]);
-										back = _dynamicLayer.getChildIndex(behind);
-										if (back != front - 1)
-										{
-											if (front > 0) _dynamicLayer.setChildIndex(behind, front - 1);
-											else _dynamicLayer.addChildAt(behind, 0);
-											renderer.rendererBehindThis.updateBitmap = true;
-										}
-									}
+									(rendererSprite.getChildAt(0) as Bitmap).bitmapData = renderer.bitmapData;
+									if (_dynamicLayer.numChildren > i) _dynamicLayer.setChildIndex(rendererSprite, i);
+									else _dynamicLayer.addChild(rendererSprite);
 								}
+								renderer.updateBitmap = false;
+							}
+							if (renderer.optimized)
+							{
+								rendererSprite.x = renderer.gameObject.transform.globalMatrix.tx;
+								rendererSprite.y = renderer.gameObject.transform.globalMatrix.ty;
 							}
 							else
 							{
-								(_sprites[i].getChildAt(0) as Bitmap).bitmapData = renderer.bitmapData;
-								if (renderer.rendererInFrontOfThis)
+								if (renderer.offset)
 								{
-									onFront = renderer.rendererInFrontOfThis.sprites[_name];
-									if (onFront && onFront.parent == _dynamicLayer)
-									{
-										back = _dynamicLayer.getChildIndex(_sprites[i]);
-										front = _dynamicLayer.getChildIndex(onFront);
-										if (back != front - 1)
-										{
-											if (back + 1 < _dynamicLayer.numChildren) _dynamicLayer.setChildIndex(onFront, back + 1);
-											else _dynamicLayer.addChild(onFront);
-											renderer.rendererInFrontOfThis.updateBitmap = true;
-										}
-									}
+									var matrix : Matrix = renderer.offset.clone();
+									matrix.concat(renderer.gameObject.transform.globalMatrix);
+									rendererSprite.transform.matrix = matrix;
 								}
-								if (renderer.rendererBehindThis)
+								else
 								{
-									behind = renderer.rendererBehindThis.sprites[_name];
-									if (behind && behind.parent == _dynamicLayer)
-									{
-										front = _dynamicLayer.getChildIndex(_sprites[i]);
-										back = _dynamicLayer.getChildIndex(behind);
-										if (back != front - 1)
-										{
-											if (front > 0) _dynamicLayer.setChildIndex(behind, front - 1);
-											else _dynamicLayer.addChildAt(behind, 0);
-											renderer.rendererBehindThis.updateBitmap = true;
-										}
-									}
+									rendererSprite.transform.matrix = renderer.gameObject.transform.globalMatrix;
 								}
 							}
-							renderer.updateBitmap = false;
 						}
-						if (renderer.optimized)
+						else if (rendererSprite && rendererSprite.visible)
 						{
-							_sprites[i].x = renderer.gameObject.transform.globalMatrix.tx;
-							_sprites[i].y = renderer.gameObject.transform.globalMatrix.ty;
-						}
-						else
-						{
-							if (renderer.offset)
-							{
-								var matrix : Matrix = renderer.offset.clone();
-								matrix.concat(renderer.gameObject.transform.globalMatrix);
-								_sprites[i].transform.matrix = matrix;
-							}
-							else
-							{
-								_sprites[i].transform.matrix = renderer.gameObject.transform.globalMatrix;
-							}
+							_dynamicLayer.removeChild(rendererSprite);
+							rendererSprite.visible = false;
 						}
 					}
-					else if (_sprites[i] && _sprites[i].visible)
+					else if(rendererSprite && rendererSprite.parent)
 					{
-						//_dynamicLayer.removeChild(_sprites[i]);
-						_sprites[i].visible = false;
+						rendererSprite.removeChildAt(0);
+						_dynamicLayer.removeChild(rendererSprite);
+						delete renderer.sprites[_name];
 					}
+					i++;
 				}
-				else if(_sprites[i] && _sprites[i].parent)
-				{
-					_sprites[i].removeChildAt(0);
-					_sprites[i].parent.removeChild(_sprites[i]);
-					delete renderer.sprites[_name];
-					_sprites[i] = null;
-				}
+				while ((renderer = renderer.rendererInFrontOfThis));
 			}
 			i = _texts.length;
 			while (i--)

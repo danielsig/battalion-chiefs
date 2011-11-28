@@ -38,7 +38,7 @@ package comp.particles
 			
 			_col = gameObject.circleCollider as CircleCollider;
 			_col.material = _flameMaterial;
-			_col.layers = Layers.OBJECTS_VS_FIRE | Layers.WATER_VS_FIRE | Layers.STEAM_AND_SMOKE;
+			_col.layers = Layers.OBJECTS_VS_FIRE | Layers.WATER_VS_FIRE | Layers.STEAM_AND_SMOKE | Layers.FIRE_VS_HUMANS;
 		}
 		public function fixedUpdate() : void
 		{
