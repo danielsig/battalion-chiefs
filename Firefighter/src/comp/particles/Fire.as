@@ -10,6 +10,18 @@ package comp.particles
 	 */
 	public class Fire extends Component implements IExclusiveComponent 
 	{
+		private static var _init : Boolean = init();
+		
+		private static function init() : Boolean
+		{
+				Audio.load("fireburn", "assets/sound/sounds.mp3~750-2383~");
+				Animation.load("FireAnimation", "assets/img/fire.png~0-80~");
+				Animation.addLabel("FireAnimation", "destroyer", 80);
+				Animation.addLabel("FireAnimation", "shrinkFire", 50);
+				Animation.load("SmokeAnimation", "assets/img/smoke.png~0-62~");
+				Animation.addLabel("SmokeAnimation", "destroyer", 62);
+				return true;
+		}
 		public static function createFire(x : Number = 0, y : Number = 0, objOnFire : GameObject = null) : GameObject
 		{
 			if (!objOnFire)
@@ -35,20 +47,14 @@ package comp.particles
 		private var _gen : ParticleGenerator;
 		private var _heat : Heat;
 		private var _emitting : Boolean = true;
-		private static var _init : Boolean = true;
+		
+		private var _nowEmitting : Boolean = false;
+		
 		private static var _fireMaterial : PhysicMaterial = new PhysicMaterial(0.0, 0.8);
 		
 		public function awake() : void
-		{
-			if (_init)
-			{
-				_init = false;
-				Animation.load("FireAnimation", "assets/img/fire.png~0-80~");
-				Animation.addLabel("FireAnimation", "destroyer", 80);
-				Animation.addLabel("FireAnimation", "shrinkFire", 50);
-				Animation.load("SmokeAnimation", "assets/img/smoke.png~0-62~");
-				Animation.addLabel("SmokeAnimation", "destroyer", 62);
-			}
+		{	
+			requireComponent(Audio);
 			_heat = requireComponent(Heat) as Heat;
 			_heat.heat = _heat.firePoint;
 			
@@ -81,13 +87,30 @@ package comp.particles
 				if (gameObject.name == "fire")
 				{
 					gameObject.destroy();
+					return;
 				}
 				else
 				{
 					destroy();
 					_gen.destroy();
+					return;
 				}
+				
+				if (!_nowEmitting && _gen.emitting)
+				{
+					sendMessage("Audio_play", "fireburn");
+					_nowEmitting = true;
+				}
+				else if (_nowEmitting && !_gen.emitting)
+				{
+					sendMessage("Audio_stop");
+					_nowEmitting = false;
+				}
+
+				_emitting = false;
+				
 			}
+			
 		}
 		public function toggleFire() : void
 		{
