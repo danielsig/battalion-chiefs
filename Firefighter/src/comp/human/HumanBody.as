@@ -158,9 +158,9 @@ package comp.human
 				}
 			);
 			
-			Audio.load("test", "assets/sound/sounds.mp3~3199-3266~");
-			Audio.load("test2", "assets/sound/sounds.mp3~3266-3500~");
-			BoneAnimation.addLabel("humanWalk", "Audio_play", 4.5, "test", 1);
+			Audio.load("test", "assets/sound/sounds.mp3~3199-3306~");
+			Audio.load("test2", "assets/sound/sounds.mp3~3552-3677~");
+			BoneAnimation.addLabel("humanWalk", "Audio_play", 4, "test", 1);
 			BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test2", 1);
 			
 			
@@ -245,7 +245,7 @@ package comp.human
 				}
 			);
 			
-			BoneAnimation.addLabel("humanRun", "Audio_play", 4.5, "test", 1);
+			BoneAnimation.addLabel("humanRun", "Audio_play", 4, "test", 1);
 			BoneAnimation.addLabel("humanRun", "Audio_play", 1, "test2", 1);
 			
 			ta = 10;
@@ -284,6 +284,10 @@ package comp.human
 					rightForearmY:[a, a]
 				}
 			);
+			
+			Audio.load("jump", "assets/sound/sounds.mp3~8986-9346~");
+			BoneAnimation.addLabel("humanJump", "Audio_play", 0.9 , "jump", 1);
+			
 			BoneAnimation.define("humanFall", 4,
 				{
 					torsoY:[ t, t],
