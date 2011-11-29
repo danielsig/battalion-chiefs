@@ -21,7 +21,7 @@ package com.battalion.audio
 	public final class AudioPlayer 
 	{
 		
-		public static const SAMPLES_PER_CALLBACK:int = 2048; // Should be >= 2048 && <= 8192
+		public static const SAMPLES_PER_CALLBACK:int = 8192; // Should be >= 2048 && <= 8192
 		
 		/**
 		 * If true, the panning effect will be a delay between the left and right channels.
@@ -106,6 +106,9 @@ package com.battalion.audio
 			_p = _start = _data._start * 705.6;
 			if (_data._end == Number.MAX_VALUE) _end = uint.MAX_VALUE;
 			else _end = _data._end * 705.6;
+			
+			_start -= _start % 8;
+			_end -= _end % 8;
 		}
 		/**
 		 * The number of loops to perform, 0 plays forever, 1 plays once, 2 plays twice etc.
@@ -259,6 +262,7 @@ package com.battalion.audio
 				_playing = _sampling = true;
 				_sound.addEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				_channel = _sound.play(0, 0, _transform);
+				var sple : int = 5;
 			}
 		}
 		/**
@@ -356,6 +360,10 @@ package com.battalion.audio
 					else
 					{
 						e.data.writeDouble(_data._bytes.readDouble());
+						/*var bytesToWrite : uint = _data._bytes.bytesAvailable;
+						if (bytesToWrite >> 3 > i + 1) bytesToWrite = (i + 1) << 3;
+						i -= (bytesToWrite >> 3) - 1;
+						e.data.writeBytes(_data._bytes, e.data.position, bytesToWrite);*/
 					}
 					phase += speed;
 					if (phase >= 1 || phase <= -1)

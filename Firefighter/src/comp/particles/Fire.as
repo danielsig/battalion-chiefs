@@ -14,7 +14,7 @@ package comp.particles
 		
 		private static function init() : Boolean
 		{
-				Audio.load("fireburn", "assets/sound/sounds.mp3~850-2383~");
+				Audio.load("fireburn", "assets/sound/sounds.mp3~852-2383~");
 				Animation.load("FireAnimation", "assets/img/fire.png~0-80~");
 				Animation.addLabel("FireAnimation", "destroyer", 80);
 				Animation.addLabel("FireAnimation", "shrinkFire", 50);
@@ -95,18 +95,6 @@ package comp.particles
 					_gen.destroy();
 					return;
 				}
-				
-				if (!_nowEmitting && _gen.emitting)
-				{
-					sendMessage("Audio_play", "fireburn");
-					_nowEmitting = true;
-				}
-				else if (_nowEmitting && !_gen.emitting)
-				{
-					sendMessage("Audio_stop");
-					_nowEmitting = false;
-				}
-
 				_emitting = false;
 			}
 			if (!_nowEmitting && _gen.emitting)
