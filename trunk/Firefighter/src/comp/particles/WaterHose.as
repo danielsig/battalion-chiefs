@@ -71,6 +71,7 @@ package comp.particles
 			
 			if (!_emitting && _gen.emitting)
 			{
+				gameObject.audio.volume = 0.1;
 				sendMessage("Audio_play", "hose");
 				_emitting = true;
 			}
