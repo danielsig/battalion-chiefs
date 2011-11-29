@@ -1,5 +1,6 @@
 package com.battalion.audio 
 {
+	import flash.events.Event;
 	import flash.events.SampleDataEvent;
 	import flash.media.Sound;
 	import flash.media.SoundChannel;
@@ -32,6 +33,7 @@ package com.battalion.audio
 		 */
 		public static var headphonesEffect : Number = 512;
 		private static var _players : Vector.<AudioPlayer> = new Vector.<AudioPlayer>();
+		private static var _mute : SoundTransform = new SoundTransform(0, 0);
 		/**
 		 * TimeScale to apply to all AudioPlayers.
 		 */
@@ -61,6 +63,8 @@ package com.battalion.audio
 		
 		private var _sound:Sound = null;
 		private var _channel:SoundChannel = null;
+		private var _playing : Boolean = false;
+		private var _sampling : Boolean = false;
 
 		public function get isPlaying() : Boolean
 		{
@@ -89,6 +93,8 @@ package com.battalion.audio
 		
 		/**
 		 * The AudioData to play, set this to play a different audio.
+		 * Note, every time you assign an audioData, the playerhead will
+		 * return to the beginning of the audio.
 		 */
 		public function get audioData() : AudioData
 		{
@@ -97,7 +103,7 @@ package com.battalion.audio
 		public function set audioData(value : AudioData) : void
 		{
 			_data = value;
-			_start = _data._start * 705.6;
+			_p = _start = _data._start * 705.6;
 			if (_data._end == Number.MAX_VALUE) _end = uint.MAX_VALUE;
 			else _end = _data._end * 705.6;
 		}
@@ -247,9 +253,10 @@ package com.battalion.audio
 		 */
 		public function play() : void
 		{
-			if (!_channel && _data)
+			if (!_playing && _data)
 			{
 				if (_reverse && _loops > 0) _loops++;
+				_playing = _sampling = true;
 				_sound.addEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				_channel = _sound.play(0, 0, _transform);
 			}
@@ -259,15 +266,39 @@ package com.battalion.audio
 		 */
 		public function stop() : void
 		{
+			if (_sampling)
+			{
+				_sampling = false;
+				_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
+			}
 			if (_channel)
 			{
+				_channel.soundTransform = _mute;
 				_channel.stop();
-				_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				_channel = null;
 			}
+			_playing = false;
 		}
-		private function audioFeed(e:SampleDataEvent) : void
+		private function soundComplete(e : Event) : void
 		{
+			_channel.removeEventListener(Event.SOUND_COMPLETE, soundComplete);
+			_playing = false;
+			_channel = null;
+		}
+		private function audioFeed(e : SampleDataEvent) : void
+		{
+			if (!_playing)
+			{
+				_sampling = false;
+				_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
+				if (_channel)
+				{
+					_channel.soundTransform = _mute;
+					_channel.stop();
+					_channel = null;
+				}
+				return;
+			}
 			var end : Number = Math.min(_end, _data._bytes.length);
 			_data._bytes.position = _p;
 			var i : int = SAMPLES_PER_CALLBACK;
@@ -283,8 +314,15 @@ package com.battalion.audio
 					_data._bytes.position = reverse ? end : _start;
 					if (_loops > 0 && _loops-- == 1)
 					{
+						_p = _data._bytes.position;
+						do
+						{
+							e.data.writeDouble(0);
+						}
+						while (i--);
+						_sampling = false;
 						_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
-						_channel = null;
+						if (_channel) _channel.addEventListener(Event.SOUND_COMPLETE, soundComplete);
 						return;
 					}
 				}
@@ -296,13 +334,21 @@ package com.battalion.audio
 						var pos : uint = _data._bytes.position;
 						
 						_data._bytes.position = pos - (((_pan * headphonesEffect) >>> 3) << 3);
-						if (_data._bytes.position >= end - 8) _data._bytes.position -= (end - _start) - 8;
-						else if (_data._bytes.position < _start) _data._bytes.position += (end - _start) - 8;
+						if (_data._bytes.position >= end - 8)
+						{
+							if (_data._bytes.position >= _data._bytes.length) _data._bytes.position = _data._bytes.length;
+							_data._bytes.position -= (end - _start) - 8;
+						}
+						else if (_data._bytes.position < _start) _data._bytes.position += (end - _start) - 16;
 						e.data.writeFloat(_data._bytes.readFloat());
 						
 						_data._bytes.position = pos + (((_pan * headphonesEffect) >>> 3) << 3);
-						if (_data._bytes.position >= end - 8) _data._bytes.position -= (end - _start) - 8;
-						else if (_data._bytes.position < _start) _data._bytes.position += (end - _start) - 8;
+						if (_data._bytes.position >= end - 8)
+						{
+							if (_data._bytes.position >= _data._bytes.length) _data._bytes.position = _data._bytes.length;
+							_data._bytes.position -= (end - _start) - 8;
+						}
+						else if (_data._bytes.position < _start) _data._bytes.position += (end - _start) - 16;
 						e.data.writeFloat(_data._bytes.readFloat());
 						
 						_data._bytes.position = pos + 8;
@@ -321,6 +367,11 @@ package com.battalion.audio
 					{
 						_data._bytes.position -= 8 * direction;
 					}
+				}
+				else if(_data._bytes.length > 7)
+				{
+					_data._bytes.position = 0;
+					e.data.writeDouble(_data._bytes.readDouble());
 				}
 				else
 				{

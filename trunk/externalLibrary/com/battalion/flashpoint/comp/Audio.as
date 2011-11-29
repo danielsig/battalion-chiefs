@@ -132,14 +132,21 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 		{
 			_player.loops = loops;
 			_playing = true;
-			if (soundName && _soundName != soundName)
+			if (soundName)
 			{
-				CONFIG::debug
+				if (_soundName != soundName)
 				{
-					if (!_sounds.hasOwnProperty(soundName)) throw new Error("The sound you are trying to play has not been loaded.");
+					CONFIG::debug
+					{
+						if (!_sounds.hasOwnProperty(soundName)) throw new Error("The sound you are trying to play has not been loaded.");
+					}
+					_soundName = soundName;
+					_player.audioData = _sounds[soundName];
 				}
-				_soundName = soundName;
-				_player.audioData = _sounds[soundName];
+				else
+				{
+					_player.stop();
+				}
 				_player.position = 0;
 				_player.play();
 			}
@@ -166,10 +173,10 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 		{
 			if (_playing)
 			{
-				var dist : Number = _transform.x - audioListener.x;
+				var dist : Number = _transform.gx - audioListener.x;
 				_player.panning = dist * 0.002 * panningMultiplier / audioListener.scale;
 				if (dist < 0) dist = -dist;
-				var distY : Number = _transform.y - audioListener.y;
+				var distY : Number = _transform.gy - audioListener.y;
 				dist += (distY < 0 ? -distY : distY);
 				var volumeFactor : Number = ((1 - listenerZoomFactor) + listenerZoomFactor * audioListener.scale);
 				_player.volume = (1 - dist * volumeFalloff * (0.5 - (2 / (2 + audioListener.scale)))) / volumeFactor;

@@ -35,6 +35,7 @@ package com.battalion.flashpoint.comp
 		private var _multiplier : Number = 1;
 		private var _multiplierChangeAmount : Number = 0;
 		private var _messages : Dictionary = null;
+		private var _prevFrame : Number = 0;
 		
 		/** @private **/
 		public function onDestroy() : Boolean
@@ -388,16 +389,29 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					if (a2 - a1 < -180) a1 -= 360;
 					_bones[boneName].rotation += (a1 * floorRatio + a2  * ceilRatio - _bones[boneName].rotation) * _multiplier;
 				}
-				var curFrame : Number = _p * _length;
-				var preFrame : Number = curFrame - (step * _length);
-				
-				for (var fr : Object in _messages)
+				if (_playback > 0)
 				{
-					if (curFrame > fr && preFrame < fr)
+					if (currentFrame < _prevFrame) _prevFrame = 0;
+					for (var fr : Object in _messages)
 					{
-						sendMessage.apply(this, _messages[fr]);
+						if (currentFrame >= fr && _prevFrame < fr)
+						{
+							sendMessage.apply(this, _messages[fr]);
+						}
 					}
 				}
+				else if(_playback < 0)
+				{
+					if (_prevFrame < currentFrame) _prevFrame = _length - 1;
+					for (fr in _messages)
+					{
+						if (currentFrame <= fr && _prevFrame > fr)
+						{
+							sendMessage.apply(this, _messages[fr]);
+						}
+					}
+				}
+				_prevFrame = currentFrame;
 			}
 		}
 		public function reverse() : void

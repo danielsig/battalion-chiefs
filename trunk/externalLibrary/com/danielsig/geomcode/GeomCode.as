@@ -402,7 +402,6 @@ package com.danielsig.geomcode
 		}
 		private function compile() : void
 		{
-			trace(_source);
 			_source = _source.replace(/\/\*([^\*]|\*[^\/])*\*\/|\/\/[^\n\r\v]*/g, "");//remove comments
 			_source = _source.replace(/[\t\n\r\v ]+/g, " ");//remove extra spaces
 			_source = _source.replace(/( ?)([^0-9a-zA-Z ])( ?)/g, removeSpace);//remove unnecessary spaces

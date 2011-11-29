@@ -35,7 +35,7 @@ package comp
 		
 		public function start() : void 
 		{
-			Physics.maxSize = 300;
+			Physics.maxSize = 600;
 			Physics.restingSpeed = 0.002;
 			Physics.gravityVector = new Point(0, 0.9);
 			Physics.iterations = 3;
@@ -58,6 +58,7 @@ package comp
 			var geomCode : GeomCodeRuntime = world.addComponent(GeomCodeRuntime) as GeomCodeRuntime;
 			world.addComponent(GeomCodePrimitives);
 			world.addComponent(GeomCodeDoors);
+			world.addComponent(GeomCodeStairs);
 			world.addComponent(GeomCodeProps);
 			geomCode.source = "assets/geomcode/Level1.gmc";
 			
@@ -86,8 +87,7 @@ package comp
 		public function tilesLoaded() : void 
 		{
 			var player : GameObject = PlayerController.createPlayer(4200, 1200);
-			//Renderer.sendGameObjectToFront(player);
-			//var human : GameObject = Civilian.createCivilian(4600, 1200);
+			//var human : GameObject = CivilianController.createCivilian(6200, 400);
 		}
 	}
 }

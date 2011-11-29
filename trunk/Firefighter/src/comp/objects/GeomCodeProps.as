@@ -42,8 +42,6 @@ package comp.objects
 			var col : BoxCollider = tv.addComponent(BoxCollider) as BoxCollider;
 			col.dimensions = new Point(128, 128);
 			col.layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_FIRE;
-			/*var body : Rigidbody = tv.addComponent(Rigidbody) as Rigidbody;
-			body.mass = 10;*/
 		}
 	}
 }
