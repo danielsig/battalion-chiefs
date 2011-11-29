@@ -10,7 +10,17 @@ package comp.particles
 	 */
 	public final class WaterHose extends Component implements IExclusiveComponent 
 	{
+		private static var _init : Boolean = init();
 		
+		private static function init() : Boolean
+		{
+			Audio.load("hose", "assets/sound/sounds.mp3~0-750~");
+			Animation.load("WaterAnimation", "assets/img/water.png~0-71~");
+			Animation.addLabel("WaterAnimation", "destroyer", 71);
+			Animation.load("SteamAnimation", "assets/img/steam.png~0-62~");
+			Animation.addLabel("SteamAnimation", "destroyer", 62);
+			return true;
+		}
 		public static function createWaterHose(x : Number = 0, y : Number = 0, parent : GameObject = null) : GameObject
 		{
 			var hose : GameObject = new GameObject("waterHose", parent, WaterHose, ParticleGenerator);
@@ -24,19 +34,13 @@ package comp.particles
 		private var _gen : ParticleGenerator;
 		private var _tr : Transform;
 		private var _prev : Renderer;
-		private static var _init : Boolean = true;
+		
+		private var _emitting : Boolean = false;
 		
 		public function awake() : void
 		{
+			requireComponent(Audio);
 			_tr = gameObject.transform;
-			if (_init)
-			{
-				_init = false;
-				Animation.load("WaterAnimation", "assets/img/water.png~0-71~");
-				Animation.addLabel("WaterAnimation", "destroyer", 71);
-				Animation.load("SteamAnimation", "assets/img/steam.png~0-62~");
-				Animation.addLabel("SteamAnimation", "destroyer", 62);
-			}
 			_gen = requireComponent(ParticleGenerator) as ParticleGenerator;
 			_gen.graphicsName = "WaterAnimation";
 			_gen.isAnimation = true;
@@ -64,6 +68,17 @@ package comp.particles
 			dir.y *= thrust;
 			_gen.velocity = dir;
 			_prev = null;
+			
+			if (!_emitting && _gen.emitting)
+			{
+				sendMessage("Audio_play", "hose");
+				_emitting = true;
+			}
+			else if (_emitting && !_gen.emitting)
+			{
+				sendMessage("Audio_stop");
+				_emitting = false;
+			}
 		}
 		
 	}
