@@ -21,7 +21,7 @@ package com.battalion.audio
 	public final class AudioPlayer 
 	{
 		
-		public static const SAMPLES_PER_CALLBACK:int = 8192; // Should be >= 2048 && <= 8192
+		public static const SAMPLES_PER_CALLBACK:int = 4000; // Should be >= 2048 && <= 8192
 		
 		/**
 		 * If true, the panning effect will be a delay between the left and right channels.
@@ -103,12 +103,12 @@ package com.battalion.audio
 		public function set audioData(value : AudioData) : void
 		{
 			_data = value;
-			_p = _start = _data._start * 705.6;
+			_start = _data._start * 705.6;
 			if (_data._end == Number.MAX_VALUE) _end = uint.MAX_VALUE;
 			else _end = _data._end * 705.6;
 			
-			_start -= _start % 8;
-			_end -= _end % 8;
+			_p = _start = (_start >>> 3) << 3;
+			_end = (_end >>> 3) << 3;
 			stop();
 		}
 		/**
@@ -254,15 +254,33 @@ package com.battalion.audio
 		}
 		/**
 		 * Play AudioData.
+		 * @param newData, the new AudioData to play
 		 */
-		public function play() : void
+		public function play(newData : AudioData = null) : void
 		{
+			if (newData)
+			{
+				_data = newData;
+				_p = _start = _data._start * 705.6;
+				if (_data._end == Number.MAX_VALUE) _end = uint.MAX_VALUE;
+				else _end = _data._end * 705.6;
+				
+				_start -= _start % 8;
+				_end -= _end % 8;
+				
+			}
 			if (!_playing && _data)
 			{
 				if (_reverse && _loops > 0) _loops++;
 				_playing = _sampling = true;
+				
 				_sound.addEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				_channel = _sound.play(0, 0, _transform);
+			}
+			else if (newData)
+			{
+				if (_reverse && _loops > 0) _loops++;
+				_playing = _sampling = true;
 			}
 		}
 		/**
@@ -285,9 +303,12 @@ package com.battalion.audio
 		}
 		private function soundComplete(e : Event) : void
 		{
-			_channel.removeEventListener(Event.SOUND_COMPLETE, soundComplete);
-			_playing = false;
-			_channel = null;
+			if (_channel)
+			{
+				_channel.removeEventListener(Event.SOUND_COMPLETE, soundComplete);
+				_playing = false;
+				_channel = null;
+			}
 		}
 		private function audioFeed(e : SampleDataEvent) : void
 		{
@@ -309,6 +330,7 @@ package com.battalion.audio
 			var phase : Number = 0;
 			var direction : int = 1 - int(reverse) * 2;
 			var speed : Number = timeScale * globalTimeScale * direction;
+			var bulkFeed : Boolean = timeScale * globalTimeScale == 1;
 			
 			while (i--)
 			{
@@ -357,15 +379,18 @@ package com.battalion.audio
 						
 						_data._bytes.position = pos + 8;
 					}
+					else if(bulkFeed && false)
+					{
+						var bytesToWrite : uint = _data._bytes.bytesAvailable;
+						if (bytesToWrite >> 3 > i + 1) bytesToWrite = (i + 1) << 3;
+						i -= (bytesToWrite >> 3) - 1;
+						e.data.writeBytes(_data._bytes, _data._bytes.position, bytesToWrite);
+						_data._bytes.position += bytesToWrite;
+						continue;
+					}
 					else
 					{
 						e.data.writeDouble(_data._bytes.readDouble());
-						/*var bytesToWrite : uint = _data._bytes.bytesAvailable;
-						if (bytesToWrite >> 3 > i + 1) bytesToWrite = (i + 1) << 3;
-						i -= (bytesToWrite >> 3) - 1;
-						e.data.writeBytes(_data._bytes, e.data.position, bytesToWrite);
-						_data._bytes.position += bytesToWrite;
-						continue;*/
 					}
 					phase += speed;
 					if (phase >= 1 || phase <= -1)

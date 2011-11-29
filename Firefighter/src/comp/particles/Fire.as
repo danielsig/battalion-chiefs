@@ -11,6 +11,7 @@ package comp.particles
 	public class Fire extends Component implements IExclusiveComponent 
 	{
 		private static var _init : Boolean = init();
+		private static var _available : int = 7;
 		
 		private static function init() : Boolean
 		{
@@ -78,7 +79,9 @@ package comp.particles
 		}
 		public function fixedUpdate() : void
 		{
-			_gen.emitting = FlameParticle.particleCounter < FlameParticle.MAX_PARTICLES && (world.cam.camera as Camera).inSight(gameObject.transform.x, gameObject.transform.y - 400, 600, 1200) && _emitting;
+			var inSight : Boolean = (world.cam.camera as Camera).inSight(gameObject.transform.x, gameObject.transform.y - 400, 600, 1200);
+			var hearable : Boolean = (world.cam.camera as Camera).inSight(gameObject.transform.x, gameObject.transform.y - 400, 1200, 1200);
+			_gen.emitting = FlameParticle.particleCounter < FlameParticle.MAX_PARTICLES && inSight && _emitting;
 			if (_heat.heat < _heat.flashPoint)
 			{
 				var collider : Collider = (gameObject.circleCollider || gameObject.boxCollider || gameObject.triangleCollider) as Collider;
@@ -97,13 +100,15 @@ package comp.particles
 				}
 				_emitting = false;
 			}
-			if (!_nowEmitting && _gen.emitting)
+			if (!_nowEmitting && hearable && _available)
 			{
-				sendMessage("Audio_play", "fireburn");
+				_available--;
+				sendMessage("Audio_gotoAndPlay", Math.random() * 1531, "fireburn");
 				_nowEmitting = true;
 			}
-			else if (_nowEmitting && !_gen.emitting)
+			else if (_nowEmitting && !hearable)
 			{
+				_available++;
 				sendMessage("Audio_stop");
 				_nowEmitting = false;
 			}

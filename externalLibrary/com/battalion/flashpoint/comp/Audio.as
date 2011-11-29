@@ -145,8 +145,6 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 				}
 				_soundName = soundName;
 				_player.audioData = _sounds[soundName];
-				
-				_player.position = 0;
 				_player.play();
 			}
 			else if (!_player.isPlaying)
