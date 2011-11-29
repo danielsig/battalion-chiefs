@@ -18,10 +18,10 @@ package comp.objects
 		
 		private static function init() : Boolean
 		{
-			Renderer.drawBox(GRAPHICS[0], 80, 140, 0xFF0000);
-			Renderer.drawBox(GRAPHICS[1], 80, 140, 0xFFFFFF);
-			Renderer.drawBox(GRAPHICS[2], 20, 140, 0x00FF00);
-			Renderer.drawBox(GRAPHICS[3], 20, 140, 0x0000FF);
+			Renderer.load(GRAPHICS[0], "assets/img/props.png~41~");
+			Renderer.load(GRAPHICS[1], "assets/img/props.png~41~");
+			Renderer.load(GRAPHICS[2], "assets/img/props.png~42~");
+			Renderer.load(GRAPHICS[3], "assets/img/props.png~42~");
 			return true;
 		}
 		private static var _counter : uint = 0;
@@ -44,7 +44,9 @@ package comp.objects
 			var graphics : Renderer = door.addComponent(Renderer) as Renderer;
 			graphics.setBitmapByName(GRAPHICS[params.dir]);
 			graphics.sendToBack();
-			if (params.dir > 1) graphics.offset = new Matrix(1, 0, 0, 1, ((params.dir * 2) - 5) * 40);
+			
+			if (params.dir > 1) graphics.setOffset(((params.dir * 2) - 5) * 40 -5 , -11, 1.3);
+			else graphics.setOffset(0 , -12, 1.3);
 			
 			if (params.other && params.other.portal)
 			{
