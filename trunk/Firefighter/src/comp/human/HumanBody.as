@@ -158,9 +158,10 @@ package comp.human
 				}
 			);
 			
-			Audio.load("test", "assets/sound/samus.mp3~9940-99999~");
+			Audio.load("test", "assets/sound/sounds.mp3~2934-3398~");
+			Audio.load("test2", "assets/sound/sounds.mp3~3399-3662~");
 			BoneAnimation.addLabel("humanWalk", "Audio_play", 4.5, "test", 1);
-			BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test", 1);
+			BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test2", 1);
 			
 			
 			ta = 16;
