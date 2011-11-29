@@ -40,6 +40,7 @@ package comp.objects
 			portal.locked = params.locked;
 			portal.strength = params.strength;
 			portal.target = world.player.transform;
+			(door.addComponent(DoorSounds) as DoorSounds).direction = params.dir;
 			
 			var graphics : Renderer = door.addComponent(Renderer) as Renderer;
 			graphics.setBitmapByName(GRAPHICS[params.dir]);

@@ -25,6 +25,7 @@ package com.battalion.flashpoint.comp
 		public static var listenerZoomFactor : Number = 1;
 		
 		public var volume : Number = 1;
+		public var panOffset : Number = 0;
 		
 		private var _player : AudioPlayer = new AudioPlayer();
 		private var _soundName : String;
@@ -171,7 +172,7 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 			if (_playing)
 			{
 				var dist : Number = _transform.gx - audioListener.x;
-				_player.panning = dist * 0.002 * panningMultiplier / audioListener.scale;
+				_player.panning = panOffset + dist * 0.002 * panningMultiplier / audioListener.scale;
 				if (dist < 0) dist = -dist;
 				var distY : Number = _transform.gy - audioListener.y;
 				dist += (distY < 0 ? -distY : distY);
