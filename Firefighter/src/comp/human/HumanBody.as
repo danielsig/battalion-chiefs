@@ -285,7 +285,7 @@ package comp.human
 				}
 			);
 			
-			Audio.load("jump", "assets/sound/sounds.mp3~8986-9346~");
+			Audio.load("jump", "assets/sound/sounds.mp3~8986-9350~");
 			BoneAnimation.addLabel("humanJump", "Audio_play", 0.9 , "jump", 1);
 			
 			BoneAnimation.define("humanFall", 4,
@@ -407,6 +407,7 @@ package comp.human
 		
 		public function fixedUpdate() : void 
 		{
+			gameObject.torso.audio.volume = 1;
 			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.2);
 			if (points && points.length)
 			{
@@ -420,6 +421,7 @@ package comp.human
 					var leftFootAhead : Boolean = _animation.currentName == "humanidle2";
 					if (_movement > 0)
 					{
+						gameObject.torso.audio.volume = 0.5;
 						_rigidbody.addForceX((_facingLeft ? backSpeed : (_running ? runSpeed : speed)), ForceMode.ACCELLERATION);
 						_tr.scaleX = 1;
 						_animation.reversed = _facingLeft;
@@ -430,6 +432,7 @@ package comp.human
 					}
 					else if (_movement < 0)
 					{
+						gameObject.torso.audio.volume = 0.5;
 						_rigidbody.addForceX(-(!_facingLeft ? backSpeed : (_running ? runSpeed : speed)), ForceMode.ACCELLERATION);
 						_tr.scaleX = -1;
 						_animation.reversed = !_facingLeft;

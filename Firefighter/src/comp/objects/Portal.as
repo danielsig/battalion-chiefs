@@ -38,6 +38,8 @@ package comp.objects
 		
 		public function start() : void
 		{
+			requireComponent(Audio);
+			Audio.load("closeDoor", "assets/sound/sounds.mp3~2383-2933~");
 			Input.assignButton("openPortal", OPEN_KEY);
 			Input.assignButton("breakPortal", BREAK_KEY);
 		}
@@ -100,7 +102,10 @@ package comp.objects
 							world.cam.transform.y += otherPortal.gameObject.transform.y - target.y;
 							target.x = otherPortal.gameObject.transform.x;
 							target.y = otherPortal.gameObject.transform.y;
+							
 							otherPortal._canPort = false;
+							
+							sendMessage("Audio_play", "closeDoor", 1);
 							
 							//log(otherPortal.gameObject.name);
 						}
