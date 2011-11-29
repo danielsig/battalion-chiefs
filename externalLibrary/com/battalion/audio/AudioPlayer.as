@@ -287,7 +287,7 @@ package com.battalion.audio
 		}
 		private function audioFeed(e : SampleDataEvent) : void
 		{
-			if (!_playing)
+			if (!_playing || !_data || !_data.bytes)
 			{
 				_sampling = false;
 				_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
