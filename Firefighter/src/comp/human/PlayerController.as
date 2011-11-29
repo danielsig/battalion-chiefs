@@ -39,13 +39,15 @@ package comp.human
 			//HEAD
 			(gameObject.torso.head.addComponent(LookAtMouse) as LookAtMouse).passive = true;
 			
-			//HAND
+			//HANDS
+			//	right hand
 			var mouseLook : LookAtMouse = gameObject.torso.rightArm.addComponent(LookAtMouse) as LookAtMouse;
 			mouseLook.passive = false;
 			mouseLook.angleOffset = 50;
 			mouseLook.transitionMultiplier = 0.3;
 			mouseLook.lowerConstraints = -150;
 			mouseLook.upperConstraints = 0;
+			//	left hand
 			mouseLook = gameObject.torso.rightArm.rightForearm.addComponent(LookAtMouse) as LookAtMouse;
 			mouseLook.passive = false;
 			mouseLook.angleOffset = 90;

@@ -2,7 +2,7 @@ Lamp(type = 0)
 {
 	
 }
-TV(type = 0)
+TV(type = 0, mass = 1, inertia = 1)
 {
 	
 }

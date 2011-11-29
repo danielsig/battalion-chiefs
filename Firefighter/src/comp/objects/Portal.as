@@ -102,7 +102,7 @@ package comp.objects
 							target.y = otherPortal.gameObject.transform.y;
 							otherPortal._canPort = false;
 							
-							log(otherPortal.gameObject.name);
+							//log(otherPortal.gameObject.name);
 						}
 					}
 					if (locked)

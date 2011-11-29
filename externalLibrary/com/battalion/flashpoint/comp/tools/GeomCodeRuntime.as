@@ -8,7 +8,7 @@ package com.battalion.flashpoint.comp.tools
 	 * Use this component to run GeomCode within FlashPoint.
 	 * @author Battalion Chiefs
 	 */
-	public final class GeomCodeRuntime extends Component implements IExclusiveComponent 
+	public final class GeomCodeRuntime extends Component implements IExclusiveComponent
 	{
 		
 		private static var _sources : Object = { };
@@ -90,13 +90,13 @@ package com.battalion.flashpoint.comp.tools
 		{
 			if (discrete)
 			{
-				/*var gx : Number = obj.transform.gx;
-				var gy : Number = obj.transform.gy;
-				var ga : Number = obj.transform.globalRotation;*/
+				var gx : Number = obj.parent.transform.x;
+				var gy : Number = obj.parent.transform.y;
+				var ga : Number = obj.parent.transform.rotation;
 				obj.parent = null;
-				/*obj.transform.x = gx;
-				obj.transform.y = gy;
-				obj.transform.rotation = ga;*/
+				obj.transform.x += gx;
+				obj.transform.y += gy;
+				obj.transform.rotation += ga;
 			}
 			if (obj.density || obj.massDistribution || obj.mass || obj.inertia)
 			{

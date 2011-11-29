@@ -158,8 +158,9 @@ package comp.human
 				}
 			);
 			
-			//Audio.load("test", "assets/sound/samus.mp3");
-			//BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test");
+			Audio.load("test", "assets/sound/samus.mp3~9940-99999~");
+			BoneAnimation.addLabel("humanWalk", "Audio_play", 4.5, "test", 1);
+			BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test", 1);
 			
 			
 			ta = 16;
@@ -242,6 +243,9 @@ package comp.human
 					rightForearmY:[a, a, a, a, a, a, a]
 				}
 			);
+			
+			BoneAnimation.addLabel("humanRun", "Audio_play", 4.5, "test", 1);
+			BoneAnimation.addLabel("humanRun", "Audio_play", 1, "test", 1);
 			
 			ta = 10;
 			t = -TORSO_HALF_HEIGHT;
@@ -398,7 +402,7 @@ package comp.human
 		
 		public function fixedUpdate() : void 
 		{
-			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.01);
+			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.2);
 			if (points && points.length)
 			{
 				if (_inAir)
@@ -431,13 +435,14 @@ package comp.human
 					}
 					else
 					{
-						//grounded and not moving
+						//grounded and not moving, but the human is not in an idle pose
 						if (_animation.currentName != "humanIdle1" && _animation.currentName != "humanIdle2")
 						{
 							_animation.transitionTime = 200;
 							if (leftFootAhead || (_animation.playhead > 6.5 || _animation.playhead < 3.5)) _animation.play("humanIdle2");
 							else _animation.play("humanIdle1");
 							gameObject.torso.head.transform.y = -TORSO_HALF_HEIGHT;
+							//gameObject.torso.sendMessage("Audio_stop");
 						}
 					}
 				}

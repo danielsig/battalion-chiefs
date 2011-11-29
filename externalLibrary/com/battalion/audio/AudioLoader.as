@@ -32,7 +32,32 @@ package com.battalion.audio
 		{
 			return _data;
 		}
+		/**
+		 * Load an AudioData object
+		 * @param	url, the url of the audio file
+		 * @param	startInMilliseconds, the millisecond in the file where the resulting AudioData will start
+		 * @param	endInMilliseconds, the millisecond in the file where the resulting AudioData will end
+		 */
+		public static function load(url : String, startInMilliseconds : uint, endInMilliseconds : uint) : AudioLoader
+		{
+			return new AudioLoader(url + "~" + startInMilliseconds + "-" + endInMilliseconds + "~");
+		}
 		
+		/**
+		 * Loads an AudioData from an url.
+		 * You can specify a range inside the audio file, that the
+		 * AudioData should span using the folowing url syntax:
+			 * "myMP3file.mp3~start-end~"
+		 * Where the start is an integer reprisenting the beginning
+		 * of the AudioData to load in milliseconds, and the end is
+		 * an integer reprisenting the end of the AudioData to load
+		 * in milliseconds.
+		 * Or you can just use the static method <code>Load()</code>
+		 * 
+		 * @see #load()
+		 * 
+		 * @param	url, the url of the audio file
+		 */
 		public function AudioLoader(url : String)
 		{
 			//identifying the range
@@ -42,8 +67,8 @@ package com.battalion.audio
 			{
 				var range : String = url.slice(tildeIndex1+1, tildeIndex2);
 				var delimIndex : int = range.indexOf("-");
-				var start : Number = Number(range.slice(0, delimIndex));
-				var end : Number = Number(range.slice(delimIndex + 1));
+				var start : Number = Number(range.slice(0, delimIndex)) / 2;
+				var end : Number = Number(range.slice(delimIndex + 1)) / 2;
 				url = url.slice(0, tildeIndex1);
 			}
 			else

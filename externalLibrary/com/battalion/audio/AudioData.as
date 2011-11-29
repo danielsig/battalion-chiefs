@@ -2,6 +2,7 @@ package com.battalion.audio
 {
 	import flash.media.ID3Info;
 	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
 	/**
 	 * An AudioData object holds information about an audio file.
 	 * This class was made to be used alongside the AudioLoader
@@ -28,6 +29,10 @@ package com.battalion.audio
 		internal var _end : Number;
 		/** @private **/
 		internal var _length : Number;
+		
+		private var _nextWithSameBytes : AudioData = null;
+		private var _prevWithSameBytes : AudioData = null;
+		private static var _heads : Dictionary = new Dictionary();
 		
 		/**
 		 * The length of the final Audio in milliseconds.
@@ -83,8 +88,12 @@ package com.battalion.audio
 		{
 			var bytes : ByteArray = new ByteArray();
 			var pos : uint = _bytes.position;
-			_bytes.position = 0;
-			bytes.writeBytes(_bytes);
+			
+			if (_start < _bytes.length)
+			{
+				_bytes.position = _start;
+				bytes.writeBytes(_bytes);
+			}
 			_bytes.position = pos;
 			return bytes;
 		}
@@ -99,11 +108,22 @@ package com.battalion.audio
 		
 		/**
 		 * Call this method when you're done using this AudioData object.
+		 * The memory that the original audio data occupies will not be garbage collected until after
+		 * calling dispose() on every AudioData object that references that same original audio data.
+		 * In other words, let's say you load an audio between the file "bob.mp3"
 		 */
 		public function dispose() : void
 		{
-			_bytes.clear();
-			_bytes = null;
+			if (_bytes)
+			{
+				if (!_heads[_bytes]) _bytes.clear();
+				else
+				{
+					if (_nextWithSameBytes) _nextWithSameBytes._prevWithSameBytes = _prevWithSameBytes;
+					if (_prevWithSameBytes) _prevWithSameBytes._nextWithSameBytes = _nextWithSameBytes;
+				}
+				_bytes = null;
+			}
 			_id3 = null;
 		}
 		

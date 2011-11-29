@@ -21,6 +21,14 @@ Door(strength = 20, locked = false, dir = 0, other = null)
 {
 	
 }
+LeftStairs()
+{
+	
+}
+RightStairs()
+{
+	
+}
 
 Level1()
 {
@@ -78,6 +86,8 @@ Level1()
 		Door(pos = (5714, 1010), dir = 2);
 		Door(pos = (2654, 1651), other = prev, dir = 3);
 		
+		
+		LeftStairs(pos = (5987, 1017));
 		//TVtest
 		TV( pos = (4400, 1200));
 	}
