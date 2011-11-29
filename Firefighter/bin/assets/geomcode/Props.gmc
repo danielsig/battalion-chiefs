@@ -6,3 +6,31 @@ TV(type = 0, mass = 1, inertia = 1)
 {
 	
 }
+Closet(type = 0)
+{
+	
+}
+Bed(type = 0)
+{
+	
+}
+Chair(type = 0)
+{
+	
+}
+Painting(type = 0)
+{
+	
+}
+Fridge(type = 0)
+{
+	
+}
+Table(type = 0)
+{
+	
+}
+Sofa(type = 0)
+{
+	
+}
