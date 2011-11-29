@@ -136,19 +136,16 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 			_playing = true;
 			if (soundName)
 			{
-				if (_soundName != soundName)
+				CONFIG::debug
 				{
-					CONFIG::debug
+					if (_soundName != soundName)
 					{
 						if (!_sounds.hasOwnProperty(soundName)) throw new Error("The sound you are trying to play has not been loaded.");
 					}
-					_soundName = soundName;
-					_player.audioData = _sounds[soundName];
 				}
-				else
-				{
-					_player.stop();
-				}
+				_soundName = soundName;
+				_player.audioData = _sounds[soundName];
+				
 				_player.position = 0;
 				_player.play();
 			}

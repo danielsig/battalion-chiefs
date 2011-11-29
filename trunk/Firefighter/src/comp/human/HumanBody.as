@@ -158,8 +158,8 @@ package comp.human
 				}
 			);
 			
-			Audio.load("test", "assets/sound/sounds.mp3~2934-3398~");
-			Audio.load("test2", "assets/sound/sounds.mp3~3399-3662~");
+			Audio.load("test", "assets/sound/sounds.mp3~3199-3266~");
+			Audio.load("test2", "assets/sound/sounds.mp3~3266-3500~");
 			BoneAnimation.addLabel("humanWalk", "Audio_play", 4.5, "test", 1);
 			BoneAnimation.addLabel("humanWalk", "Audio_play", 1, "test2", 1);
 			
@@ -246,7 +246,7 @@ package comp.human
 			);
 			
 			BoneAnimation.addLabel("humanRun", "Audio_play", 4.5, "test", 1);
-			BoneAnimation.addLabel("humanRun", "Audio_play", 1, "test", 1);
+			BoneAnimation.addLabel("humanRun", "Audio_play", 1, "test2", 1);
 			
 			ta = 10;
 			t = -TORSO_HALF_HEIGHT;

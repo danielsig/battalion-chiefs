@@ -109,6 +109,7 @@ package com.battalion.audio
 			
 			_start -= _start % 8;
 			_end -= _end % 8;
+			stop();
 		}
 		/**
 		 * The number of loops to perform, 0 plays forever, 1 plays once, 2 plays twice etc.
@@ -262,7 +263,6 @@ package com.battalion.audio
 				_playing = _sampling = true;
 				_sound.addEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				_channel = _sound.play(0, 0, _transform);
-				var sple : int = 5;
 			}
 		}
 		/**
@@ -293,7 +293,7 @@ package com.battalion.audio
 		{
 			if (!_playing || !_data || !_data.bytes)
 			{
-				_sampling = false;
+				_playing = _sampling = false;
 				_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 				if (_channel)
 				{
@@ -324,7 +324,7 @@ package com.battalion.audio
 							e.data.writeDouble(0);
 						}
 						while (i--);
-						_sampling = false;
+						_sampling = _playing = false;
 						_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
 						if (_channel) _channel.addEventListener(Event.SOUND_COMPLETE, soundComplete);
 						return;
@@ -363,7 +363,9 @@ package com.battalion.audio
 						/*var bytesToWrite : uint = _data._bytes.bytesAvailable;
 						if (bytesToWrite >> 3 > i + 1) bytesToWrite = (i + 1) << 3;
 						i -= (bytesToWrite >> 3) - 1;
-						e.data.writeBytes(_data._bytes, e.data.position, bytesToWrite);*/
+						e.data.writeBytes(_data._bytes, e.data.position, bytesToWrite);
+						_data._bytes.position += bytesToWrite;
+						continue;*/
 					}
 					phase += speed;
 					if (phase >= 1 || phase <= -1)
