@@ -50,6 +50,35 @@ package comp.objects
 			Renderer.load("closet0", "assets/img/props.png~32~")
 			Renderer.load("closet1", "assets/img/props.png~12~")
 			Renderer.load("closet2", "assets/img/props.png~13~")
+			Renderer.load("closet3", "assets/img/props.png~33~")
+			Renderer.load("closet4", "assets/img/props.png~34~")
+			Renderer.load("closet5", "assets/img/props.png~35~")
+			Renderer.load("misc0", "assets/img/props.png~36~")
+			Renderer.load("misc1", "assets/img/props.png~37~")
+			Renderer.load("misc2", "assets/img/props.png~38~")
+			Renderer.load("misc3", "assets/img/props.png~39~")
+			Renderer.load("misc4", "assets/img/props.png~40~")
+			Renderer.load("misc5", "assets/img/props.png~43~")
+			Renderer.load("misc6", "assets/img/props.png~44~")
+			Renderer.load("misc7", "assets/img/props.png~45~")
+			Renderer.load("misc8", "assets/img/props.png~46~")
+			Renderer.load("misc9", "assets/img/props.png~47~")
+			Renderer.load("misc10", "assets/img/props.png~48~")
+			Renderer.load("misc11", "assets/img/props.png~49~")
+			Renderer.load("misc12", "assets/img/props.png~50~")
+			Renderer.load("misc13", "assets/img/props.png~51~")
+			Renderer.load("misc14", "assets/img/props.png~52~")
+			Renderer.load("misc15", "assets/img/props.png~53~")
+			Renderer.load("misc16", "assets/img/props.png~54~")
+			Renderer.load("misc17", "assets/img/props.png~55~")
+			Renderer.load("misc18", "assets/img/props.png~56~")
+			Renderer.load("misc19", "assets/img/props.png~57~")
+			Renderer.load("misc20", "assets/img/props.png~58~")
+			Renderer.load("misc21", "assets/img/props.png~59~")
+			Renderer.load("misc22", "assets/img/props.png~60~")
+			Renderer.load("misc23", "assets/img/props.png~61~")
+			Renderer.load("misc24", "assets/img/props.png~62~")
+			Renderer.load("misc25", "assets/img/props.png~63~")
 			return true;
 		}
 		
@@ -125,6 +154,18 @@ package comp.objects
 			col.layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_FIRE;
 			switch(params.type)
 			{
+				case 5:
+					ren.setOffset(0, 0, 1.4);
+					col.dimensions = new Point(128, 90);
+					break;
+				case 4:
+					ren.setOffset(0, 0, 1.4);
+					col.dimensions = new Point(128, 90);
+					break;
+				case 3:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 90);
+					break;
 				case 2:
 					ren.setOffset(0, 0);
 					col.dimensions = new Point(128, 90);
@@ -323,7 +364,147 @@ package comp.objects
 			}
 		}
 		
-		
+		//{::::::::::::::::::::::::: Misc ::::::::::::::::::::::::::
+		public function geomMisc(misc : GameObject, params : Object) : void
+		{
+			misc.addComponent(Heat);
+			var ren : Renderer = misc.addComponent(Renderer) as Renderer;
+			ren.setBitmapByName("misc" + params.type);
+			ren.sendToBack();
+			var col : BoxCollider = misc.addComponent(BoxCollider) as BoxCollider;
+			col.layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_FIRE;
+			/*
+			 * 1  - Tecup
+			 * 2  - BeerBottle
+			 * 3  - CoffeeMachine
+			 * 4  - Computer1
+			 * 5  - Computer2
+			 * 6  - Microwave1
+			 * 7  - Microwave2
+			 * 8  - Mirror1
+			 * 9  - ComputerMonitor
+			 * 10 - Plant
+			 * 11 - Toaster
+			 * 12 - ComputerMonitorSide
+			 * 13 - WindowOpen
+			 * 14 - WindowClosed
+			 * 15 - Mirror2
+			 * 16 - Mirror3
+			 * 17 - ShoeStand1
+			 * 18 - ShoeStand2
+			 * 19 - Sink
+			 * 20 - Toilet
+			 * 21 - WindowOutside
+			 * 22 - Tub
+			 * 23 - BedDouble1
+			 * 24 - BedDouble2
+			 * 25 - Shower
+			 * */
+			switch(params.type)
+			{
+				case 24:
+					ren.setOffset(0, 0, 1.6);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 23:
+					ren.setOffset(0, 0, 2.0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 22:
+					ren.setOffset(0, 0, 2.0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 21:
+					ren.setOffset(0, 0, 1.5);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 20:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 19:
+					ren.setOffset(0, 0, 0.6);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 18:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 17:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 16:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 15:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 14:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 13:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 12:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 11:
+					ren.setOffset(0, 0, 0.7);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 10:
+					ren.setOffset(0, 0, 0.6);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 9:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 8:
+					ren.setOffset(0, 0, 0.7);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 7:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 6:
+					ren.setOffset(0, 0, 0.7);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 5:
+					ren.setOffset(0, 0, 0.65);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 4:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 3:
+					ren.setOffset(0, 0, 0.5);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 2:
+					ren.setOffset(0, 0, 0.5);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 1:
+					ren.setOffset(0, 0, 0.3);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 0: 
+				default:
+					ren.setOffset(0, 0, 0.2);
+					col.dimensions = new Point(128, 128);
+					break;
+			}
+		}
 		
 		/*
 		//{::::::::::::::::::::::::: Closets ::::::::::::::::::::::::::

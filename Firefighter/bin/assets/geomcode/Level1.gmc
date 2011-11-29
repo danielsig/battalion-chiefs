@@ -92,8 +92,8 @@ Level1()
 		//TVtest
 		//Misc( pos = (4400, 1200));
 		//Misc( pos = (4500, 1200));
-		Misc( pos = (1890, 320), type = 20);
-		Misc( pos = (1930, 320), type = 20);
-		//Misc( pos = (4700, 1200), type = 22);
+		Misc( pos = (4400, 1200), type = 24);
+		Misc( pos = (4500, 1200), type = 25);
+		//Misc( pos = (4600, 1200), type = 23);
 	}
 }
