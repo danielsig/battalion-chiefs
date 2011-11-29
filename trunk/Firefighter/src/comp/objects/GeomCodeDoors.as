@@ -45,7 +45,15 @@ package comp.objects
 			graphics.setBitmapByName(GRAPHICS[params.dir]);
 			graphics.sendToBack();
 			
-			if (params.dir > 1) graphics.setOffset(((params.dir * 2) - 5) * 40 -5 , -11, 1.3);
+			if (params.dir > 1)
+			{
+				graphics.setOffset(((params.dir * 2) - 5) * 40 -5 , -11, 1.3);
+				if (params.dir == 3)
+				{
+					graphics.offset.a = -graphics.offset.a;
+					graphics.offset.tx += 12;
+				}
+			}
 			else graphics.setOffset(0 , -12, 1.3);
 			
 			if (params.other && params.other.portal)
