@@ -1,6 +1,7 @@
 package comp
 {
 	import comp.particles.*;
+	import comp.debug.*;
 	import comp.human.*;
 	import comp.objects.*;
 	import com.battalion.flashpoint.core.*;
@@ -86,6 +87,7 @@ package comp
 		}
 		public function tilesLoaded() : void 
 		{
+			MouseLocation.create();
 			var player : GameObject = PlayerController.createPlayer(4200, 1200);
 			//var human : GameObject = CivilianController.createCivilian(6200, 400);
 		}

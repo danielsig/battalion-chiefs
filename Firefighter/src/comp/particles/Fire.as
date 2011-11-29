@@ -49,7 +49,7 @@ package comp.particles
 		private var _heat : Heat;
 		private var _emitting : Boolean = true;
 		
-		private var _nowEmitting : Boolean = false;
+		private var _soundEffects : Boolean = false;
 		
 		private static var _fireMaterial : PhysicMaterial = new PhysicMaterial(0.0, 0.8);
 		
@@ -90,33 +90,44 @@ package comp.particles
 				if (gameObject.name == "fire")
 				{
 					gameObject.destroy();
+					_gen = null;
 					return;
 				}
 				else
 				{
 					destroy();
 					_gen.destroy();
+					_gen = null;
 					return;
 				}
 				_emitting = false;
 			}
-			if (!_nowEmitting && hearable && _available)
+			if (!_soundEffects && hearable && _available)
 			{
 				_available--;
 				sendMessage("Audio_gotoAndPlay", Math.random() * 1531, "fireburn");
-				_nowEmitting = true;
+				_soundEffects = true;
 			}
-			else if (_nowEmitting && !hearable)
+			else if (_soundEffects && !hearable)
 			{
 				_available++;
 				sendMessage("Audio_stop");
-				_nowEmitting = false;
+				_soundEffects = false;
 			}
 			
 		}
 		public function toggleFire() : void
 		{
 			_emitting = !_emitting;
+		}
+		public function onDestroy() : Boolean
+		{
+			if (_soundEffects)
+			{
+				_available++;
+				sendMessage("Audio_stop");
+			}
+			return false;
 		}
 	}
 
