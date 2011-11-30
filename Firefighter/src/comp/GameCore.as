@@ -64,7 +64,6 @@ package comp
 			geomCode.source = "assets/geomcode/Level1.gmc";
 			
 			geomCode.construct("Level1");
-			geomCode.construct("Table", {type:0, pos:new Point(4700, 1200)});
 			
 			
 			/*

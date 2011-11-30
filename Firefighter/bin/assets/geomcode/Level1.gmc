@@ -128,33 +128,46 @@ Level1()
 		Misc( pos = (6170, 2944), type = 23);
 		Lamp( pos = (6290, 3019), type = 0);
 		Closet( pos = (6031, 2989), type = 0);
-		Chair( pos = (5850, 3002), type = 0);
+		Misc( pos = (5850, 3015), type = 37);
 		Misc( pos = (5910, 3036), type = 3);
 		Table( pos = (5847, 2966), type = 1);
 		Misc( pos = (5850, 2950), type = 8);
 		
 		//Basement
+		Misc( pos = (1710, 1582), type = 31);
+		Misc( pos = (2500, 1656), type = 32);
+		Misc( pos = (2500, 1600), type = 33);
 		TV(pos = (2245, 1630), type = 1);
 		Sofa(pos = (2245, 1614), type = 5);
 		Closet( pos = (2095, 1644), type = 0);
 		Chair(pos = (1845, 1655), type = 4);
 		Closet(pos = (1700,1675), type = 1 , flipped = true);
+		Misc( pos = (1610, 1655), type = 36);
+		Table( pos = (1447, 1720), type = 0, flipped = true );
+		Misc( pos = (1447, 1660), type = 31);
+		Closet(pos = (1300, 1655), type = 3 );
 		
 		
 		/* ------------------- FLOOR 1 -------------------------- */
+		//FirstFloorHallway
+		Misc( pos = (4500, 1165), type = 35);
+		Misc( pos = (4580, 1165), type = 34);
+		Misc( pos = (4320, 1208), type = 39);
 		
         //Hallway
 		Misc( pos = (5040, 1865), type = 16);
-		Painting( pos = (4780, 1770), type = 1);
+		Misc( pos = (4780, 1770), type = 26);
        
        
         //Kitchen (Room 1)
         Table( pos = (7350, 2990), type = 0);
         Chair( pos = (7420, 3000), type = 0);
         Chair( pos = (7280, 3000), type = 0, flipped = true);
-        Fridge( pos = (7125, 2970), type = 0);
+        Fridge( pos = (7000, 2970), type = 0);
         Misc( pos = (7325, 2960), type = 10); 
         Misc( pos = (7375, 2960), type = 2); 
+		Misc( pos = (7125, 3005), type = 38); 
+		Misc( pos = (6925, 3035), type = 40); 
 		
 		//Bedroom (Room 2)
 		Misc( pos = (7330, 2300), type = 22);

@@ -18,7 +18,7 @@ Chair(type = 0, flipped = false)
 {
 	
 }
-Painting(type = 0)
+Painting(type = 0, flipped = false)
 {
 	
 }

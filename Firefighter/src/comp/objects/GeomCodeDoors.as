@@ -4,6 +4,7 @@ package comp.objects
 	import com.battalion.flashpoint.comp.Renderer;
 	import com.battalion.flashpoint.comp.tools.*;
 	import flash.geom.Matrix;
+	import comp.particles.Heat;
 	
 	/**
 	 * 
@@ -35,6 +36,7 @@ package comp.objects
 		public function geomDoor(door : GameObject, params : Object) : void
 		{
 			var portal : Portal = door.addComponent(Portal) as Portal;
+			portal.addComponent(Heat);
 			portal.height = 140;
 			portal.width = 100;
 			portal.locked = params.locked;
