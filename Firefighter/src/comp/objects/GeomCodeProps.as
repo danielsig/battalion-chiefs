@@ -171,12 +171,12 @@ package comp.objects
 					col.dimensions = new Point(128, 90);
 					break;
 				case 1:
-					ren.setOffset(0, 0);
+					ren.setOffset(0, 0, 0.8);
 					col.dimensions = new Point(128, 90);
 					break;
 				case 0: 
 				default:
-					ren.setOffset(0, 0);
+					ren.setOffset(0, 0, 1.2);
 					col.dimensions = new Point(128, 128);
 					break;
 			}
@@ -198,7 +198,7 @@ package comp.objects
 					col.dimensions = new Point(128, 128);
 					break;
 				case 3:
-					ren.setOffset(0, 0);
+					ren.setOffset(0, 0, 0.75);
 					col.dimensions = new Point(128, 128);
 					break;
 				case 2:
@@ -349,7 +349,7 @@ package comp.objects
 					col.dimensions = new Point(128, 128);
 					break;
 				case 2:
-					ren.setOffset(0, 0, 1.4);
+					ren.setOffset(0, 0, 1.3);
 					col.dimensions = new Point(128, 128);
 					break;
 				case 1:
@@ -374,31 +374,31 @@ package comp.objects
 			var col : BoxCollider = misc.addComponent(BoxCollider) as BoxCollider;
 			col.layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_FIRE;
 			/*
-			 * 1  - Tecup
-			 * 2  - BeerBottle
-			 * 3  - CoffeeMachine
-			 * 4  - Computer1
-			 * 5  - Computer2
-			 * 6  - Microwave1
-			 * 7  - Microwave2
-			 * 8  - Mirror1
-			 * 9  - ComputerMonitor
-			 * 10 - Plant
-			 * 11 - Toaster
-			 * 12 - ComputerMonitorSide
-			 * 13 - WindowOpen
-			 * 14 - WindowClosed
-			 * 15 - Mirror2
-			 * 16 - Mirror3
-			 * 17 - ShoeStand1
-			 * 18 - ShoeStand2
-			 * 19 - Sink
-			 * 20 - Toilet
-			 * 21 - WindowOutside
-			 * 22 - Tub
-			 * 23 - BedDouble1
-			 * 24 - BedDouble2
-			 * 25 - Shower
+			 * 0  - Tecup
+			 * 1  - BeerBottle
+			 * 2  - CoffeeMachine
+			 * 3  - Computer1
+			 * 4  - Computer2
+			 * 5  - Microwave1
+			 * 6  - Microwave2
+			 * 7  - Mirror1
+			 * 8  - ComputerMonitor
+			 * 9  - Plant
+			 * 10 - Toaster
+			 * 11 - ComputerMonitorSide
+			 * 12 - WindowOpen
+			 * 13 - WindowClosed
+			 * 14 - Mirror2
+			 * 15 - Mirror3
+			 * 16 - ShoeStand1
+			 * 17 - ShoeStand2
+			 * 18 - Sink
+			 * 19 - Toilet
+			 * 20 - WindowOutside
+			 * 21 - Tub
+			 * 22 - BedDouble1
+			 * 23 - BedDouble2
+			 * 24 - Shower
 			 * */
 			switch(params.type)
 			{
@@ -487,7 +487,7 @@ package comp.objects
 					col.dimensions = new Point(128, 128);
 					break;
 				case 3:
-					ren.setOffset(0, 0, 0.5);
+					ren.setOffset(0, 0, 0.47);
 					col.dimensions = new Point(128, 128);
 					break;
 				case 2:
