@@ -84,21 +84,25 @@ Level1()
 		
 		//Door inside the staircase - connected to the basement
 		Door(pos = (5714, 1010), dir = 2);
-		Door(pos = (2654, 1651), other = prev, dir = 3);
-		
+		Door(pos = (2650, 1650), other = prev, dir = 3);
 		
 		LeftStairs(pos = (5987, 1017));
 		
-		//OutsideWindows
+		//OutsideWindows and firetruck
 		Misc( pos = (1110, 320), type = 20);
 		Misc( pos = (1380, 320), type = 20);
 		Misc( pos = (1650, 320), type = 20);
 		Misc( pos = (1920, 320), type = 20);
+		Misc( pos = (2810, 320), type = 28);
 		
-		//SecondFloor
+		/* ------------------- FLOOR 2 -------------------------- */
+		
+		//SecondFloor Hallway
 		Misc( pos = (4320, 518), type = 17);
 		Misc( pos = (4080, 506), type = 9);
 		Painting( pos = (4500, 420), type = 1);
+		
+		
 		Sofa(pos = (4330, 2598), type = 2);
 		Painting( pos = (4331, 2510), type = 2);
 		Closet( pos = (4631, 2592), type = 4);
@@ -112,11 +116,16 @@ Level1()
 		Misc( pos = (6098, 1692), type = 1);
 		Sofa(pos = (5845, 1666), type = 3);
 		Painting( pos = (5845, 1615), type = 0);
+		
+		//Bathroom second floor
 		Misc( pos = (6285, 2323), type = 24);
 		Misc( pos = (5815, 2373), type = 18);
 		Misc( pos = (5815, 2290), type = 15);
-		Misc( pos = (5935, 2386), type = 19);
-		Closet( pos = (6131, 2375), type = 1);
+		Misc( pos = (5935, 2372), type = 19);
+		Closet( pos = (6061, 2375), type = 1);
+		Misc( pos = (6191, 2335), type = 29);
+		
+		
 		Misc( pos = (6170, 2944), type = 23);
 		Lamp( pos = (6290, 3019), type = 0);
 		Closet( pos = (6031, 2989), type = 0);
@@ -125,8 +134,50 @@ Level1()
 		Table( pos = (5847, 2966), type = 1);
 		Misc( pos = (5850, 2950), type = 8);
 		
+		//Basement
+		TV(pos = (2245, 1630), type = 1);
+		Sofa(pos = (2245, 1614), type = 5);
+		Closet( pos = (2095, 1644), type = 0);
+		Chair(pos = (1845, 1655), type = 4);
+		Closet(pos = (1700,1675), type = 1 , flipped = true);
 		
+		/* ------------------- FLOOR 1 -------------------------- */
+        //Hallway
+		Misc( pos = (5040, 1865), type = 16);
+		Painting( pos = (4780, 1770), type = 1);
+       
+       
+        //Kitchen (Room 1)
+        Table( pos = (7350, 2990), type = 0);
+        Chair( pos = (7420, 3000), type = 0);
+        Chair( pos = (7280, 3000), type = 0, flipped = true);
+        Fridge( pos = (7125, 2970), type = 0);
+        Misc( pos = (7325, 2960), type = 10); 
+        Misc( pos = (7375, 2960), type = 2); 
 		
+		//Bedroom (Room 2)
+		Misc( pos = (7330, 2300), type = 22);
+		Lamp( pos = (7450, 2380), type = 2);
+		Closet( pos = (6970, 2334), type = 5);
+        Closet( pos = (7120, 2388), type = 6);
+		Misc( pos = (7118, 2305), type = 25);
 		
+		 
+        //Bedroom (Room 3)
+        Painting( pos = (7380, 1650), type = 2);  
+        Bed( pos = (7385, 1690), type = 0, flipped = true);
+        Misc( pos = (7055, 1720), type = 9); 
+        Misc( pos = (6920, 1720), type = 9);
+        Table( pos = (7180, 1690), type = 2);
+        Misc( pos = (7180, 1670), type = 4);
+        Closet( pos = (6990, 1695), type = 4);
+       
+        //Toilet (Room 4)
+        Misc( pos = (7050, 900), type = 19); 
+        Misc( pos = (7380, 856), type = 21); 
+        Misc( pos = (7140, 900), type = 18);
+        Misc( pos = (7140, 785), type = 14); 
+        Misc( pos = (6950, 810), type = 20);
+		Misc( pos = (7231, 850), type = 30);
 	}
 }

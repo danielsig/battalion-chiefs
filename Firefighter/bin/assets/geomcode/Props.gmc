@@ -2,19 +2,19 @@ Lamp(type = 0)
 {
 	
 }
-TV(type = 0, mass = 1, inertia = 1)
+TV(type = 0)
 {
 	
 }
-Closet(type = 0)
+Closet(type = 0, flipped = false )
 {
 	
 }
-Bed(type = 0)
+Bed(type = 0, flipped = false)
 {
 	
 }
-Chair(type = 0)
+Chair(type = 0, flipped = false)
 {
 	
 }
