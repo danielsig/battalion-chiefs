@@ -35,7 +35,7 @@ Level1()
 	discrete
 	{
 		//Door outside - connected into the first floor
-		Door(pos = (2100, 370), dir = 0);
+		Door(pos = (2170, 370), dir = 0);
 		Door(pos = (4051, 1202), other = prev, dir = 2);
 		
 		//Door inside the first floor hallway - connected to the first appartment
@@ -71,11 +71,11 @@ Level1()
 		Door(pos = (5150, 2611), other = prev, dir = 3);
 		
 		//Door insde the second appartment - connected to the living room
-		Door(pos = (4180, 2611), dir = 0);
+		Door(pos = (4140, 2611), dir = 0);
 		Door(pos = (5714, 1714), other = prev, dir = 2);
 		
 		//Door insde the second appartment - connected to the bathroom
-		Door(pos = (4480, 2611), dir = 0);
+		Door(pos = (4500, 2611), dir = 0);
 		Door(pos = (5714, 2354), other = prev, dir = 2);
 		
 		//Door insde the second appartment - connected to the bedroom
@@ -89,11 +89,44 @@ Level1()
 		
 		LeftStairs(pos = (5987, 1017));
 		
-		//TVtest
-		//Misc( pos = (4400, 1200));
-		//Misc( pos = (4500, 1200));
-		Misc( pos = (4400, 1200), type = 24);
-		Misc( pos = (4500, 1200), type = 25);
-		//Misc( pos = (4600, 1200), type = 23);
+		//OutsideWindows
+		Misc( pos = (1110, 320), type = 20);
+		Misc( pos = (1380, 320), type = 20);
+		Misc( pos = (1650, 320), type = 20);
+		Misc( pos = (1920, 320), type = 20);
+		
+		//SecondFloor
+		Misc( pos = (4320, 518), type = 17);
+		Misc( pos = (4080, 506), type = 9);
+		Painting( pos = (4500, 420), type = 1);
+		Sofa(pos = (4330, 2598), type = 2);
+		Painting( pos = (4331, 2510), type = 2);
+		Closet( pos = (4631, 2592), type = 4);
+		Lamp( pos = (4761, 2636), type = 2);
+		Misc( pos = (5050, 2570), type = 7);
+		Fridge( pos = (6270, 1720), type = 1);
+		Table( pos = (6150, 1710), type = 0);
+		Chair(pos = (6075, 1740), type = 3);
+		Misc( pos = (6170, 1667), type = 6);
+		Misc( pos = (6110, 1692), type = 1);
+		Misc( pos = (6098, 1692), type = 1);
+		Sofa(pos = (5845, 1666), type = 3);
+		Painting( pos = (5845, 1615), type = 0);
+		Misc( pos = (6285, 2323), type = 24);
+		Misc( pos = (5815, 2373), type = 18);
+		Misc( pos = (5815, 2290), type = 15);
+		Misc( pos = (5935, 2386), type = 19);
+		Closet( pos = (6131, 2375), type = 1);
+		Misc( pos = (6170, 2944), type = 23);
+		Lamp( pos = (6290, 3019), type = 0);
+		Closet( pos = (6031, 2989), type = 0);
+		Chair( pos = (5850, 3002), type = 0);
+		Misc( pos = (5910, 3036), type = 3);
+		Table( pos = (5847, 2966), type = 1);
+		Misc( pos = (5850, 2950), type = 8);
+		
+		
+		
+		
 	}
 }
