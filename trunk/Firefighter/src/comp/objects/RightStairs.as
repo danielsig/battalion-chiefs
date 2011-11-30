@@ -41,7 +41,7 @@ package comp.objects
 			{
 				_bottom = true;
 			}
-			log(_bottom);
+			//log(_bottom);
 		}
 		public function fixedUpdate() : void
 		{

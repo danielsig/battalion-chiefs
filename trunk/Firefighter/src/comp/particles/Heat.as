@@ -19,18 +19,26 @@ package comp.particles
 		public static const WOOD : uint = 1;
 		public static const FABRIC : uint = 2;
 		public static const PLASTIC : uint = 3;
+		public static const SMALL_OBJECT : uint = 4;
+		public static const TINY_OBJECT : uint = 5;
 		
 		private static const WOOD_FLASH_POINT : Number = 300;
 		private static const FABRIC_FLASH_POINT : Number = 250;
 		private static const PLASTIC_FLASH_POINT : Number = 400;
+		private static const SMALL_OBJECT_FLASH_POINT : Number = WOOD_FLASH_POINT;
+		private static const TINY_OBJECT_FLASH_POINT : Number = WOOD_FLASH_POINT;
 		
 		private static const WOOD_FIRE_POINT : Number = 1000;
 		private static const FABRIC_FIRE_POINT : Number = 1300;
 		private static const PLASTIC_FIRE_POINT : Number = 600;
+		private static const SMALL_OBJECT_FIRE_POINT : Number = WOOD_FIRE_POINT;
+		private static const TINY_OBJECT_FIRE_POINT : Number = WOOD_FIRE_POINT;
 		
 		private static const WOOD_COMBUSTION_RATE : Number = 12;
 		private static const FABRIC_COMBUSTION_RATE : Number = 16;
 		private static const PLASTIC_COMBUSTION_RATE : Number = 8;
+		private static const SMALL_OBJECT_COMBUSTION_RATE : Number = 3;
+		private static const TINY_OBJECT_COMBUSTION_RATE : Number = 1;
 		
 		public function get materialType() : uint
 		{
@@ -50,6 +58,16 @@ package comp.particles
 					flashPoint = PLASTIC_FLASH_POINT;
 					firePoint = PLASTIC_FIRE_POINT;
 					combustionRate = PLASTIC_COMBUSTION_RATE;
+					break;
+				case SMALL_OBJECT:
+					flashPoint = SMALL_OBJECT_FLASH_POINT;
+					firePoint = SMALL_OBJECT_FIRE_POINT;
+					combustionRate = SMALL_OBJECT_COMBUSTION_RATE;
+					break;
+				case TINY_OBJECT:
+					flashPoint = TINY_OBJECT_FLASH_POINT;
+					firePoint = TINY_OBJECT_FIRE_POINT;
+					combustionRate = TINY_OBJECT_COMBUSTION_RATE;
 					break;
 				case WOOD:
 				default:
