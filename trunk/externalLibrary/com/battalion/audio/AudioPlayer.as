@@ -122,6 +122,11 @@ package com.battalion.audio
 		public function set loops(value : Number) : void
 		{
 			_loops = value;
+			if (!_loops)
+			{
+				_loops--;
+			}
+			else if (_reverse && _loops > 0) _loops++;
 		}
 		/**
 		 * The position of the playhead, in milliseconds.

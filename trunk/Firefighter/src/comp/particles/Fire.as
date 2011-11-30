@@ -35,8 +35,7 @@ package comp.particles
 				var collider : Collider = (objOnFire.circleCollider || objOnFire.boxCollider || objOnFire.triangleCollider) as Collider;
 				if (collider)
 				{
-					objOnFire.fire._preLayers = collider.groupLayers;
-					collider.groupLayers &= ~(Layers.OBJECTS_VS_FIRE | Layers.FIRE_VS_HUMANS);
+					collider.removeLayers(Layers.OBJECTS_VS_FIRE | Layers.FIRE_VS_HUMANS);
 				}
 			}
 			objOnFire.transform.x = x;
@@ -44,7 +43,6 @@ package comp.particles
 			return objOnFire;
 		}
 		
-		private var _preLayers : uint = 0;
 		private var _gen : ParticleGenerator;
 		private var _heat : Heat;
 		private var _emitting : Boolean = true;
@@ -85,22 +83,19 @@ package comp.particles
 			if (_heat.heat < _heat.flashPoint)
 			{
 				var collider : Collider = (gameObject.circleCollider || gameObject.boxCollider || gameObject.triangleCollider) as Collider;
-				if (collider) collider.groupLayers = _preLayers;
+				if (collider) collider.addLayers(gameObject.humanBody ? Layers.FIRE_VS_HUMANS : Layers.OBJECTS_VS_FIRE);
 				
 				if (gameObject.name == "fire")
 				{
-					gameObject.destroy();
-					_gen = null;
-					return;
+					var g : GameObject = gameObject;
+					destroy();
+					g.destroy();			
 				}
 				else
 				{
 					destroy();
-					_gen.destroy();
-					_gen = null;
-					return;
 				}
-				_emitting = false;
+				return;
 			}
 			if (!_soundEffects && hearable && _available)
 			{
@@ -127,6 +122,8 @@ package comp.particles
 				_available++;
 				sendMessage("Audio_stop");
 			}
+			releaseComponent(ParticleGenerator).destroy();
+			_gen = null;
 			return false;
 		}
 	}
