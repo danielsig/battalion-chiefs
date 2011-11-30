@@ -250,7 +250,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Painting ::::::::::::::::::::::::::
 		public function geomPainting(painting : GameObject, params : Object) : void
 		{
-			painting.addComponent(Heat);
+			(painting.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;
 			var ren : Renderer = painting.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("painting" + params.type);
 			ren.sendToBack();
@@ -281,7 +281,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Beds ::::::::::::::::::::::::::
 		public function geomBed(bed : GameObject, params : Object) : void
 		{
-			bed.addComponent(Heat);
+			(bed.addComponent(Heat) as Heat).materialType = Heat.WOOD;
 			var ren : Renderer = bed.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("bed" + params.type);
 			ren.sendToBack();
@@ -304,7 +304,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Fridge ::::::::::::::::::::::::::
 		public function geomFridge(fridge : GameObject, params : Object) : void
 		{
-			fridge.addComponent(Heat);
+			(fridge.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;;
 			var ren : Renderer = fridge.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("fridge" + params.type);
 			ren.sendToBack();
@@ -327,7 +327,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Tables ::::::::::::::::::::::::::
 		public function geomTable(table : GameObject, params : Object) : void
 		{
-			table.addComponent(Heat);
+			(table.addComponent(Heat) as Heat)..materialType = Heat.WOOD;
 			var ren : Renderer = table.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("table" + params.type);
 			ren.sendToBack();
@@ -358,7 +358,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Sofas ::::::::::::::::::::::::::
 		public function geomSofa(sofa : GameObject, params : Object) : void
 		{
-			sofa.addComponent(Heat);
+			(sofa.addComponent(Heat) as Heat).materialType = Heat.WOOD;
 			var ren : Renderer = sofa.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("sofa" + params.type);
 			ren.sendToBack();
@@ -405,7 +405,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Misc ::::::::::::::::::::::::::
 		public function geomMisc(misc : GameObject, params : Object) : void
 		{
-			misc.addComponent(Heat);
+			(misc.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;
 			var ren : Renderer = misc.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("misc" + params.type);
 			ren.sendToBack();
