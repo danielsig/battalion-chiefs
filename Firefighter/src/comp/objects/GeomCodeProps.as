@@ -108,6 +108,9 @@ package comp.objects
 		public function geomLamp(lamp : GameObject, params : Object) : void
 		{
 			(lamp.addComponent(Heat) as Heat).materialType = Heat.WOOD;
+			lamp.heat.heat = 0;
+			(lamp.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = lamp.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("lamp" + params.type);
 			ren.sendToBack();
@@ -137,6 +140,9 @@ package comp.objects
 		public function geomTV(tv : GameObject, params : Object) : void
 		{
 			(tv.addComponent(Heat) as Heat).materialType = Heat.PLASTIC;
+			tv.heat.heat = 0;
+			(tv.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = tv.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("tv" + params.type);
 			ren.sendToBack();
@@ -164,6 +170,9 @@ package comp.objects
 		public function geomCloset(closet : GameObject, params : Object) : void
 		{
 			(closet.addComponent(Heat) as Heat).materialType = Heat.WOOD;
+			closet.heat.heat = 0;
+			(closet.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = closet.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("closet" + params.type);
 			ren.sendToBack();
@@ -212,6 +221,9 @@ package comp.objects
 		public function geomChair(chair : GameObject, params : Object) : void
 		{
 			(chair.addComponent(Heat) as Heat).materialType = Heat.WOOD;
+			chair.heat.heat = 0;
+			(chair.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = chair.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("chair" + params.type);
 			ren.sendToBack();
@@ -251,6 +263,9 @@ package comp.objects
 		public function geomPainting(painting : GameObject, params : Object) : void
 		{
 			(painting.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;
+			painting.heat.heat = 0;
+			(painting.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = painting.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("painting" + params.type);
 			ren.sendToBack();
@@ -282,6 +297,9 @@ package comp.objects
 		public function geomBed(bed : GameObject, params : Object) : void
 		{
 			(bed.addComponent(Heat) as Heat).materialType = Heat.WOOD;
+			bed.heat.heat = 0;
+			(bed.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = bed.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("bed" + params.type);
 			ren.sendToBack();
@@ -305,6 +323,9 @@ package comp.objects
 		public function geomFridge(fridge : GameObject, params : Object) : void
 		{
 			(fridge.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;
+			fridge.heat.heat = 0;
+			(fridge.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = fridge.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("fridge" + params.type);
 			ren.sendToBack();
@@ -328,6 +349,9 @@ package comp.objects
 		public function geomTable(table : GameObject, params : Object) : void
 		{
 			(table.addComponent(Heat) as Heat)..materialType = Heat.WOOD;
+			table.heat.heat = 0;
+			(table.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = table.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("table" + params.type);
 			ren.sendToBack();
@@ -359,6 +383,9 @@ package comp.objects
 		public function geomSofa(sofa : GameObject, params : Object) : void
 		{
 			(sofa.addComponent(Heat) as Heat).materialType = Heat.FABRIC;
+			sofa.heat.heat = 0;
+			(sofa.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = sofa.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("sofa" + params.type);
 			ren.sendToBack();
@@ -406,6 +433,9 @@ package comp.objects
 		public function geomMisc(misc : GameObject, params : Object) : void
 		{
 			(misc.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;
+			misc.heat.heat = 0;
+			(misc.heat as Heat).addHeat(params.heat);
+			
 			var ren : Renderer = misc.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("misc" + params.type);
 			ren.sendToBack();

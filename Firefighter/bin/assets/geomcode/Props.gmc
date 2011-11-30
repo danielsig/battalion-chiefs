@@ -1,40 +1,40 @@
-Lamp(type = 0)
+Lamp(type = 0, heat = 0)
 {
 	
 }
-TV(type = 0)
+TV(type = 0, heat = 0)
 {
 	
 }
-Closet(type = 0, flipped = false )
+Closet(type = 0, flipped = false, heat = 0)
 {
 	
 }
-Bed(type = 0, flipped = false)
+Bed(type = 0, flipped = false, heat = 0)
 {
 	
 }
-Chair(type = 0, flipped = false)
+Chair(type = 0, flipped = false, heat = 0)
 {
 	
 }
-Painting(type = 0, flipped = false)
+Painting(type = 0, flipped = false, heat = 0)
 {
 	
 }
-Fridge(type = 0)
+Fridge(type = 0, heat = 0)
 {
 	
 }
-Table(type = 0)
+Table(type = 0, heat = 0)
 {
 	
 }
-Sofa(type = 0)
+Sofa(type = 0, heat = 0)
 {
 	
 }
-Misc(type = 0)
+Misc(type = 0, heat = 0)
 {
 	
 }

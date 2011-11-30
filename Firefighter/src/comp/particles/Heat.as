@@ -85,6 +85,7 @@ package comp.particles
 		internal var combustionRate : uint = WOOD_COMBUSTION_RATE;
 		
 		public var heat : Number = 0;
+		public var burned : Number = 0;
 		public var time : Number = new Date().time;
 		
 		public function ignite() : void
@@ -99,6 +100,7 @@ package comp.particles
 				{
 					var now : Number = new Date().time;
 					heat -= (now - time) * HEAT_DECREASE_PER_MILLI_SECOND;
+					//burned 
 					time = now;
 				}
 				
