@@ -36,7 +36,7 @@ package comp.objects
 		public function geomDoor(door : GameObject, params : Object) : void
 		{
 			var portal : Portal = door.addComponent(Portal) as Portal;
-			portal.addComponent(Heat);
+			(portal.addComponent(Heat) as Heat).materialType = Heat.WOOD;
 			portal.height = 140;
 			portal.width = 100;
 			portal.locked = params.locked;
