@@ -18,12 +18,7 @@ package comp.objects
 		private static var _init : Boolean = init();
 		private static function init() : Boolean
 		{
-			Renderer.draw("rightStairGraphics",
-				"fill", { color:0 },
-				-LeftStairs.WIDTH * 0.5, LeftStairs.HEIGHT * 0.5,
-				LeftStairs.WIDTH * 0.5, -LeftStairs.HEIGHT * 0.5,
-				LeftStairs.WIDTH * 0.5, LeftStairs.HEIGHT * 0.5
-			);
+			Renderer.load("stairs", "assets/img/stairs.png");
 			return true;
 		}
 		
@@ -32,7 +27,11 @@ package comp.objects
 		public function awake() : void
 		{
 			var ren : Renderer = requireComponent(Renderer) as Renderer;
-			ren.setBitmapByName("rightStairGraphics");
+			ren.setBitmapByName("stairs");
+			ren.sendToFront();
+			ren.setOffset(0, -50);
+			ren.offset.b = 0.5;
+			ren.offset.a = -1;
 			sendAfter("afterInit", "fixedUpdate");
 		}
 		public function afterInit() : void
