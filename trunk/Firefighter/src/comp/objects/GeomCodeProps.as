@@ -107,7 +107,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: LAMPS ::::::::::::::::::::::::::
 		public function geomLamp(lamp : GameObject, params : Object) : void
 		{
-			lamp.addComponent(Heat);
+			(lamp.addComponent(Heat) as Heat).materialType = Heat.WOOD;
 			var ren : Renderer = lamp.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("lamp" + params.type);
 			ren.sendToBack();
@@ -136,7 +136,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: TVs ::::::::::::::::::::::::::
 		public function geomTV(tv : GameObject, params : Object) : void
 		{
-			tv.addComponent(Heat);
+			(tv.addComponent(Heat) as Heat).materialType = Heat.PLASTIC;
 			var ren : Renderer = tv.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("tv" + params.type);
 			ren.sendToBack();
@@ -163,7 +163,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Closets ::::::::::::::::::::::::::
 		public function geomCloset(closet : GameObject, params : Object) : void
 		{
-			closet.addComponent(Heat);
+			(closet.addComponent(Heat) as Heat).materialType = Heat.WOOD;
 			var ren : Renderer = closet.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("closet" + params.type);
 			ren.sendToBack();
@@ -211,7 +211,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Chairs ::::::::::::::::::::::::::
 		public function geomChair(chair : GameObject, params : Object) : void
 		{
-			chair.addComponent(Heat);
+			(chair.addComponent(Heat) as Heat).materialType = Heat.WOOD;
 			var ren : Renderer = chair.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("chair" + params.type);
 			ren.sendToBack();
@@ -241,7 +241,7 @@ package comp.objects
 					col.dimensions = new Point(32, 32);
 					break;
 			}
-			if (params.flipped == true)
+			if (params.inverted == true)
 			{
 				ren.offset.a = -ren.offset.a;
 			}
@@ -295,7 +295,7 @@ package comp.objects
 					col.dimensions = new Point(32, 32);
 					break;
 			}
-			if (params.flipped == true)
+			if (params.inverted == true)
 			{
 				ren.offset.a = -ren.offset.a;
 			}
@@ -304,7 +304,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Fridge ::::::::::::::::::::::::::
 		public function geomFridge(fridge : GameObject, params : Object) : void
 		{
-			(fridge.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;;
+			(fridge.addComponent(Heat) as Heat).materialType = Heat.SMALL_OBJECT;
 			var ren : Renderer = fridge.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("fridge" + params.type);
 			ren.sendToBack();
@@ -358,7 +358,7 @@ package comp.objects
 		//{::::::::::::::::::::::::: Sofas ::::::::::::::::::::::::::
 		public function geomSofa(sofa : GameObject, params : Object) : void
 		{
-			(sofa.addComponent(Heat) as Heat).materialType = Heat.WOOD;
+			(sofa.addComponent(Heat) as Heat).materialType = Heat.FABRIC;
 			var ren : Renderer = sofa.addComponent(Renderer) as Renderer;
 			ren.setBitmapByName("sofa" + params.type);
 			ren.sendToBack();
