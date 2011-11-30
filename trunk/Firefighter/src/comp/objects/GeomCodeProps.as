@@ -78,7 +78,14 @@ package comp.objects
 			Renderer.load("misc22", "assets/img/props.png~60~")
 			Renderer.load("misc23", "assets/img/props.png~61~")
 			Renderer.load("misc24", "assets/img/props.png~62~")
-			Renderer.load("misc25", "assets/img/props.png~63~")
+			Renderer.load("misc25", "assets/img/props.png~52~")
+			Renderer.load("closet6", "assets/img/props.png~13~")
+			Renderer.load("misc26", "assets/img/props.png~63~")
+			Renderer.load("misc27", "assets/img/props.png~64~")
+			Renderer.load("misc28", "assets/img/firetruck.png")
+			Renderer.load("misc29", "assets/img/props.png~66~")
+			Renderer.load("misc30", "assets/img/props.png~67~")
+
 			return true;
 		}
 		
@@ -154,6 +161,10 @@ package comp.objects
 			col.layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_FIRE;
 			switch(params.type)
 			{
+				case 6:
+					ren.setOffset(0, 0, 0.6);
+					col.dimensions = new Point(128, 90);
+					break;
 				case 5:
 					ren.setOffset(0, 0, 1.4);
 					col.dimensions = new Point(128, 90);
@@ -180,6 +191,11 @@ package comp.objects
 					col.dimensions = new Point(128, 128);
 					break;
 			}
+			if (params.flipped == true)
+			{
+				ren.offset.rotate(Math.PI / 2);
+			}
+			
 		}
 		
 		//{::::::::::::::::::::::::: Chairs ::::::::::::::::::::::::::
@@ -214,6 +230,10 @@ package comp.objects
 					ren.setOffset(0, 0);
 					col.dimensions = new Point(128, 128);
 					break;
+			}
+			if (params.flipped == true)
+			{
+				ren.offset.a = -ren.offset.a;
 			}
 		}
 		
@@ -261,9 +281,13 @@ package comp.objects
 			{
 				case 0: 
 				default:
-					ren.setOffset(0, 0, 2);
+					ren.setOffset(0, 0, 1.5);
 					col.dimensions = new Point(128, 128);
 					break;
+			}
+			if (params.flipped == true)
+			{
+				ren.offset.a = -ren.offset.a;
 			}
 		}
 		
@@ -284,7 +308,7 @@ package comp.objects
 					break;
 				case 0: 
 				default:
-					ren.setOffset(0, 0);
+					ren.setOffset(0, 0, 1.5);
 					col.dimensions = new Point(128, 128);
 					break;
 			}
@@ -399,9 +423,39 @@ package comp.objects
 			 * 22 - BedDouble1
 			 * 23 - BedDouble2
 			 * 24 - Shower
+			 * 25 - Mirror2 resized
+			 * 26 - Painting 4
+			 * 27 - FiretruckPart1 - not used
+			 * 28 - FiretruckPart2
+			 * 29 - Towelrack1
+			 * 30 - Towelrack2
 			 * */
 			switch(params.type)
 			{
+				case 30:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 29:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 28:
+					ren.setOffset(0, 0, 1.3);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 27:
+					ren.setOffset(0, 0, 2.5);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 26:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(128, 128);
+					break;
+				case 25:
+					ren.setOffset(0, 0, 0.7);
+					col.dimensions = new Point(128, 128);
+					break;
 				case 24:
 					ren.setOffset(0, 0, 1.6);
 					col.dimensions = new Point(128, 128);
@@ -423,7 +477,7 @@ package comp.objects
 					col.dimensions = new Point(128, 128);
 					break;
 				case 19:
-					ren.setOffset(0, 0, 0.6);
+					ren.setOffset(0, 0, 0.8);
 					col.dimensions = new Point(128, 128);
 					break;
 				case 18:
