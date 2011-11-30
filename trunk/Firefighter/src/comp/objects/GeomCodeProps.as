@@ -45,7 +45,7 @@ package comp.objects
 			Renderer.load("tv2", "assets/img/props.png~31~")
 			Renderer.load("lamp0", "assets/img/props.png~8~")
 			Renderer.load("lamp1", "assets/img/props.png~9~")
-			Renderer.load("lamp2", "assets/img/props.png~32~")
+			Renderer.load("lamp2", "assets/img/props.png~10~")
 			Renderer.load("lamp3", "assets/img/props.png~11~")
 			Renderer.load("closet0", "assets/img/props.png~32~")
 			Renderer.load("closet1", "assets/img/props.png~12~")
@@ -85,6 +85,16 @@ package comp.objects
 			Renderer.load("misc28", "assets/img/firetruck.png")
 			Renderer.load("misc29", "assets/img/props.png~66~")
 			Renderer.load("misc30", "assets/img/props.png~67~")
+			Renderer.load("misc31", "assets/img/props.png~68~")
+			Renderer.load("misc32", "assets/img/props.png~69~")
+			Renderer.load("misc33", "assets/img/props.png~70~")
+			Renderer.load("misc34", "assets/img/props.png~71~")
+			Renderer.load("misc35", "assets/img/props.png~72~")
+			Renderer.load("misc36", "assets/img/props.png~73~")
+			Renderer.load("misc37", "assets/img/props.png~74~")
+			Renderer.load("misc38", "assets/img/props.png~75~")
+			Renderer.load("misc39", "assets/img/props.png~76~")
+			Renderer.load("misc40", "assets/img/props.png~77~")
 
 			return true;
 		}
@@ -339,6 +349,10 @@ package comp.objects
 					col.dimensions = new Point(32, 32);
 					break;
 			}
+			if (params.flipped == true)
+			{
+				ren.offset.rotate(Math.PI);
+			}
 		}
 		
 		//{::::::::::::::::::::::::: Sofas ::::::::::::::::::::::::::
@@ -429,9 +443,59 @@ package comp.objects
 			 * 28 - FiretruckPart2
 			 * 29 - Towelrack1
 			 * 30 - Towelrack2
+			 * 31 - Box1
+			 * 32 - Box2
+			 * 33 - Box3
+			 * 34 - FireExtinquiser
+			 * 35 - FireHoose
+			 * 36 - Plant2
+			 * 37 - OfficeChair1
+			 * 38 - Oven1
+			 * 39 - Plant3
+			 * 40 - GarbageCan1
 			 * */
 			switch(params.type)
 			{
+				case 40:
+					ren.setOffset(0, 0, 0.45);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 39:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 38:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 37:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 36:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 35:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 34:
+					ren.setOffset(0, 0, 0.7);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 33:
+					ren.setOffset(0, 0, 0.7);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 32:
+					ren.setOffset(0, 0);
+					col.dimensions = new Point(32, 32);
+					break;
+				case 31:
+					ren.setOffset(0, 0, 0.8);
+					col.dimensions = new Point(32, 32);
+					break;
 				case 30:
 					ren.setOffset(0, 0);
 					col.dimensions = new Point(32, 32);
