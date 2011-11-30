@@ -90,7 +90,7 @@ package comp
 		{
 			MouseLocation.create();
 			var player : GameObject = PlayerController.createPlayer(6150, 780);
-			//var human : GameObject = CivilianController.createCivilian(6200, 400);
+			var human : GameObject = CivilianController.createCivilian(6200, 400);
 		}
 	}
 }

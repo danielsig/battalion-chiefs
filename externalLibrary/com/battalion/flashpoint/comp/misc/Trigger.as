@@ -32,13 +32,6 @@ package com.battalion.flashpoint.comp.misc
 			trigger.width = width;
 			trigger.height = height;
 			trigger.target = triggerTarget;
-			
-			if (particleTrigger)
-			{
-				object.addComponent(TriggerFire) as TriggerFire;
-				//var fireParticles : ParticleGenerator = object.addComponent(ParticleGenerator) as ParticleGenerator;
-				//fireParticles._particleGenerator
-			}
 		}
 		
 		public function fixedUpdate() : void

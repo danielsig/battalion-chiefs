@@ -451,7 +451,7 @@ package comp.human
 		{
 			gameObject.torso.audio.volume = 1;
 			_rigidbody.affectedByGravity = true;
-			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.4);
+			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.2);
 			/*for each(var point : ContactPoint in points)
 			{
 				if(point.otherCollider) point.otherCollider.sendMessage("onHumanHit", this);

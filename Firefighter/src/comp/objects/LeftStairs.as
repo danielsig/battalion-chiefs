@@ -45,7 +45,7 @@ package comp.objects
 			{
 				_bottom = true;
 			}
-			log(_bottom);
+			//log(_bottom);
 		}
 		public function fixedUpdate() : void
 		{
@@ -74,7 +74,7 @@ package comp.objects
 				if (height < 5 && height > -50)
 				{
 					var dy : Number = gameObject.transform.y + HEIGHT * 0.5 - (human.gameObject.transform.y + 63);
-					log(height, human.verticalDirection);
+					//log(height, human.verticalDirection);
 					var useTheseStairs : Boolean = (dy < HEIGHT && dy > 5)
 						|| _bottom || (human.verticalDirection < 0 && dy > 0);
 					if (useTheseStairs)

@@ -54,8 +54,25 @@ package comp.objects
 			portal1.otherPortal = portal2;
 			portal2.otherPortal = portal1;
 		}
-		
-		public function fixedUpdate () : void 
+		public function transport(transform : Transform) : Boolean 
+		{
+			var top : Number = gameObject.transform.y - ( height * 0.5);
+			var bottom : Number = gameObject.transform.y + ( height * 0.5);
+			var left : Number = gameObject.transform.x - ( width * 0.5);
+			var right : Number = gameObject.transform.x + ( width * 0.5);
+			
+			var x : Number = transform.x;
+			var y : Number = transform.y;
+			
+			if ( (x > left && x < right) && (y > top && y < bottom))
+			{
+				transform.x = otherPortal.gameObject.transform.x;
+				transform.y = otherPortal.gameObject.transform.y + 7;
+				return true;
+			}
+			return false;
+		}
+		public function fixedUpdate () : void
 		{
 			CONFIG::debug
 			{
