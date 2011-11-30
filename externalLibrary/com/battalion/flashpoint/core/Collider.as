@@ -68,6 +68,17 @@ package com.battalion.flashpoint.core
 		private var _this : Object;//for speed;
 		private var _name : String;//for speed;
 		
+		public function addLayers(layersToAdd : uint) : void
+		{
+			if (_this.group) _this.group.addLayers(layersToAdd);
+			else body.layers |= layersToAdd;
+		}
+		public function removeLayers(layersToRemove : uint) : void
+		{
+			if (_this.group) _this.group.removeLayers(layersToRemove);
+			else body.layers &= ~layersToRemove;
+		}
+		
 		/**
 		 * Applies movement to this GameObject and friction to all the colliders
 		 * attached to it but only if there's no rigidbody attached.

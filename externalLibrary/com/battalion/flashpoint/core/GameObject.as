@@ -718,7 +718,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					targetClass = Component;
 				}
 				
-				if (instance is targetClass && instance.hasOwnProperty(functionName))
+				if ((targetClass && instance is targetClass || !targetClass) && instance.hasOwnProperty(functionName))
 				{
 					CONFIG::debug
 					{

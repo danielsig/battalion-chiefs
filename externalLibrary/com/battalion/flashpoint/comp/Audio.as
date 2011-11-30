@@ -135,6 +135,7 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 		{
 			_player.loops = loops;
 			_playing = true;
+			fixedUpdate();
 			if (soundName)
 			{
 				CONFIG::debug

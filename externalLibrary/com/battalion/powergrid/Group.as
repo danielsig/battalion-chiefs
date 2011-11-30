@@ -171,6 +171,33 @@ package com.battalion.powergrid
 			while ((index--) && (target = target.next)){};
 			return target.body;
 		}
+		public function addLayers(layersToAdd : uint) : void
+		{
+			layers |= layersToAdd;
+			var target : BodyNode = bodies;
+			if (target)
+			{
+				do
+				{
+					target.body.layers |= layersToAdd;
+				}
+				while ((target = target.next));
+			}
+		}
+		public function removeLayers(layersToRemove : uint) : void
+		{
+			layersToRemove = ~layersToRemove;
+			layers &= layersToRemove;
+			var target : BodyNode = bodies;
+			if (target)
+			{
+				do
+				{
+					target.body.layers &= layersToRemove;
+				}
+				while ((target = target.next));
+			}
+		}
 		/**
 		 * The layer mask of every collider in this group merged together with a bitwize OR operator.
 		 * Setting this property will assign that layer mask to every collider in this group.

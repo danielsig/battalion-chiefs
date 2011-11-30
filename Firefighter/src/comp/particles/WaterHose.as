@@ -14,7 +14,7 @@ package comp.particles
 		
 		private static function init() : Boolean
 		{
-			Audio.load("hose", "assets/sound/sounds.mp3~0-750~");
+			Audio.load("hose", "assets/sound/sounds.mp3~150-750~");
 			Animation.load("WaterAnimation", "assets/img/water.png~0-71~");
 			Animation.addLabel("WaterAnimation", "destroyer", 71);
 			Animation.load("SteamAnimation", "assets/img/steam.png~0-62~");
@@ -39,7 +39,7 @@ package comp.particles
 		
 		public function awake() : void
 		{
-			requireComponent(Audio);
+			(requireComponent(Audio) as Audio).volume = 0.1;
 			_tr = gameObject.transform;
 			_gen = requireComponent(ParticleGenerator) as ParticleGenerator;
 			_gen.graphicsName = "WaterAnimation";
@@ -71,13 +71,12 @@ package comp.particles
 			
 			if (!_emitting && _gen.emitting)
 			{
-				gameObject.audio.volume = 0.1;
-				sendMessage("Audio_play", "hose");
+				gameObject.audio.play("hose");
 				_emitting = true;
 			}
 			else if (_emitting && !_gen.emitting)
 			{
-				sendMessage("Audio_stop");
+				gameObject.audio.stop();
 				_emitting = false;
 			}
 		}

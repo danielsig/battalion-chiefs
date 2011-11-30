@@ -179,6 +179,13 @@ package com.battalion.flashpoint.core
 			}
 			_gameObject.removeComponent(instance);
 		}
+		/**
+		 * Makes this component dependant on another component class <code>comp</code>
+		 * in a way that there must be at least one instance of that component on it's GameObject.
+		 * @see #releaseComponent()
+		 * @param	comp, the component to be dependant on.
+		 * @return an instance of required component.
+		 */
 		public final function requireComponent(comp : Class) : Component
 		{
 			CONFIG::debug
@@ -200,8 +207,44 @@ package com.battalion.flashpoint.core
 			}
 			CONFIG::debug
 			{
-				instance._requiredBy.push(this);
-				_require.push(instance);
+				if (_require.indexOf(instance) < 0)
+				{
+					instance._requiredBy.push(this);
+					_require.push(instance);
+				}
+			}
+			return instance;
+		}
+		/**
+		 * Undo the requiring of a component, that is, after calling this
+		 * the required component can be successfully destroyed.
+		 * @see #requireComponent()
+		 * @param	comp, the component that this component is dependant on.
+		 * @return	the component instance that this component was previously dependant on.
+		 */
+		public final function releaseComponent(comp : Class) : Component
+		{
+			CONFIG::debug
+			{
+				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
+				if (comp == null) throw new Error("Comp must be non null.");
+				if (Util.isConcise(comp)) throw new Error(comp + " implements the IConciseComponent interface. A component may not require and therefor not release a concise component.");
+			}
+			var name : String = getQualifiedClassName(comp);
+			name = name.slice(name.lastIndexOf("::") + 2);
+			name = name.charAt(0).toLowerCase() + name.slice(1);
+			if (_gameObject.hasOwnProperty(name))
+			{
+				var instance : Component = _gameObject[name];
+			}
+			CONFIG::debug
+			{
+				var index : uint = _require.indexOf(instance);
+				if (index > -1)
+				{
+					instance._requiredBy.splice(instance._requiredBy.indexOf(this), 1);
+					_require.splice(index, 1);
+				}
 			}
 			return instance;
 		}
