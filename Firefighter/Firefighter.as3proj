@@ -39,7 +39,7 @@
     <option loadExterns="" />
     <option staticLinkRSL="True" />
     <option additional="" />
-    <option compilerConstants="CONFIG::unoptimized, false" />
+    <option compilerConstants="CONFIG::unoptimized, false&#xA;CONFIG::flashPlayer11, false&#xA;CONFIG::flashPlayer10, !CONFIG::flashPlayer11" />
     <option customSDK="" />
   </build>
   <!-- SWC Include Libraries -->
@@ -48,9 +48,8 @@
   </includeLibraries>
   <!-- SWC Libraries -->
   <libraryPaths>
-    <element path="C:\Users\Notandi\Fire\externalLibrary\Box2D_2.0.2.swc" />
-    <element path="C:\Users\Notandi\Fire\externalLibrary\greensock.swc" />
-    <element path="C:\Users\Notandi\Fire\externalLibrary\MonsterDebugger.swc" />
+    <element path="C:\skolihaust2011\battalionchiefs\externalLibrary\MonsterDebugger.swc" />
+    <element path="C:\skolihaust2011\battalionchiefs\externalLibrary\greensock.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

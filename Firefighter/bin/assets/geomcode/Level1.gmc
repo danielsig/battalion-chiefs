@@ -88,12 +88,14 @@ Level1()
 		
 		LeftStairs(pos = (5987, 1017));
 		
+		
 		//OutsideWindows and firetruck
 		Misc( pos = (1110, 320), type = 20);
 		Misc( pos = (1380, 320), type = 20);
 		Misc( pos = (1650, 320), type = 20);
 		Misc( pos = (1920, 320), type = 20);
 		Misc( pos = (2810, 320), type = 28);
+		
 		
 		/* ------------------- FLOOR 2 -------------------------- */
 		
@@ -114,7 +116,7 @@ Level1()
 		Misc( pos = (6170, 1667), type = 6);
 		Misc( pos = (6110, 1692), type = 1);
 		Misc( pos = (6098, 1692), type = 1);
-		Sofa(pos = (5845, 1666), type = 3);
+		Sofa( pos = (5845, 1666), type = 3);
 		Painting( pos = (5845, 1615), type = 0);
 		
 		//Bathroom second floor
@@ -141,7 +143,9 @@ Level1()
 		Chair(pos = (1845, 1655), type = 4);
 		Closet(pos = (1700,1675), type = 1 , flipped = true);
 		
+		
 		/* ------------------- FLOOR 1 -------------------------- */
+		
         //Hallway
 		Misc( pos = (5040, 1865), type = 16);
 		Painting( pos = (4780, 1770), type = 1);
@@ -171,7 +175,7 @@ Level1()
         Table( pos = (7180, 1690), type = 2);
         Misc( pos = (7180, 1670), type = 4);
         Closet( pos = (6990, 1695), type = 4);
-       
+		
         //Toilet (Room 4)
         Misc( pos = (7050, 900), type = 19); 
         Misc( pos = (7380, 856), type = 21); 
@@ -179,5 +183,6 @@ Level1()
         Misc( pos = (7140, 785), type = 14); 
         Misc( pos = (6950, 810), type = 20);
 		Misc( pos = (7231, 850), type = 30);
+		
 	}
 }

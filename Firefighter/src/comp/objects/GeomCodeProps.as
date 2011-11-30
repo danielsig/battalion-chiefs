@@ -45,7 +45,7 @@ package comp.objects
 			Renderer.load("tv2", "assets/img/props.png~31~")
 			Renderer.load("lamp0", "assets/img/props.png~8~")
 			Renderer.load("lamp1", "assets/img/props.png~9~")
-			Renderer.load("lamp2", "assets/img/props.png~10~")
+			Renderer.load("lamp2", "assets/img/props.png~32~")
 			Renderer.load("lamp3", "assets/img/props.png~11~")
 			Renderer.load("closet0", "assets/img/props.png~32~")
 			Renderer.load("closet1", "assets/img/props.png~12~")
@@ -107,19 +107,19 @@ package comp.objects
 			{
 				case 3:
 					ren.setOffset(0, -25);
-					col.dimensions = new Point(60, 115);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 2:
 					ren.setOffset(-5, -20);
-					col.dimensions = new Point(50, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, -22);
-					col.dimensions = new Point(20, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				default:
 					ren.setOffset(2, -20);
-					col.dimensions = new Point(60, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -136,16 +136,16 @@ package comp.objects
 			{
 				case 2:
 					ren.setOffset(0, -28);
-					col.dimensions = new Point(128, 74);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, -20);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, -13);
-					col.dimensions = new Point(128, 102);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -163,32 +163,32 @@ package comp.objects
 			{
 				case 6:
 					ren.setOffset(0, 0, 0.6);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 5:
 					ren.setOffset(0, 0, 1.4);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 4:
 					ren.setOffset(0, 0, 1.4);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 3:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 2:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 90);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0, 1.2);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 			if (params.flipped == true)
@@ -211,24 +211,24 @@ package comp.objects
 			{
 				case 4:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 3:
 					ren.setOffset(0, 0, 0.75);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 2:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 			if (params.flipped == true)
@@ -250,20 +250,20 @@ package comp.objects
 			{
 				case 3:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 2:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -282,7 +282,7 @@ package comp.objects
 				case 0: 
 				default:
 					ren.setOffset(0, 0, 1.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 			if (params.flipped == true)
@@ -304,12 +304,12 @@ package comp.objects
 			{
 				case 1:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0, 1.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -327,16 +327,16 @@ package comp.objects
 			{
 				case 2:
 					ren.setOffset(0, 0, 1.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, 0, 1.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0, 1.2);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -354,36 +354,36 @@ package comp.objects
 			{
 				case 7:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 6:
 					ren.setOffset(0, 0, 0.9);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 5:
 					ren.setOffset(0, 0, 1.65);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 4:
 					ren.setOffset(0, 0, 1.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 3:
 					ren.setOffset(0, 0, 2);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 2:
 					ren.setOffset(0, 0, 1.3);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0, 1.7);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -408,7 +408,7 @@ package comp.objects
 			 * 7  - Mirror1
 			 * 8  - ComputerMonitor
 			 * 9  - Plant
-			 * 10 - Toaster
+			 * 32 - Toaster
 			 * 11 - ComputerMonitorSide
 			 * 12 - WindowOpen
 			 * 13 - WindowClosed
@@ -434,128 +434,128 @@ package comp.objects
 			{
 				case 30:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 29:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 28:
 					ren.setOffset(0, 0, 1.3);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 27:
 					ren.setOffset(0, 0, 2.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 26:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 25:
 					ren.setOffset(0, 0, 0.7);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 24:
 					ren.setOffset(0, 0, 1.6);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 23:
 					ren.setOffset(0, 0, 2.0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 22:
 					ren.setOffset(0, 0, 2.0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 21:
 					ren.setOffset(0, 0, 1.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 20:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 19:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 18:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 17:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 16:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 15:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 14:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 13:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 12:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 11:
 					ren.setOffset(0, 0, 0.7);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
-				case 10:
+				case 32:
 					ren.setOffset(0, 0, 0.6);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 9:
 					ren.setOffset(0, 0);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 8:
 					ren.setOffset(0, 0, 0.7);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 7:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 6:
 					ren.setOffset(0, 0, 0.7);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 5:
 					ren.setOffset(0, 0, 0.65);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 4:
 					ren.setOffset(0, 0, 0.8);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 3:
 					ren.setOffset(0, 0, 0.47);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 2:
 					ren.setOffset(0, 0, 0.5);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 1:
 					ren.setOffset(0, 0, 0.3);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 				case 0: 
 				default:
 					ren.setOffset(0, 0, 0.2);
-					col.dimensions = new Point(128, 128);
+					col.dimensions = new Point(32, 32);
 					break;
 			}
 		}
@@ -585,7 +585,7 @@ package comp.objects
 			{
 				case 0: 
 				default:
-					col.defineSizeAndAnchor(128, 0.5, -1);
+					col.defineSizeAndAnchor(32, 0.5, -1);
 					break;
 			}
 			delete closet.type;
