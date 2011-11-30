@@ -70,12 +70,12 @@ package com.battalion.flashpoint.core
 		
 		public function addLayers(layersToAdd : uint) : void
 		{
-			if (_this.group) _this.group.addLayers(layersToAdd);
+			if (_this.group && _this.rigidbody) _this.group.addLayers(layersToAdd);
 			else body.layers |= layersToAdd;
 		}
 		public function removeLayers(layersToRemove : uint) : void
 		{
-			if (_this.group) _this.group.removeLayers(layersToRemove);
+			if (_this.group && _this.rigidbody) _this.group.removeLayers(layersToRemove);
 			else body.layers &= ~layersToRemove;
 		}
 		

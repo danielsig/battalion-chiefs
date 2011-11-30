@@ -88,8 +88,9 @@ package comp
 		public function tilesLoaded() : void 
 		{
 			//MouseLocation.create();
-			var player : GameObject = PlayerController.createPlayer(6150, 780);
-			var human : GameObject = CivilianController.createCivilian(6200, 400);
+			var player : GameObject = PlayerController.createPlayer(2500, 350);
+			var human1 : GameObject = CivilianController.createCivilian(6200, 400);
+			var human2 : GameObject = CivilianController.createCivilian(4200, 400);
 		}
 	}
 }

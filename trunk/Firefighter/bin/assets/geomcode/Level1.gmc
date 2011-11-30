@@ -67,8 +67,8 @@ Level1()
 		Door(pos = (5714, 242), other = prev, dir = 2);
 		
 		//Door inside the second floor hallway - connected to the second appartment
-		Door(pos = (4200, 500), dir = 0);
-		Door(pos = (5150, 2611), other = prev, dir = 3);
+		Door(pos = (4200, 500), dir = 0, heat = 1000);
+		Door(pos = (5150, 2611), other = prev, dir = 3, heat = 1000);
 		
 		//Door insde the second appartment - connected to the living room
 		Door(pos = (4140, 2611), dir = 0);
@@ -105,11 +105,11 @@ Level1()
 		Sofa(pos = (4330, 2598), type = 2);
 		Painting( pos = (4331, 2510), type = 2);
 		Closet( pos = (4631, 2592), type = 4);
-		Lamp( pos = (4761, 2636), type = 2);
-		Misc( pos = (5050, 2570), type = 7);
-		Fridge( pos = (6270, 1720), type = 1);
-		Table( pos = (6150, 1710), type = 0);
-		Chair(pos = (6075, 1740), type = 3);
+		Lamp( pos = (4761, 2636), type = 2, heat = 1000);
+		Misc( pos = (5050, 2570), type = 7, heat = 1000);
+		Fridge( pos = (6270, 1720), type = 1, heat = 1000);
+		Table( pos = (6150, 1710), type = 0, heat = 1000);
+		Chair(pos = (6075, 1740), type = 3, heat = 1000);
 		Misc( pos = (6170, 1667), type = 6);
 		Misc( pos = (6110, 1692), type = 1);
 		Misc( pos = (6098, 1692), type = 1);
@@ -118,16 +118,16 @@ Level1()
 		
 		//Bathroom second floor
 		Misc( pos = (6285, 2323), type = 24);
-		Misc( pos = (5815, 2373), type = 18);
-		Misc( pos = (5815, 2290), type = 15);
-		Misc( pos = (5935, 2372), type = 19);
+		Misc( pos = (5815, 2373), type = 18, heat = 1000);
+		Misc( pos = (5815, 2290), type = 15, heat = 1000);
+		Misc( pos = (5935, 2372), type = 19, heat = 1000);
 		Closet( pos = (6061, 2375), type = 1);
 		Misc( pos = (6191, 2335), type = 29);
 		
 		
-		Misc( pos = (6170, 2944), type = 23);
-		Lamp( pos = (6290, 3019), type = 0);
-		Closet( pos = (6031, 2989), type = 0);
+		Misc( pos = (6170, 2944), type = 23, heat = 1000);
+		Lamp( pos = (6290, 3019), type = 0, heat = 1000);
+		Closet( pos = (6031, 2989), type = 0, heat = 1000);
 		Misc( pos = (5850, 3015), type = 37);
 		Misc( pos = (5910, 3036), type = 3);
 		Table( pos = (5847, 2966), type = 1);
@@ -137,10 +137,10 @@ Level1()
 		Misc( pos = (1710, 1582), type = 31);
 		Misc( pos = (2500, 1656), type = 32);
 		Misc( pos = (2500, 1600), type = 33);
-		TV(pos = (2245, 1630), type = 1);
-		Sofa(pos = (2245, 1614), type = 5);
-		Closet( pos = (2095, 1644), type = 0);
-		Chair(pos = (1845, 1655), type = 4);
+		TV(pos = (2245, 1630), type = 1, heat = 1000);
+		Sofa(pos = (2245, 1614), type = 5, heat = 1000);
+		Closet( pos = (2095, 1644), type = 0, heat = 1000);
+		Chair(pos = (1845, 1655), type = 4, heat = 1000);
 		Closet(pos = (1700,1675), type = 1 , flipped = true);
 		Misc( pos = (1610, 1655), type = 36);
 		Table( pos = (1447, 1720), type = 0, flipped = true );
@@ -165,34 +165,34 @@ Level1()
         Chair( pos = (7280, 3000), type = 0, flipped = true);
         Fridge( pos = (7000, 2970), type = 0);
         Misc( pos = (7325, 2960), type = 10); 
-        Misc( pos = (7375, 2960), type = 2); 
+        Misc( pos = (7375, 2960), type = 2, heat = 1000); 
 		Misc( pos = (7125, 3005), type = 38); 
 		Misc( pos = (6925, 3035), type = 40); 
 		
 		//Bedroom (Room 2)
 		Misc( pos = (7330, 2300), type = 22);
-		Lamp( pos = (7450, 2380), type = 2);
-		Closet( pos = (6970, 2334), type = 5);
-        Closet( pos = (7120, 2388), type = 6);
-		Misc( pos = (7118, 2305), type = 25);
+		Lamp( pos = (7450, 2380), type = 2, heat = 1000);
+		Closet( pos = (6970, 2334), type = 5, heat = 1000);
+        Closet( pos = (7120, 2388), type = 6, heat = 1000);
+		Misc( pos = (7118, 2305), type = 25, heat = 1000);
 		
 		 
         //Bedroom (Room 3)
         Painting( pos = (7380, 1650), type = 2);  
         Bed( pos = (7385, 1690), type = 0, flipped = true);
-        Misc( pos = (7055, 1720), type = 9); 
-        Misc( pos = (6920, 1720), type = 9);
-        Table( pos = (7180, 1690), type = 2);
+        Misc( pos = (7055, 1720), type = 9, heat = 1000); 
+        Misc( pos = (6920, 1720), type = 9, heat = 1000);
+        Table( pos = (7180, 1690), type = 2, heat = 1000);
         Misc( pos = (7180, 1670), type = 4);
-        Closet( pos = (6990, 1695), type = 4);
+        Closet( pos = (6990, 1695), type = 4)
 		
         //Toilet (Room 4)
         Misc( pos = (7050, 900), type = 19); 
         Misc( pos = (7380, 856), type = 21); 
-        Misc( pos = (7140, 900), type = 18);
-        Misc( pos = (7140, 785), type = 14); 
-        Misc( pos = (6950, 810), type = 20);
-		Misc( pos = (7231, 850), type = 30);
+        Misc( pos = (7140, 900), type = 18, heat = 1000);
+        Misc( pos = (7140, 785), type = 14, heat = 1000); 
+        Misc( pos = (6950, 810), type = 20, heat = 1000);
+		Misc( pos = (7231, 850), type = 30, heat = 1000);
 		
 		/* ------------------- STAIRWAY -------------------------- */
 		

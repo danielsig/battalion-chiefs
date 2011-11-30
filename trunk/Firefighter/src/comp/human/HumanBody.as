@@ -449,6 +449,15 @@ package comp.human
 		
 		public function fixedUpdate() : void 
 		{
+			if (gameObject.fire)
+			{
+				_movement = _movement * 3 + (Math.random() * 8 - 4);
+				if (_movement > 0) _movement = 1;
+				if (_movement < 0) _movement = -1;
+				_facingLeft = _movement < 0;
+				_running = true;
+				_jumping = false;
+			}
 			gameObject.torso.audio.volume = 1;
 			_rigidbody.affectedByGravity = true;
 			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.2);
