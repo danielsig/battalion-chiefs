@@ -18,11 +18,11 @@ package comp.objects
 		//{::::::::::::::::::::::::: STAIRS ::::::::::::::::::::::::::
 		public function geomLeftStairs(stairs : GameObject, params : Object) : void
 		{
-			(stairs.addComponent(Stairs) as Stairs).rightGoesUp = false;
+			stairs.addComponent(LeftStairs);
 		}
 		public function geomRightStairs(stairs : GameObject, params : Object) : void
 		{
-			(stairs.addComponent(Stairs) as Stairs).rightGoesUp = true;
+			stairs.addComponent(RightStairs);
 		}
 	}
 }

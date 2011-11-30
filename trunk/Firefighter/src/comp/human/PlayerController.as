@@ -22,6 +22,8 @@ package comp.human
 			var player : GameObject = new GameObject("player", PlayerController);
 			player.transform.x = x;
 			player.transform.y = y;
+			world.cam.transform.x = player.transform.x;
+			world.cam.transform.y = player.transform.y;
 			return player;
 		}
 		
@@ -76,6 +78,7 @@ package comp.human
 			
 			//CONTROLS
 			Input.assignDirectional("playerDirection", "d", "a", Keyboard.RIGHT, Keyboard.LEFT);
+			Input.assignDirectional("playerVerticalDirection", "w", "s", Keyboard.UP, Keyboard.DOWN);
 			Input.assignButton("shift", Keyboard.SHIFT);
 			Input.assignButton("jump", Keyboard.SPACE);
 			Input.assignButton("crouch", "c");
@@ -90,7 +93,10 @@ package comp.human
 			
 			//CONTROLS
 			sendMessage("HumanBody_face" + (mousePos.x < thisPos.x ? "Left" : "Right"));
-			var dir : int = Input.directional("playerDirection");
+			sendMessage("HumanBody_go" + (mousePos.y < thisPos.y ? "Up" : "Down"));
+			var dir : int = Input.directional("playerVerticalDirection");
+			if(dir) sendMessage("HumanBody_go" + (dir > 0 ? "Up" : "Down") + "Stairs");
+			dir = Input.directional("playerDirection");
 			if (dir) sendMessage("HumanBody_go" + (dir > 0 ? "Right" : "Left"));
 			if (_running != Input.holdButton("shift")) sendMessage("HumanBody_" + ((_running = !_running) ? "start" : "stop") + "Running");
 			if (Input.pressButton("jump")) sendMessage("HumanBody_jump");

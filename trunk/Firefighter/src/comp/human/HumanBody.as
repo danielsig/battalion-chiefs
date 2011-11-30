@@ -2,6 +2,7 @@ package comp.human
 {
 	import com.battalion.flashpoint.comp.*;
 	import com.battalion.flashpoint.core.*;
+	import comp.objects.LeftStairs;
 	import comp.particles.Heat;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
@@ -128,8 +129,6 @@ package comp.human
 				{
 					torsoY:[ t, t, t, t, t, t, t],
 					torsoA:[ ta, ta, ta, ta, ta, ta, ta],
-					headY:[ t, t, t, t, t, t, t],
-					headA:[0, 0, 0, 0, 0, 0, 0],
 					
 					leftLegA:[ leg1, leg2, leg3, leg4, leg5, leg6, leg1],
 					rightLegA:[ leg4, leg5, leg6, leg1, leg2, leg3, leg4],
@@ -285,8 +284,7 @@ package comp.human
 				}
 			);
 			
-			Audio.load("jump", "assets/sound/sounds.mp3~8986-9350~");
-			BoneAnimation.addLabel("humanJump", "Audio_play", 0.9 , "jump", 1);
+			Audio.load("landing", "assets/sound/sounds.mp3~8986-9350~");
 			
 			BoneAnimation.define("humanFall", 4,
 				{
@@ -366,8 +364,35 @@ package comp.human
 		private var _running : Boolean = false;
 		private var _jumping : Boolean = false;
 		private var _movement : int = 0;
+		private var _verticalMovement : int = 0;
 		
 		private var _inAir : Boolean = true;
+		private var _forceGrounded : Boolean = false;
+		
+		public function get horizontalDirection() : int
+		{
+			return _movement;
+		}
+		public function get verticalDirection() : int
+		{
+			return _verticalMovement;
+		}
+		public function get running() : Boolean
+		{
+			return _running;
+		}
+		public function set running(value : Boolean) : void
+		{
+			_running = value;
+		}
+		public function get currentSpeed() : Number
+		{
+			return _movement ? (_running ? runSpeed : speed) : 0;
+		}
+		public function get currentVelocity() : Number
+		{
+			return _movement * (_running ? runSpeed : speed);
+		}
 		
 		public function faceRight() : void
 		{
@@ -390,11 +415,24 @@ package comp.human
 		{
 			_movement = -1;
 		}
-		
 		public function goRight() : void
 		{
 			_movement = 1;
 		}
+		public function goUp() : void
+		{
+			_verticalMovement = -1;
+		}
+		public function goUpStairs() : void
+		{
+			_verticalMovement = -2;
+		}
+		
+		public function goDownStairs() : void
+		{
+			_verticalMovement = 2;
+		}
+		
 		public function jump() : void
 		{
 			_jumping = true;
@@ -404,17 +442,34 @@ package comp.human
 		{
 			return !_inAir;
 		}
+		public function set grounded(value : Boolean) : void
+		{
+			_forceGrounded = true;
+		}
 		
 		public function fixedUpdate() : void 
 		{
 			gameObject.torso.audio.volume = 1;
-			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.2);
-			if (points && points.length)
+			_rigidbody.affectedByGravity = true;
+			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.4);
+			/*for each(var point : ContactPoint in points)
 			{
+				if(point.otherCollider) point.otherCollider.sendMessage("onHumanHit", this);
+			}*/
+			if (points && points.length || _forceGrounded)
+			{
+				if (_forceGrounded)
+				{
+					var v : Point = _rigidbody.velocity;
+					v.x *= 0.5;
+					v.y *= 0.5;
+					_rigidbody.velocity = v;
+				}
 				if (_inAir)
 				{
 					//landing
 					_inAir = false;
+					sendMessage("Audio_play", "landing", 1);
 				}
 				else
 				{
@@ -456,6 +511,7 @@ package comp.human
 				}
 				if (_jumping)
 				{
+					if (_forceGrounded) _tr.y -= 6;
 					_rigidbody.addForce(new Point(0, -jumpSpeed), ForceMode.ACCELLERATION);
 					_animation.transitionTime = 50;
 					_animation.play((_rigidbody.velocity.x > 20 || _rigidbody.velocity.x < -20) && !_animation.reversed ? "humanLeap" : "humanJump", 1);
@@ -513,8 +569,13 @@ package comp.human
 					_tr.scaleX = 1;
 				}
 			}
+			_forceGrounded = false;
+			sendBefore("beforeNextFixedUpdate", "fixedUpdate");
+		}
+		public function beforeNextFixedUpdate() : void 
+		{
 			_jumping = false;
-			_movement = 0;
+			_movement = _verticalMovement = 0;
 		}
 		
 		public function defineAppearance(
@@ -660,7 +721,7 @@ package comp.human
 			//PHSYICS
 			box.dimensions = new Point(62, 126);
 			box.material = new PhysicMaterial(0.3, 0);
-			box.layers = Layers.FIRE_VS_HUMANS | Layers.OBJECTS_VS_HUMANS;
+			box.layers = Layers.FIRE_VS_HUMANS | Layers.OBJECTS_VS_HUMANS | Layers.STAIRS;
 			_rigidbody.mass = 100;
 			_rigidbody.drag = 0;
 			_rigidbody.freezeRotation = true;
