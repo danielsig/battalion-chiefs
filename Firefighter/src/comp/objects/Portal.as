@@ -98,9 +98,9 @@ package comp.objects
 							otherPortal.sendMessage("portalClosed", target.gameObject, otherPortal);
 							target.sendMessage("openingPortal", this);
 							world.cam.transform.x += otherPortal.gameObject.transform.x - target.x;
-							world.cam.transform.y += otherPortal.gameObject.transform.y - target.y;
+							world.cam.transform.y += otherPortal.gameObject.transform.y - target.y + 7;
 							target.x = otherPortal.gameObject.transform.x;
-							target.y = otherPortal.gameObject.transform.y;
+							target.y = otherPortal.gameObject.transform.y + 7;
 							
 							otherPortal._canPort = false;
 							

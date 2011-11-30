@@ -86,9 +86,6 @@ Level1()
 		Door(pos = (5714, 1010), dir = 2);
 		Door(pos = (2650, 1650), other = prev, dir = 3);
 		
-		LeftStairs(pos = (5987, 1017));
-		
-		
 		//OutsideWindows and firetruck
 		Misc( pos = (1110, 320), type = 20);
 		Misc( pos = (1380, 320), type = 20);
@@ -183,6 +180,13 @@ Level1()
         Misc( pos = (7140, 785), type = 14); 
         Misc( pos = (6950, 810), type = 20);
 		Misc( pos = (7231, 850), type = 30);
+		
+		/* ------------------- STAIRWAY -------------------------- */
+		
+		LeftStairs(pos = (5944, 412));
+		RightStairs(pos = (5944, 604));
+		LeftStairs(pos = (5944, 796));
+		RightStairs(pos = (5944, 988));
 		
 	}
 }

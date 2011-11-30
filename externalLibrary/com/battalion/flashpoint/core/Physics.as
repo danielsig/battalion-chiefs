@@ -141,6 +141,26 @@ package com.battalion.flashpoint.core
 			_unitSize = unitSize;
 			_maxSize = maxSize;
 		}
+		public static function toTileX(x : Number) : uint
+		{
+			return 0.5 + (x - _offsetX) / _unitSize;
+		}
+		public static function toTileY(y : Number) : uint
+		{
+			return 0.5 + (y - _offsetY) / _unitSize;
+		}
+		public static function getInArea(rect : Rectangle) : Vector.<Collider>
+		{
+			var vector : Vector.<Collider> = new Vector.<Collider>();
+			PowerGrid.getInAreaProperty("userData", vector as Vector.<*>, 0.5 + (rect.x - _offsetX) / _unitSize, 0.5 + (rect.y - _offsetY) / _unitSize, rect.width / _unitSize, rect.height / _unitSize);
+			return vector;
+		}
+		public static function getInMap(left : uint, top : uint, width : uint = 1, height : uint = 1) : Vector.<Collider>
+		{
+			var vector : Vector.<Collider> = new Vector.<Collider>();
+			PowerGrid.getInAreaProperty("userData", vector as Vector.<*>, left, top, width, height);
+			return vector;
+		}
 		
 		public static function init() : void
 		{

@@ -559,6 +559,11 @@ package comp.objects
 					break;
 			}
 		}
+		public function geomMiscComplete(misc : GameObject) : void
+		{
+			//misc.addComponent(Rigidbody);
+			//misc.rigidbody.mass = 10;
+		}
 		
 		/*
 		//{::::::::::::::::::::::::: Closets ::::::::::::::::::::::::::

@@ -17,6 +17,10 @@ package
 		public static const OBJECTS_VS_HUMANS : uint = 32;
 		public static const FIRE_VS_HUMANS : uint = 64;
 		
+		public static const STAIRS_LEFT : uint = 128;
+		public static const STAIRS_RIGHT : uint = 256;
+		public static const STAIRS : uint = STAIRS_LEFT | STAIRS_RIGHT;
+		
 		public static const ALL : uint = uint.MAX_VALUE;
 		
 		public function Layers() 

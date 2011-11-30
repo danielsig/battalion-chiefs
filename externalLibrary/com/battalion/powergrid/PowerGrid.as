@@ -3,10 +3,13 @@ package com.battalion.powergrid
 	
 	import com.battalion.flashpoint.comp.TextRenderer;
 	import com.battalion.flashpoint.core.GameObject;
+	import comp.objects.RightStairs;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
 	
 	/**
 	 * The main class of the PowerGrid physics engine. Call the init method before anything else.
@@ -145,7 +148,8 @@ package com.battalion.powergrid
 				if (!grid) throw new Error("grid must be non null");
 				if (isNaN(maxSizePromise)) throw new Error("maxSizePromise is NaN (Not a Number)");
 			}
-			generateSqrtTable(2, 0.01, maxSizePromise * 1.2);
+			//TODO change the first parameter (1) to 2, before release
+			generateSqrtTable(1, 0.01, maxSizePromise * 1.2);
 			maxSize = sqrtTable.length / sqrtPow;
 			_unitLog2 = 0;
 			while (unitSize >>> _unitLog2)
@@ -591,7 +595,7 @@ package com.battalion.powergrid
 							
 							//check for collisions with tiles
 							
-							if (circle.layers & _tiles[i])
+							if (circle._mass && circle.layers & _tiles[i])
 							{
 								if (resolveCircleVsTile(circle, i, timeScale))
 								{
@@ -904,7 +908,7 @@ package com.battalion.powergrid
 							
 							//check for collisions with tiles
 							
-							if (triangle.layers & _tiles[i])
+							if (triangle._mass && triangle.layers & _tiles[i])
 							{
 								collision = true;
 								tileCollision ||= resolveTriangleVsTile(triangle, i, timeScale);
@@ -2209,6 +2213,49 @@ package com.battalion.powergrid
 		{
 			maxVelocityX = maxVelocityY = unitSize;
 			maxVelocityA = 120;
+		}
+		public static function getInAreaProperty(propertyName : String, vector : Vector.<*>, left : uint, top : uint, width : uint = 1, height : uint = 1) : void
+		{
+			if (!vector || !propertyName) return;
+			var right : uint = left + width;
+			var bottom : uint = top + height;
+			for (var x : uint = left; x < right; x++)
+			{
+				for (var y : uint = top; y < bottom; y++)
+				{
+					var bucket : BodyNode = _buckets[x + (y * _width)];
+					if (bucket)
+					{
+						do
+						{
+							if(vector.indexOf(bucket.body[propertyName]) < 0) vector.push(bucket.body[propertyName]);
+						}
+						while (bucket = bucket.next);
+					}
+				}
+			}
+		}
+		public static function getInArea(left : uint, top : uint, width : uint = 1, height : uint = 1) : Vector.<AbstractRigidbody>
+		{
+			var right : uint = left + width;
+			var bottom : uint = top + height;
+			var bodies : Vector.<AbstractRigidbody> = new Vector.<AbstractRigidbody>();
+			for (var x : uint = left; x < right; x++)
+			{
+				for (var y : uint = top; y < bottom; y++)
+				{
+					var bucket : BodyNode = _buckets[x + (y * _width)];
+					if (bucket)
+					{
+						do
+						{
+							if(bodies.indexOf(bucket.body) < 0) bodies.push(bucket.body);
+						}
+						while (bucket = bucket.next);
+					}
+				}
+			}
+			return bodies;
 		}
 		public static function getBucket(xIndex : uint, yIndex : uint) : BodyNode
 		{

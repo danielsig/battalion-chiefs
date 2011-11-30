@@ -101,6 +101,13 @@ package com.battalion.flashpoint.core
 		
 		/**
 		 * The velocity of the rigidbody in pixels per fixedUpdate.
+		 * To change the velocity you must assign this property.
+		 * So basicly...
+			 * rigidbody.velocity.x = 10;
+		 * does not work
+		 * but...
+			 * rigidbody.velocity = rigidbody.velocity.add(new Point(10, 0));
+		 * does.
 		 */
 		public function get velocity() : Point
 		{

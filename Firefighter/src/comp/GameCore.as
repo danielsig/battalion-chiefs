@@ -64,6 +64,7 @@ package comp
 			geomCode.source = "assets/geomcode/Level1.gmc";
 			
 			geomCode.construct("Level1");
+			geomCode.construct("Table", {type:0, pos:new Point(4700, 1200)});
 			
 			
 			/*
@@ -88,7 +89,7 @@ package comp
 		public function tilesLoaded() : void 
 		{
 			MouseLocation.create();
-			var player : GameObject = PlayerController.createPlayer(4200, 1200);
+			var player : GameObject = PlayerController.createPlayer(6150, 780);
 			//var human : GameObject = CivilianController.createCivilian(6200, 400);
 		}
 	}
