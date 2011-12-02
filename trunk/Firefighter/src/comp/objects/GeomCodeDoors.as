@@ -37,6 +37,12 @@ package comp.objects
 		{
 			var portal : Portal = door.addComponent(Portal) as Portal;
 			(portal.addComponent(Heat) as Heat).materialType = Heat.WOOD;
+			
+			var col : BoxCollider = door.addComponent(BoxCollider) as BoxCollider;
+			col.width = 100;
+			col.height = 166;
+			col.layers = Layers.OBJECTS_VS_FIRE;
+			
 			portal.height = 140;
 			portal.width = 100;
 			portal.locked = params.locked;

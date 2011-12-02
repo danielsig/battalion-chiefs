@@ -31,8 +31,8 @@ package comp.particles
 		private static const WOOD_FIRE_POINT : Number = 1000;
 		private static const FABRIC_FIRE_POINT : Number = 1300;
 		private static const PLASTIC_FIRE_POINT : Number = 600;
-		private static const SMALL_OBJECT_FIRE_POINT : Number = WOOD_FIRE_POINT;
-		private static const TINY_OBJECT_FIRE_POINT : Number = WOOD_FIRE_POINT;
+		private static const SMALL_OBJECT_FIRE_POINT : Number = PLASTIC_FIRE_POINT;
+		private static const TINY_OBJECT_FIRE_POINT : Number = PLASTIC_FIRE_POINT;
 		
 		private static const WOOD_COMBUSTION_RATE : Number = 12;
 		private static const FABRIC_COMBUSTION_RATE : Number = 16;

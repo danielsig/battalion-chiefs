@@ -4,6 +4,7 @@ package com.battalion.flashpoint.core
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
+	import flash.utils.Dictionary;
 	import com.battalion.Input;
 	
 	/**
@@ -134,6 +135,52 @@ package com.battalion.flashpoint.core
 			{
 				_gameObject._components.length--;
 			}
+		}
+		public function addListener(messageName : String, callbackFunction : Function) : void
+		{
+			CONFIG::debug
+			{
+				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
+				if (!messageName) throw new Error("MessageName must be non-null.");
+				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+			}
+			if (!_gameObject._listeners[messageName]) _gameObject._listeners[messageName] = new Dictionary();
+			var obj : Object = { };
+			obj[messageName] = callbackFunction;
+			_gameObject._listeners[messageName][callbackFunction] = _gameObject.addDynamic(messageName + "Listener", obj, true);
+			
+		}
+		public function removeListener(messageName : String, callbackFunction : Function) : void
+		{
+			CONFIG::debug
+			{
+				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
+				if (!messageName) throw new Error("MessageName must be non-null.");
+				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+			}
+			if (_gameObject._listeners[messageName] && _gameObject._listeners[messageName][callbackFunction])
+			{
+				_gameObject.removeComponent(_gameObject._listeners[messageName][callbackFunction]);
+				delete _gameObject._listeners[messageName][callbackFunction];
+			}
+		}
+		/**
+		 * Use this to add a DynamicComponent.
+		 * @param	name, the name of the dynamic component
+		 * @param	properties, an Object containing properties and methods that should be placed in the DynamicComponent instance.
+		 * @param	hidden, Boolean indicating if this DynamicComponent should be hidden (see IHiddenComponent).
+		 * @return	the DynamicComponent instance.
+		 */
+		public final function addDynamic(name : String, properties : Object = null, hidden : Boolean = false) : DynamicComponent
+		{
+			//TODO: Optimize
+			CONFIG::unoptimized{ throw new Error("This function can be optimized further by copy pasting code hence avoiding function calls"); }
+			CONFIG::debug
+			{
+				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
+				if (!name) throw new Error("Name must be non-null.");
+			}
+			return _gameObject.addDynamic(name, properties, hidden);
 		}
 		/**
 		 * @see GameObject.addConcise()

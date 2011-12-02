@@ -18,7 +18,7 @@ package com.battalion.flashpoint.core
 	 * </ul>
 	 * @author Battalion Chiefs
 	 */
-	public interface IConciseComponent 
+	public interface IConciseComponent extends IHiddenComponent
 	{
 		
 	}

@@ -49,7 +49,16 @@ package comp.human
 			_doorQueue = new Vector.<Portal>();
 			_followPlayer = true;
 			releaseComponent(Trigger).destroy();
-			(_player.addComponent(DoorQueue) as DoorQueue)._civilian = this;
+			_player.addListener("openingPortal", openingPortal);
+		}
+		private function openingPortal(portal : Portal) : void
+		{
+			_doorQueue.push(portal);
+		}
+		private function onDestroy() : Boolean
+		{
+			if(!_player.isDestroyed) _player.removeListener("openingPortal", openingPortal);
+			return false;
 		}
 		public function fixedUpdate() : void 
 		{

@@ -82,6 +82,14 @@ package comp.objects
 				if (!otherPortal) throw new Error ("Portal must be non-null.");
 			}
 			
+			if (gameObject.heat.heat != otherPortal.gameObject.heat.heat)
+			{
+				var heat : Number = (gameObject.heat.heat + otherPortal.gameObject.heat.heat) * 0.5;
+				gameObject.heat.heat = otherPortal.gameObject.heat.heat = 0;
+				gameObject.heat.addHeat(heat);
+				otherPortal.gameObject.heat.addHeat(heat);
+			}
+			
 			if (_canPort)
 			{
 				var top : Number = gameObject.transform.y - ( height * 0.5);
