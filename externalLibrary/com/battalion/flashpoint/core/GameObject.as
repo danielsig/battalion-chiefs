@@ -66,6 +66,8 @@ trace(myChild);//WORLD.foo.bar
 		/** @private **/
 		internal var _components : Vector.<Component>;
 		/** @private **/
+		internal var _listeners : Object = { };
+		/** @private **/
 		internal var _messages : Object = { };
 		/** @private **/
 		internal var _after : Object = { };
@@ -215,7 +217,8 @@ trace(myChild);//WORLD.foo.bar
 				
 				if (!(component is IConciseComponent))
 				{
-					this[name] = component;
+					
+					if (!(component is IHiddenComponent)) this[name] = component;
 					
 					var compObj : Object = component;
 					if (compObj.hasOwnProperty("update") && compObj.update is Function)
@@ -384,6 +387,7 @@ trace(myChild);//WORLD.foo.bar
 		}
 		/**
 		 * Gets all components of s spcific type.
+		 * set the type to Component, in order to get all Components
 		 * @param	type, the type of the Components to get.
 		 * @return	All components of s spcific type.
 		 */
@@ -397,7 +401,7 @@ trace(myChild);//WORLD.foo.bar
 			var results : Vector.<Component> = new Vector.<Component>();
 			for each(var component : Component in _components)
 			{
-				if (component is type)
+				if (component is type && !(component is IHiddenComponent) && !(component is DynamicComponent && (component as DynamicComponent)._hidden))
 				{
 					results.push(component);
 				}
@@ -438,7 +442,7 @@ trace(myChild);//WORLD.foo.bar
 		}
 		private function findComponentUpwardsRecursive(type : String) : *
 		{
-			if (this.hasOwnProperty(type) && this[type] is Component)
+			if (this.hasOwnProperty(type) && this[type] is Component && !(this[type] is DynamicComponent && this[type]._hidden))
 				return this[type];
 			if (this != WORLD)
 				return _parent.findComponentUpwardsRecursive(type);
@@ -458,7 +462,7 @@ trace(myChild);//WORLD.foo.bar
 			}
 			var name : String = type + "";
 			name = name.charAt(8).toLowerCase() + name.slice(8, name.length - 1);
-			if (this.hasOwnProperty(name) && this[name] is Component)
+			if (this.hasOwnProperty(name) && this[name] is Component && !(this[name] is DynamicComponent && this[name]._hidden))
 				return this[name];
 			return findComponentDownwardsRecursive(name);
 		}
@@ -466,7 +470,7 @@ trace(myChild);//WORLD.foo.bar
 		{
 			for each(var obj : GameObject in _children)
 			{
-				if (obj.hasOwnProperty(type) && obj[type] is Component)
+				if (obj.hasOwnProperty(type) && obj[type] is Component && !(obj[type] is DynamicComponent && obj[type]._hidden))
 					return obj[type];
 			}
 			for each(obj in _children)
@@ -477,7 +481,7 @@ trace(myChild);//WORLD.foo.bar
 			return null;
 		}
 		
-		public function findGameObjectDownwards(goName : String): GameObject
+		public function findGameObjectDownwards(goName : String) : GameObject
 		{
 			CONFIG::debug
 			{
@@ -521,7 +525,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			var name : String = type + "";
 			name = name.charAt(7).toLowerCase() + name.slice(8, name.length-1);
-			if (this.hasOwnProperty(name) && this[name] is type)
+			if (this.hasOwnProperty(name) && this[name] is type && !(this[name] is DynamicComponent && this[name]._hidden))
 			{
 				return this[name];
 			}
@@ -547,6 +551,14 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			{
 				compObj._gameObject = null;
 			}
+			for(var message : String in _listeners)
+			{
+				for(var listener : Object in _listeners[message])
+				{
+					delete _listeners[message][listener];
+				}
+				delete _listeners[message];
+			}
 			
 			_children.length = 0;
 			_components.length = 0;
@@ -557,6 +569,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			_parent = null;
 			_children = null;
 			_components = null;
+			_listeners = null;
 			_fixedUpdate = null;
 			_messages = null;
 			_after = null;
@@ -591,7 +604,114 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			return copy;
 		}
-		
+		public function addListener(messageName : String, callbackFunction : Function) : void
+		{
+			CONFIG::debug
+			{
+				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (!messageName) throw new Error("MessageName must be non-null.");
+				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+			}
+			if (!_listeners[messageName]) _listeners[messageName] = new Dictionary();
+			var obj : Object = { };
+			obj[messageName] = callbackFunction;
+			_listeners[messageName][callbackFunction] = addDynamic(messageName + "Listener", obj, true);
+			
+		}
+		public function removeListener(messageName : String, callbackFunction : Function) : void
+		{
+			CONFIG::debug
+			{
+				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (!messageName) throw new Error("MessageName must be non-null.");
+				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+			}
+			if (_listeners[messageName] && _listeners[messageName][callbackFunction])
+			{
+				removeComponent(_listeners[messageName][callbackFunction]);
+				delete _listeners[messageName][callbackFunction];
+			}
+		}
+		/**
+		 * Use this to add a DynamicComponent.
+		 * @param	name, the name of the dynamic component
+		 * @param	properties, an Object containing properties and methods that should be placed in the DynamicComponent instance.
+		 * @param	hidden, Boolean indicating if this DynamicComponent should be hidden (see IHiddenComponent).
+		 * @return	the DynamicComponent instance.
+		 */
+		public function addDynamic(name : String, properties: Object = null, hidden : Boolean = false) : DynamicComponent
+		{
+			CONFIG::debug
+			{
+				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (!name) throw new Error("Name must be non-null.");
+			}
+			var instance : DynamicComponent = new DynamicComponent();
+			
+			properties ||= { };
+			for (var property : String in properties)
+			{
+				instance[property] = properties[property];
+			}
+			
+			instance._name = name;
+			instance._gameObject = this;
+			instance._hidden = hidden;
+			
+			_components.push(instance);
+			if(!hidden) this[name] = instance;
+
+			for (var message : String in _messages)
+			{
+				var indexOfUnderScore : int = message.indexOf("_");
+				if (indexOfUnderScore > 0)
+				{
+					var functionName : String = message.slice(indexOfUnderScore + 1);
+					var className : String = message.slice(0, indexOfUnderScore);
+					className = className.charAt(0).toLowerCase() + className.slice(1);
+					if (hasOwnProperty(className))
+					{
+						var targetClass : Class = getDefinitionByName(getQualifiedClassName(this[className])) as Class;
+					}
+					else
+					{
+						targetClass = null;
+					}
+				}
+				else
+				{
+					functionName = message;
+					targetClass = Component;
+				}
+				
+				if ((targetClass && instance is targetClass || !targetClass) && instance.hasOwnProperty(functionName))
+				{
+					CONFIG::debug
+					{
+						if (!(instance[functionName] is Function)) throw new Error("the property " + functionName + " of " + instance + " conflicts with a message with the same name."); 
+					}
+					_messages[message].push(instance[functionName]);
+				}
+			}
+			
+			if (instance.hasOwnProperty("update") && instance.update is Function)
+			{
+				_update.push(instance.update);
+			}
+			if (instance.hasOwnProperty("fixedUpdate") && instance.fixedUpdate is Function)
+			{
+				_fixedUpdate.push(instance.fixedUpdate);
+			}
+			if (instance.hasOwnProperty("start") && instance.start is Function)
+			{
+				_start.push(instance.start);
+			}
+			if (instance.hasOwnProperty("awake") && instance.awake is Function)
+			{
+				instance.awake();
+			}
+			return instance;
+		}
 		/**
 		 * Just like addComponent except it's for concise components.
 		 * 
@@ -608,6 +728,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (comp == null) throw new Error("Comp must be non-null."); 
+				if (comp is DynamicComponent) throw new Error("Do not use this method to add dynamic components, use addDynamic() instead.");
 				if (!Util.isComponent(comp)) throw new Error(comp + " does not extend " + Component + ".");
 				if (!Util.isConcise(comp)) throw new Error(comp + " does not implement the IConciseComponent interface.");
 			}
@@ -676,6 +797,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (comp == null) throw new Error("Comp must be non-null."); 
+				if (comp is DynamicComponent) throw new Error("Do not use this method to add dynamic components, use addDynamic() instead.");
 				if (!Util.isComponent(comp)) throw new Error(comp + " does not extend " + Component + ".");
 				if (Util.isConcise(comp)) throw new Error(comp + " implements the IConciseComponent interface. Please use the addConcise() method instead.");
 			}
@@ -690,10 +812,13 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			instance._gameObject = this;
 			_components.push(instance);
 			
-			var name : String = getQualifiedClassName(instance);
-			name = name.slice(name.lastIndexOf("::") + 2);
-			name = name.charAt(0).toLowerCase() + name.slice(1);
-			this[name] = instance;
+			if (!(instance is IHiddenComponent))
+			{
+				var name : String = getQualifiedClassName(instance);
+				name = name.slice(name.lastIndexOf("::") + 2);
+				name = name.charAt(0).toLowerCase() + name.slice(1);
+				this[name] = instance;
+			}
 
 			for (var message : String in _messages)
 			{
@@ -787,7 +912,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					return;
 				}
 			}
-			if (compObj.hasOwnProperty("update"))
+			if (compObj.hasOwnProperty("update") && compObj.update is Function)
 			{
 				var index : int = _update.lastIndexOf(compObj.update);
 				if (index < _update.length - 1)
@@ -799,7 +924,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					_update.length--;
 				}
 			}
-			if (compObj.hasOwnProperty("fixedUpdate"))
+			if (compObj.hasOwnProperty("fixedUpdate") && compObj.fixedUpdate is Function)
 			{
 				index  = _fixedUpdate.lastIndexOf(compObj.fixedUpdate);
 				if (index < _fixedUpdate.length - 1)
@@ -835,7 +960,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					targetClass = Component;
 				}
 				
-				if (instance is targetClass && instance.hasOwnProperty(functionName))
+				if (instance is targetClass && instance.hasOwnProperty(functionName) && compObj[functionName] is Function)
 				{
 					var rcv : Vector.<Function> = _messages[message];
 					index = rcv.indexOf(instance[functionName]);
@@ -865,9 +990,13 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			
 			var type : Class = Class(getDefinitionByName(getQualifiedClassName(instance)))
 			
-			var name : String = getQualifiedClassName(instance);
-			name = name.slice(name.lastIndexOf("::") + 2);
-			name = name.charAt(0).toLowerCase() + name.slice(1);
+			if (instance is DynamicComponent) var name : String = compObj._name
+			else
+			{
+				name = getQualifiedClassName(instance);
+				name = name.slice(name.lastIndexOf("::") + 2);
+				name = name.charAt(0).toLowerCase() + name.slice(1);
+			}
 			
 			for each(var component : Component in _components)
 			{
@@ -1050,8 +1179,12 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 				var compNames : Vector.<String> = new Vector.<String>(i);
 				while(i--)
 				{
-					compNames[i] = getQualifiedClassName(_components[i]);
-					compNames[i] = compNames[i].slice(compNames[i].lastIndexOf(":") + 1);
+					if (_components[i] is DynamicComponent) compNames[i] = (_components[i] as DynamicComponent)._name;
+					else
+					{
+						compNames[i] = getQualifiedClassName(_components[i]);
+						compNames[i] = compNames[i].slice(compNames[i].lastIndexOf(":") + 1);
+					}
 				}
 				components = ": [" + compNames.join(", ") + "]";
 			}
@@ -1074,8 +1207,12 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 						compNames = new Vector.<String>(i);
 						while(i--)
 						{
-							compNames[i] = getQualifiedClassName(target._components[i]);
-							compNames[i] = compNames[i].slice(compNames[i].lastIndexOf(":") + 1);
+							if (target._components[i] is DynamicComponent) compNames[i] = (target._components[i] as DynamicComponent)._name;
+							else
+							{
+								compNames[i] = getQualifiedClassName(target._components[i]);
+								compNames[i] = compNames[i].slice(compNames[i].lastIndexOf(":") + 1);
+							}
 						}
 						components = ": [" + compNames.join(", ") + "]";
 					}
@@ -1123,16 +1260,34 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					trace(this + ": " + names.join(", "));
 					for each(var comp : Component in _components)
 					{
-						var name : String = getQualifiedClassName(comp);
-						name = name.slice(name.lastIndexOf("::") + 2);
-						name = name.charAt(0).toLowerCase() + name.slice(1);
-						trace("\t" + name + ": ");
-						var info : XMLList = describeType(comp).children();
-						for each(var member : XML in info)
+						if (comp is DynamicComponent)
 						{
-							if ((member.name() == "variable" || member.name() == "accessor"))
+							var name : String = (comp as DynamicComponent)._name;
+							name = name.charAt(0).toLowerCase() + name.slice(1);
+							
+							trace("\t" + name + ": ");
+							for(var memberName : String in comp as DynamicComponent)
 							{
-								trace("\t\t" + member.@name + ": " + comp[member.@name]);
+								if (!(comp[memberName] is Function))
+								{
+									trace("\t\t" + memberName + ": " + comp[memberName]);
+								}
+							}
+						}
+						else
+						{
+							name = getQualifiedClassName(comp);
+							name = name.slice(name.lastIndexOf("::") + 2);
+							name = name.charAt(0).toLowerCase() + name.slice(1);
+							
+							trace("\t" + name + ": ");
+							var info : XMLList = describeType(comp).children();
+							for each(var member : XML in info)
+							{
+								if ((member.name() == "variable" || member.name() == "accessor"))
+								{
+									trace("\t\t" + member.@name + ": " + comp[member.@name]);
+								}
 							}
 						}
 					}

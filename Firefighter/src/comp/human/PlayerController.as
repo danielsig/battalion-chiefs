@@ -17,7 +17,7 @@ package comp.human
 	public class PlayerController extends Component implements IExclusiveComponent
 	{
 		
-		public static function createPlayer(x : Number = 0, y : Number = 0) : GameObject 
+		public static function createPlayer(x : Number = 0, y : Number = 0) : GameObject
 		{
 			var player : GameObject = new GameObject("player", PlayerController);
 			player.transform.x = x;
