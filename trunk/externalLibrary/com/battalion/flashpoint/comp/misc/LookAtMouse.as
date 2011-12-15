@@ -2,6 +2,7 @@ package com.battalion.flashpoint.comp.misc
 {
 	
 	import com.battalion.flashpoint.core.*;
+	import com.battalion.flashpoint.comp.Camera;
 	import com.battalion.Input;
 	import flash.geom.Point;
 	
@@ -27,11 +28,9 @@ package com.battalion.flashpoint.comp.misc
 		public var enabled : Boolean = true;
 		
 		/**
-		 * A number to multiply the angular transition with, before applying it to the rotation.
-		 * In other words, the rotation will become:
-			 * <code>rotation += (targetRotation - rotation) * transitionMultiplier;</code>
+		 * A number to multiply the angular transition with before applying it to the GameObject.
 		 */
-		public var transitionMultiplier : Number = 0.9;
+		public var speed : Number = 4;
 		
 		/**
 		 * The lower rotational constraints of the GameObject relative to the parent GameObject.
@@ -60,7 +59,7 @@ package com.battalion.flashpoint.comp.misc
 		{
 			CONFIG::debug
 			{
-				if (transitionMultiplier <= 0 || transitionMultiplier > 1) throw new Error("transitionMultiplier must be a value between 0 and 1 (0 > x ≥ 1), but it was: " + transitionMultiplier);
+				if (speed <= 0) throw new Error("speed must be greater than 0, but it was: " + speed);
 				if (lowerConstraints < -180 || lowerConstraints > 180) throw new Error("lowerConstraints must be a value between -180 and 180 (-180 ≥ x ≥ 180), but it was: " + lowerConstraints);
 				if (upperConstraints < -180 || upperConstraints > 180) throw new Error("upperConstraints must be a value between -180 and 180 (-180 ≥ x ≥ 180), but it was: " + upperConstraints);
 			}
@@ -80,10 +79,14 @@ package com.battalion.flashpoint.comp.misc
 		public function look() : void 
 		{
 			_tr.rotation = _prevRotation;
-			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
-			_tr.rotateTowards(mousePos, angleOffset, transitionMultiplier * FlashPoint.deltaRatio);
-			if (_tr.rotation < lowerConstraints) _tr.rotation = lowerConstraints;
-			else if (_tr.rotation > upperConstraints) _tr.rotation = upperConstraints;
+			var mainCam : Camera = Camera.mainCamera;
+			if (mainCam)
+			{
+				var mousePos : Point = mainCam.screenToWorld(Input.mouse);
+				_tr.rotateTowards(mousePos, angleOffset, speed * FlashPoint.deltaTime);
+				if (_tr.rotation < lowerConstraints) _tr.rotation = lowerConstraints;
+				else if (_tr.rotation > upperConstraints) _tr.rotation = upperConstraints;
+			}
 			_prevRotation = _tr.rotation;
 		}
 		

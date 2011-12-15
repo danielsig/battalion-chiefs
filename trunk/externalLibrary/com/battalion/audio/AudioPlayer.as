@@ -24,16 +24,29 @@ package com.battalion.audio
 		public static const SAMPLES_PER_CALLBACK:int = 4000; // Should be >= 2048 && <= 8192
 		
 		/**
-		 * If true, the panning effect will be a delay between the left and right channels.
-		 * If false, the panning effect will be a difference in volume between the left and right channels.
+		 * If true, the panning effect will be a delay between the left and right channels (optimal for headphones, very cool effect, but not a very fast one either).
+		 * If false, the panning effect will be a difference in volume between the left and right channels (optimal for speakers).
 		 */
 		private static var _headphones : Boolean = false;
 		/**
 		 * The stereo effect of the headphones setting.
 		 */
 		public static var headphonesEffect : Number = 512;
+		
 		private static var _players : Vector.<AudioPlayer> = new Vector.<AudioPlayer>();
 		private static var _mute : SoundTransform = new SoundTransform(0, 0);
+		private static var _silence : ByteArray = initSilence();
+		
+		private static function initSilence() : ByteArray
+		{
+			var bytes : ByteArray = new ByteArray();
+			var i : int = SAMPLES_PER_CALLBACK;
+			while (i--)
+			{
+				bytes.writeDouble(0);
+			}
+			return bytes;
+		}
 		/**
 		 * TimeScale to apply to all AudioPlayers.
 		 */
@@ -141,6 +154,9 @@ package com.battalion.audio
 		}
 		/**
 		 * Volume of this AudioPlayer.
+		 * Don't worry about setting the volume to 0 while still playing,
+		 * the player is optimized for that kind of situation, so that it
+		 * doesn't make any unneeded calculations.
 		 */
 		public function get volume() : Number
 		{
@@ -331,7 +347,17 @@ package com.battalion.audio
 			}
 			var bytes : ByteArray = _data._bytes;
 			var feed : ByteArray = e.data;
-			var end : Number = Math.min(_end, bytes.length);
+			var end : Number = _end;
+			if (bytes.length < end) end = bytes.length;
+			
+			if (!_transform.volume)
+			{
+				_silence.position = 0;
+				e.data.writeBytes(_silence);
+				_p = ((_p + _silence.length - _start) % (end - _start)) + _start;
+				return;
+			}
+			
 			bytes.position = _p;
 			var i : int = SAMPLES_PER_CALLBACK;
 			var phase : Number = 0;
@@ -339,85 +365,164 @@ package com.battalion.audio
 			var speed : Number = timeScale * globalTimeScale * direction;
 			var bulkFeed : Boolean = timeScale * globalTimeScale == 1;
 			
-			while (i--)
+			if (!bulkFeed)
 			{
-				if (!reverse && end - bytes.position < 8 || reverse && bytes.position - _start < 8)
+				while (i--)
 				{
-					if (pingPongPlayback) reverse = !reverse;
-					bytes.position = reverse ? end : _start;
-					if (_loops > 0 && _loops-- == 1)
+					if (!reverse && end - bytes.position < 8 || reverse && bytes.position - _start < 8)
 					{
-						_p = bytes.position;
-						do
+						if (pingPongPlayback) reverse = !reverse;
+						bytes.position = reverse ? end : _start;
+						if (_loops > 0 && _loops-- == 1)
 						{
-							feed.writeDouble(0);
+							_p = bytes.position;
+							do
+							{
+								feed.writeDouble(0);
+							}
+							while (i--);
+							_sampling = _playing = false;
+							_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
+							if (_channel) _channel.addEventListener(Event.SOUND_COMPLETE, soundComplete);
+							return;
 						}
-						while (i--);
-						_sampling = _playing = false;
-						_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
-						if (_channel) _channel.addEventListener(Event.SOUND_COMPLETE, soundComplete);
-						return;
 					}
-				}
-				
-				if (!reverse && end - bytes.position > 7 || reverse && bytes.position - _start > 7)
-				{
-					if (_headphones)
+					
+					if (!reverse && end - bytes.position > 7 || reverse && bytes.position - _start > 7)
 					{
-						var pos : uint = bytes.position;
-						
-						bytes.position = pos - (((_pan * headphonesEffect) >>> 3) << 3);
-						if (bytes.position >= end - 8)
+						if (_headphones)
 						{
-							if (bytes.position >= bytes.length) bytes.position = bytes.length;
-							bytes.position -= (end - _start) - 8;
+							var pos : uint = bytes.position;
+							
+							bytes.position = pos - (((_pan * headphonesEffect) >>> 3) << 3);
+							if (bytes.position >= end - 8)
+							{
+								if (bytes.position >= bytes.length) bytes.position = bytes.length;
+								bytes.position -= (end - _start) - 8;
+							}
+							else if (bytes.position < _start) bytes.position += (end - _start) - 16;
+							feed.writeFloat(bytes.readFloat());
+							
+							bytes.position = pos + (((_pan * headphonesEffect) >>> 3) << 3);
+							if (bytes.position >= end - 8)
+							{
+								if (bytes.position >= bytes.length) bytes.position = bytes.length;
+								bytes.position -= (end - _start) - 8;
+							}
+							else if (bytes.position < _start) bytes.position += (end - _start) - 16;
+							feed.writeFloat(bytes.readFloat());
+							
+							bytes.position = pos + 8;
 						}
-						else if (bytes.position < _start) bytes.position += (end - _start) - 16;
-						feed.writeFloat(bytes.readFloat());
-						
-						bytes.position = pos + (((_pan * headphonesEffect) >>> 3) << 3);
-						if (bytes.position >= end - 8)
+						else
 						{
-							if (bytes.position >= bytes.length) bytes.position = bytes.length;
-							bytes.position -= (end - _start) - 8;
+							feed.writeDouble(bytes.readDouble());
 						}
-						else if (bytes.position < _start) bytes.position += (end - _start) - 16;
-						feed.writeFloat(bytes.readFloat());
-						
-						bytes.position = pos + 8;
+						phase += speed;
+						if (phase >= 1 || phase <= -1)
+						{
+							bytes.position += (int(phase) - 1) * 8;
+							phase -= int(phase);
+						}
+						else
+						{
+							bytes.position -= 8 * direction;
+						}
 					}
-					else if(bulkFeed)
+					else if(bytes.length > 7)
 					{
-						var bytesToWrite : uint = bytes.bytesAvailable;
-						if (bytesToWrite >> 3 > i + 1) bytesToWrite = (i + 1) << 3;
-						i -= (bytesToWrite >> 3) - 1;
-						feed.writeBytes(bytes, bytes.position, bytesToWrite);
-						bytes.position += bytesToWrite;
-						continue;
-					}
-					else
-					{
+						bytes.position = 0;
 						feed.writeDouble(bytes.readDouble());
 					}
-					phase += speed;
-					if (phase >= 1 || phase <= -1)
+					else
 					{
-						bytes.position += (int(phase) - 1) * 8;
-						phase -= int(phase);
+						feed.writeDouble(0);
+					}
+				}
+			}
+			else
+			{
+				var bytesPerUnit : uint = 64 * 8;
+				while (i--)
+				{
+					if (!reverse && end - bytes.position < bytesPerUnit || reverse && bytes.position - _start < bytesPerUnit)
+					{
+						if (pingPongPlayback) reverse = !reverse;
+						bytes.position = reverse ? end : _start;
+						if (_loops > 0 && _loops-- == 1)
+						{
+							_p = bytes.position;
+							do
+							{
+								feed.writeDouble(0);
+							}
+							while (i--);
+							_sampling = _playing = false;
+							_sound.removeEventListener(SampleDataEvent.SAMPLE_DATA, audioFeed);
+							if (_channel) _channel.addEventListener(Event.SOUND_COMPLETE, soundComplete);
+							return;
+						}
+					}
+					
+					if (!reverse && end - bytes.position >= bytesPerUnit || reverse && bytes.position - _start >= bytesPerUnit)
+					{
+						if (_headphones)
+						{
+							pos = bytes.position;
+							var centerPos : uint = pos;
+							
+							pos -= (((_pan * headphonesEffect) >>> 3) << 3);
+							if (pos >= end - bytesPerUnit)
+							{
+								if (pos >= bytes.length) pos = bytes.length;
+								pos -= (end - _start) - bytesPerUnit;
+							}
+							else if (pos < _start) pos += (end - _start) - (bytesPerUnit);
+							
+							feed.writeBytes(bytes, pos, bytesPerUnit);
+							/*
+							pos = centerPos + (((_pan * headphonesEffect) >>> 3) << 3);
+							if (pos >= end - bytesPerUnit)
+							{
+								if (pos >= bytes.length) pos = bytes.length;
+								pos -= (end - _start) - bytesPerUnit;
+							}
+							else if (pos < _start) pos += (end - _start) - (8 + bytesPerUnit);
+							feed.writeBytes(bytes, pos, bytesPerUnit);
+							*/
+							bytes.position = centerPos + bytesPerUnit;
+						}
+						else
+						{
+							var bytesToWrite : uint = bytes.bytesAvailable;
+							if (bytesToWrite >> 3 > i + 1) bytesToWrite = (i + 1) << 3;
+							i -= (bytesToWrite >> 3) - 1;
+							feed.writeBytes(bytes, bytes.position, bytesToWrite);
+							bytes.position += bytesToWrite;
+							continue;
+						}
+						phase += speed;
+						if (phase >= 1 || phase <= -1)
+						{
+							bytes.position += (int(phase) - 1) * bytesPerUnit;
+							phase -= int(phase);
+						}
+						else
+						{
+							bytes.position -= bytesPerUnit * direction;
+						}
+					}
+					else if(bytes.length >= bytesPerUnit)
+					{
+						bytes.position = _start;
+						feed.writeBytes(bytes, bytes.position, bytesPerUnit);
+						bytes.position += bytesPerUnit;
 					}
 					else
 					{
-						bytes.position -= 8 * direction;
+						_silence.position = 0;
+						feed.writeBytes(_silence, 0, bytesPerUnit);
 					}
-				}
-				else if(bytes.length > 7)
-				{
-					bytes.position = 0;
-					feed.writeDouble(bytes.readDouble());
-				}
-				else
-				{
-					feed.writeDouble(0);
 				}
 			}
 			_p = bytes.position;

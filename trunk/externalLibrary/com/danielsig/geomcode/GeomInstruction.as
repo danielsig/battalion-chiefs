@@ -153,7 +153,7 @@ package com.danielsig.geomcode
 							break;
 						case TRACE:
 							elseTrue = false;
-							trace(target.evalEval + " = " + target.eval(local));
+							trace("0:" + target.evalEval + " = " + target.eval(local));
 							break;
 						default: break;
 					}
@@ -260,11 +260,11 @@ package com.danielsig.geomcode
 			{
 				if(object == null && c > 0)
 				{
-					trace("     .+=================================================+.");
-					trace("    || GeomCode: Warning! null object reference.       ||");
-					trace("    || " + StringUtilPro.toMinLength("'" + objectNames[c - 1] + "' is null in the following expression:$||", 52, " "));
-					trace("    || " + StringUtilPro.toMinLength("\t" + objectNames.join(".") + "$||", 46, " "));
-					trace("     '+=================================================+'");
+					trace("2:     .+=================================================+.");
+					trace("2:    || GeomCode: Warning! null object reference.       ||");
+					trace("2:    || " + StringUtilPro.toMinLength("'" + objectNames[c - 1] + "' is null in the following expression:$||", 52, " "));
+					trace("2:    || " + StringUtilPro.toMinLength("\t" + objectNames.join(".") + "$||", 46, " "));
+					trace("2:     '+=================================================+'");
 					return;
 				}
 				object = object[objectNames[c++]];

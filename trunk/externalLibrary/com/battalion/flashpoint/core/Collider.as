@@ -22,6 +22,25 @@ package com.battalion.flashpoint.core
 		protected override function getPrivate(name : String) : * { return this[name]; }
 		
 		/**
+		 * Enables the collider, it's almost equivalent to adding it except
+		 * that disabling and enabling is faster than destroying and adding.
+		 * This comes most in handy when you want to add a GameObject with a
+		 * collider to a pool. <a href="http://en.wikipedia.org/wiki/Pool_(computer_science)">More info on pools here</a>.
+		 * @see enable()
+		 * @see disable()
+		 */
+		public function get enabled() : Boolean
+		{
+			if (body) return body.enabled;
+			else return _enabled;
+		}
+		public function set enabled(value : Boolean) : void
+		{
+			if (body) body.enabled = value;
+			else _enabled = value;
+		}
+		
+		/**
 		 * A bitmask indicating what layers this collider can collide with.
 		 * Each bit is a single layer.
 		 * @see #groupLayers
@@ -63,10 +82,11 @@ package com.battalion.flashpoint.core
 		internal var _prev : IPhysicsSyncable;
 		
 		/** @private */
-		internal var body : AbstractRigidbody;
+		internal var body : AbstractRigidbody = null;
 		private var _transform : Transform;//for speed;
 		private var _this : Object;//for speed;
 		private var _name : String;//for speed;
+		private var _enabled : Boolean = true;
 		
 		public function addLayers(layersToAdd : uint) : void
 		{
@@ -161,6 +181,60 @@ package com.battalion.flashpoint.core
 				root.sendBefore("updatePhysics", "update");
 			}
 		}
+		/**
+		 * Enables the rigidbody, it's almost equivalent to adding it except
+		 * that disabling and enabling is faster than destroying and adding.
+		 * This comes most in handy when you want to add a GameObject with a
+		 * rigidbody to a pool. <a href="http://en.wikipedia.org/wiki/Pool_(computer_science)">More info on pools here</a>.
+		 * @see disable()
+		 * @see #enabled
+		 */
+		public function enable() : void
+		{
+			if(body) body.enable();
+			else _enabled = true;
+			
+			if (_this.length == 1)
+			{
+				if (!_this.updated)
+				{
+					_this.updated = true;
+					
+					var root : GameObject = _gameObject;
+					while (root._parent != world) root = root._parent;
+					
+					root.addConcise(UpdatePhysics, "updatePhysics");
+					root.sendBefore("updatePhysics", "update");
+				}
+			}
+		}
+		/**
+		 * Disables the rigidbody, it's almost equivalent to destroying it except
+		 * that disabling and enabling is faster than destroying and adding.
+		 * This comes most in handy when you want to add a GameObject with a
+		 * rigidbody to a pool. <a href="http://en.wikipedia.org/wiki/Pool_(computer_science)">More info on pools here</a>.
+		 * @see enable()
+		 * @see #enabled
+		 */
+		public function disable() : void
+		{
+			if(body) body.disable();
+			else _enabled = false;
+			
+			if (_this.length == 1)
+			{
+				if (!_this.updated)
+				{
+					_this.updated = true;
+					
+					var root : GameObject = _gameObject;
+					while (root._parent != world) root = root._parent;
+					
+					root.addConcise(UpdatePhysics, "updatePhysics");
+					root.sendBefore("updatePhysics", "update");
+				}
+			}
+		}
 		/** @private */
 		public final function onDestroy() : Boolean
 		{
@@ -184,6 +258,11 @@ package com.battalion.flashpoint.core
 				root.sendBefore("updatePhysics", "update");
 			}
 			
+			if (_this.subColliders)
+			{
+				var index : int = _this.subColliders.indexOf(this);
+				if (index > -1) _this.subColliders.splice(index, 1);
+			}
 			_material = null;
 			_name = null;
 			_this = null;
@@ -198,7 +277,7 @@ package com.battalion.flashpoint.core
 		/** @private */
 		internal final function addPhysics() : void 
 		{
-			_this.added = true;
+			_this.added = this;
 			if (_head)
 			{
 				(_head as Collider || _head as Rigidbody)._prev = this;

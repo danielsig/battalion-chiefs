@@ -1,7 +1,6 @@
 package com.battalion.flashpoint.comp.misc 
 {
 	
-	import com.battalion.flashpoint.comp.TextRenderer;
 	import com.battalion.flashpoint.core.*;
 	
 	/**

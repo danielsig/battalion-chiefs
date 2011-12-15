@@ -1,4 +1,4 @@
-package com.battalion.flashpoint.comp.misc 
+package com.battalion.flashpoint.comp.tools 
 {
 	
 	import com.battalion.flashpoint.core.*;

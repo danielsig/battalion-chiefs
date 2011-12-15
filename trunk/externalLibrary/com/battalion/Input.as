@@ -1,13 +1,20 @@
 package com.battalion 
 {
+	import flash.display.DisplayObject;
+	import flash.display.InteractiveObject;
+	import flash.display.Sprite;
 	import flash.display.Stage;
+	import flash.events.ContextMenuEvent;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
+	import flash.ui.ContextMenu;
 	import flash.ui.Keyboard;
+	import flash.ui.ContextMenuItem;
+	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	import net.onthewings.utils.KeyCodeUtil;
 	import com.danielsig.StringUtilPro;
@@ -26,7 +33,7 @@ package com.battalion
 		private static var _release : Vector.<Boolean> = new Vector.<Boolean>(256);
 		private static var _hold : Vector.<Boolean> = new Vector.<Boolean>(256);
 		private static var _toggled : Vector.<Boolean> = new Vector.<Boolean>(256);
-		private static var _buttons : Object = { };
+		private static var _buttons : Dictionary = new Dictionary();
 		
 		private static var _mouseButton : int = 0;
 		private static var _scroll : int = 0;
@@ -37,6 +44,9 @@ package com.battalion
 		private static var _mouseYPrev : Number = 0;
 		
 		private static var _stage : Stage;
+		private static var _menu : ContextMenu;
+		private static var _menuSelect : Dictionary = new Dictionary();
+		private static var _enabled : Boolean = true;
 		
 		/**
 		 * Use this to initialize. If your game logic loops does not happen on every frame,
@@ -52,14 +62,22 @@ package com.battalion
 			_stage = stage;
 			if (!tickDispatcher) stage.addEventListener(Event.ENTER_FRAME, onNewFrame);
 			else tickDispatcher.addEventListener(tickEvent, onNewFrame);
+			unlock();
 			
-			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
-			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
-			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
-			stage.addEventListener(MouseEvent.CLICK, onClick);
-			stage.addEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
-			stage.addEventListener(MouseEvent.MOUSE_WHEEL, onScroll);
+			_menu = new ContextMenu();
+			_menu.hideBuiltInItems();
+			_stage.showDefaultContextMenu = false;
+			var index : uint = 0;
+			do
+			{
+				var child : DisplayObject = _stage.getChildAt(index);
+				if (child is InteractiveObject)
+				{
+					(child as InteractiveObject).contextMenu = _menu;
+					return;
+				}
+			}
+			while (++index < _stage.numChildren);
 		}
 		private static function onMouseDown(e : MouseEvent) : void	 { _mouseButton = 2; }
 		private static function onMouseUp(e : MouseEvent) : void	 { _mouseButton = -1; }
@@ -80,11 +98,17 @@ package com.battalion
 			
 			_mouseXPrev = _mouseX;
 			_mouseYPrev = _mouseY;
-			
-			_mouseX = _stage.mouseX;
-			_mouseY = _stage.mouseY;
+			if (_enabled)
+			{
+				_mouseX = _stage.mouseX;
+				_mouseY = _stage.mouseY;
+			}
 			
 			_scroll = 0;
+			for (var menu : String in _menuSelect)
+			{
+				_menuSelect[menu] = false;
+			}
 		}
 		private static function onKeyDown(e : KeyboardEvent) : void
 		{
@@ -152,8 +176,6 @@ package com.battalion
 			return value;
 		}
 		
-		
-		
 		public static function directional(name : String) : int
 		{
 			return int(holdButton(name + "Positive")) - int(holdButton(name + "Negative"));
@@ -195,7 +217,71 @@ package com.battalion
 			assignButton.apply(null, positive);
 			assignButton.apply(null, negative);
 		}
+		public static function addContextMenuItem(name : String, sepperatorAbove : Boolean = false) : void
+		{
+			var item : ContextMenuItem = new ContextMenuItem(name, sepperatorAbove, true, true);
+			_menu.customItems.push(item);
+			_menuSelect[name] = false;
+			item.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, onMenuSelected);
+		}
+		public static function removeContextMenuItem(name : String) : void
+		{
+			for (var i : uint = 0; i < _menu.customItems.length; i++ )
+			{
+				if (_menu.customItems[i].caption == name)
+				{
+					_menu.customItems.splice(i, 1);
+					delete _menuSelect[name]
+					return;
+				}
+			}
+		}
+		public static function menuSelected(name : String) : Boolean
+		{
+			return _menuSelect[name];
+		}
+		private static function onMenuSelected(e:ContextMenuEvent) : void
+		{
+			_menuSelect[e.target.caption] = true;
+		}
 		
+		/**
+		 * Disables all input except context menu input and returns the only function that can enable it again.
+		 * The returned method essentially works like a key to a lock, only the one who has a reference to this
+		 * method can unlock the input again.
+		 */
+		public static function getLock() : Function
+		{
+			_enabled = false;
+			if (_mouseButton == 1 || _mouseButton == 2) _mouseButton = -1;
+			_scroll = 0;
+			while(_prevKeyCounter)
+			{
+				_press[_prevKeys[--_prevKeyCounter]] = false;
+				_release[_prevKeys[_prevKeyCounter]] = false;
+				_hold[_prevKeys[_prevKeyCounter]] = false;
+			}
+			_stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+			_stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+			_stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+			_stage.removeEventListener(MouseEvent.CLICK, onClick);
+			_stage.removeEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
+			_stage.removeEventListener(MouseEvent.MOUSE_WHEEL, onScroll);
+			
+			return unlock;
+		}
+		private static function unlock(e : Event = null) : void
+		{
+			_enabled = true;
+			_stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+			_stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			_stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+			_stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+			_stage.addEventListener(MouseEvent.CLICK, onClick);
+			_stage.addEventListener(MouseEvent.DOUBLE_CLICK, onDoubleClick);
+			_stage.addEventListener(MouseEvent.MOUSE_WHEEL, onScroll);
+		}
 		
 		public static function listButtons() : void
 		{

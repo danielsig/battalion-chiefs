@@ -26,6 +26,11 @@ package comp.objects
 		public static const HEIGHT : Number = 192;
 		public static const RATIO : Number = HEIGHT / WIDTH;
 		
+		public static const SPEED : Number = 0.0015;
+		public static const FRICTION : Number = 0.35;
+		public static const THRESHOLD : Number = 5;
+		public static const WALK_THRESHOLD_FACTOR : Number = 0.5;
+		
 		private var _bottom : Boolean = false;
 		
 		public function awake() : void
@@ -70,9 +75,12 @@ package comp.objects
 			var humanTr : Transform = human.gameObject.transform;
 			if (humanTr.x + 31 > tr.x - LeftStairs.HEIGHT * 0.5 && humanTr.x - 31 < tr.x + LeftStairs.HEIGHT * 0.5)
 			{
-				var height : Number = (tr.y - HEIGHT * 0.5 + (humanTr.x - tr.x) * RATIO) - humanTr.y;
+				var v : Point = human.gameObject.rigidbody.velocity;
+				var height : Number = ((tr.y - HEIGHT * 0.5 + (humanTr.x - tr.x) * RATIO) - humanTr.y);
 				//log(height);
-				if (height < 5 && height > -50)
+				var threshold : Number = THRESHOLD;
+				if (v.x > 0) threshold += v.x * RATIO * WALK_THRESHOLD_FACTOR;
+				if (height < threshold && height > -50)
 				{
 					var dy : Number = gameObject.transform.y + HEIGHT * 0.5 - (human.gameObject.transform.y + 63);
 					//log(height, human.verticalDirection);
@@ -87,9 +95,8 @@ package comp.objects
 						{
 							human.gameObject.rigidbody.addForceX(human.verticalDirection * human.speed, ForceMode.ACCELLERATION);
 						}
-						var v : Point = human.gameObject.rigidbody.velocity;
-						v.x += human.currentVelocity * 0.003;
-						v.y = v.x * 0.73
+						v.x = v.x * FRICTION + human.currentVelocity * SPEED;
+						v.y = v.x * RATIO;
 						human.gameObject.rigidbody.velocity = v;
 						humanTr.y += height;
 					}

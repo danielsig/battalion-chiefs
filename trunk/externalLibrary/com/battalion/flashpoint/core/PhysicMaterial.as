@@ -1,6 +1,5 @@
 package com.battalion.flashpoint.core 
 {
-	import com.battalion.powergrid.AbstractRigidbody;
 	/**
 	 * Assign a PhysicMaterial to Colliders, and see what happens.
 	 * The PhysicMaterial is immutable.

@@ -24,6 +24,7 @@ package com.battalion.flashpoint.comp
 	public final class Animation extends Component implements IExclusiveComponent, IPlayableComponent
 	{
 		private static var _animations : Object = { };
+		private static var _animationFPS : Object = { };
 		private static var _animationLabels : Object = { };
 		/** @private **/
 		internal static var _filterQueue : Object = { };
@@ -120,9 +121,10 @@ myObj.animation.play("myAnimation");
 		 * 
 		 * @example <strong>Hint:</strong> to get the images in a reverse order (handy for reversed animation) just swap the indexes.<listing version="3.0">"images/mySpriteSheet.png~4-0~"</listing>
 		 * @param	animationName the name of the animation. This will act as a reference to the loaded animation.
+		 * @param	framesPerSecond the number of frames to display per second for the animation being loaded.
 		 * @param	...frameURLs a list of urls to load.
 		 */
-		public static function load(animationName : String, ...frameURLs) : void
+		public static function load(animationName : String, framesPerSecond : Number, ...frameURLs) : void
 		{
 			var index : int = 0;
 			var urls : Vector.<String> = new Vector.<String>(frameURLs.length);
@@ -162,6 +164,7 @@ myObj.animation.play("myAnimation");
 				}
 			}
 			_animations[animationName] = frames;
+			_animationFPS[animationName] = framesPerSecond;
 			_animationLabels[animationName] = new Vector.<Array>(index);
 			_filterQueue[animationName] = new Vector.<Object>();
 			var loader : BitmapLoader = new BitmapLoader(urls, frames, CONFIG::debug, null, false);
@@ -189,7 +192,11 @@ myObj.animation.play("myAnimation");
 		}
 		
 		/** @private **/
-		internal var _p : int = 0;//playHead
+		internal var _p : Number = 0;//playHead
+		/** @private **/
+		internal var _prev : Number = 0;//playHead on the previous fixed update
+		/** @private **/
+		internal var _next : Number = 0;//playHead on the next fixed update
 		/** @private **/
 		internal var _frames : Vector.<BitmapData> = null;
 		/** @private **/
@@ -205,6 +212,7 @@ myObj.animation.play("myAnimation");
 		private var _reversed : Boolean = false;
 		private var _loops : uint = 0;
 		private var _pingPongPlayback : Boolean = false;
+		private var _framesPerSecond : Number = 30;
 		
 		/** @private **/
 		public function onDestroy() : Boolean
@@ -230,8 +238,11 @@ myObj.animation.play("myAnimation");
 		}
 		
 		/**
-		 * Basically the same thing as the static counterpart <a href="../comp/Animation.html#load()"><code>load()</code></a> except that this method does not require a name.
-		 * The animation will have the same name as the GameObject of this animation component + "Animation". Basicly an animation component in a GameObject named "player" will name the animation "playerAnimation".
+		 * Basically the same thing as the static counterpart
+		 * <a href="../comp/Animation.html#load()"><code>load()</code></a>
+		 * except that this method does not require a name.
+		 * The animation will have the same name as the GameObject of this animation component + "Animation".
+		 * As an example, an animation component in a GameObject named "player" will name the animation "playerAnimation".
 		 * @param	...frameURLs a list of urls to load.
 		 */
 		public function loadAndPlay(...frameURLs) : void
@@ -272,6 +283,8 @@ myObj.animation.play("myAnimation");
 				_reversed = value;
 				_frames = (_cloned ? _frames : _frames.concat()).reverse();
 				_p = _length + _p - 1;
+				_prev = _length + _prev - 1;
+				_next = _length + _next - 1;
 			}
 		}
 		
@@ -281,7 +294,11 @@ myObj.animation.play("myAnimation");
 		}
 		public function set playing(value : Boolean) : void
 		{
-			if(_animationName) _playing = value;
+			if (_animationName)
+			{
+				_playing = value;
+				updateFrame(_p);
+			}
 		}
 		
 		/**
@@ -294,18 +311,27 @@ myObj.animation.play("myAnimation");
 		}
 		public function set playhead(value : Number) : void
 		{
-			value = int(value);
+			if (value == 40)
+			{
+				var t : int = 0;
+			}
 			CONFIG::debug
 			{
 				if (value <= -_length || value >= _length) throw new Error("Can not set playhead to " + value + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
-			_p = value < 0 ? _length + value : value;
-			_renderer.bitmapData = _frames[_p];
-			_renderer.updateBitmap = _renderer.bitmapData != null;
-			if (_messages[_p])
-			{
-				sendMessage.apply(this, _messages[_p]);
-			}
+			var temp : Number = _p;
+			_prev -= _p;
+			_next -= _p;
+			_p = value < 0 ? _length + value - 1 : value;
+			_prev += _p;
+			_next += _p;
+			
+			if (_prev < 0) _prev = 0;
+			else if (_prev >= _length) _prev = _length - 0.0001;
+			if (_next < 0) _next = 0;
+			else if (_next >= _length) _next = _length - 0.0001;
+			
+			updateFrame(temp);
 		}
 		/**
 		 * Number of frames in the current animation.
@@ -330,17 +356,32 @@ myObj.animation.play("myAnimation");
 			}
 			_animationName = value;
 			_frames = _animations[value];
+			_framesPerSecond = _animationFPS[value];
 			_messages = _animationLabels[value];
 			_length = _frames.length;
-			_p = 0;
+			_p = _prev = 0;
+			_next = FlashPoint.fixedDeltaTime;
 		}
-		
 		/** @private **/
 		public function fixedUpdate() : void
 		{
 			if (_playing)
 			{
-				if (++_p >= _length || _p < 0)
+				_prev = _next;
+				_next += _framesPerSecond * FlashPoint.fixedDeltaTime;
+			}
+		}
+		/** @private **/
+		public function update() : void
+		{
+			if (_playing)
+			{
+				var index : int = _p;
+				
+				var ratio : Number = FlashPoint.frameInterpolationRatio;
+				_p = _next * ratio + _prev * (1 - ratio);
+				
+				if (_p >= _length || _p < 0)
 				{
 					if (_loops > 0 && _loops-- == 1)
 					{
@@ -349,89 +390,146 @@ myObj.animation.play("myAnimation");
 						return;
 					}
 					if (_pingPongPlayback) reverse();
-					else _p = _p < 0 ? 1 : 0;
+					else _p = _p < 0 ? _length-0.0001 : 0;
 				}
-				_renderer.bitmapData = _frames[_p];
+				var targetIndex : int = _p;
+				
+				_renderer.bitmapData = _frames[targetIndex];
 				_renderer.updateBitmap = _renderer.bitmapData != null;
-				if (_messages[_p])
+				if (index > targetIndex)
 				{
-					sendMessage.apply(this, _messages[_p]);
+					while (++index < _length)
+					{
+						if (_messages[index])
+						{
+							if(sendMessage.apply(this, _messages[index])) return;
+						}
+					}
+					index = -1;
+				}
+				while (index++ < targetIndex)
+				{
+					if (_messages[index])
+					{
+						if(sendMessage.apply(this, _messages[index])) return;
+					}
 				}
 			}
 		}
 		
 		/**
-		 * Pause playback.
+		 * Pause playback. Has no effect if there's no animation selected
+		 * @see play()
+		 * @see stop()
 		 */
 		public function pause() : void
 		{
-			_playing = false;
+			if (_animationName)
+			{
+				_playing = false;
+				updateFrame(_p);
+			}
 		}
 		/**
 		 * Stop playback, technically it's the same as <code>gotoAndPause(0);</code> except that it stops rendering.
+		 * Has no effect if there's no animation selected
+		 * @see play()
+		 * @see pause()
 		 */
 		public function stop() : void
 		{
-			_playing = false;
-			_p = 0;
-			_renderer.bitmapData = null;
+			if (_animationName)
+			{
+				_playing = false;
+				_p = _prev = _next = 0;
+				_renderer.bitmapData = null;
+			}
 		}
 		/**
 		 * jumps to a specific frame and pauses there.
 		 * Setting this to a negative number will make it jump to a frame counting backwards from the end of the animation.
+		 * Has no effect if there's no animation selected and the <code>animationName</code> parameter is null.
 		 */
 		public function gotoAndPause(frame : Number, animationName : String = null) : void
 		{
-			if (animationName && animationName != _animationName)
+			if (animationName)
 			{
-				CONFIG::debug
+				if (animationName != _animationName)
 				{
-					if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
+					CONFIG::debug
+					{
+						if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
+					}
+					_animationName = animationName;
+					_frames = _animations[animationName];
+					_framesPerSecond = _animationFPS[animationName];
+					_messages = _animationLabels[animationName];
+					_length = _frames.length;
 				}
-				_animationName = animationName;
-				_frames = _animations[animationName];
-				_messages = _animationLabels[animationName];
-				_length = _frames.length;
 			}
+			else if (!_animationName) return;
 			
 			frame = int(frame);
 			CONFIG::debug
 			{
 				if (frame <= -_length || frame > _length) throw new Error("frame " + frame + " is out of range [" + -_length + "-" + _length + "]");
 			}
+			var temp : Number = _p;
+			_prev -= _p;
+			_next -= _p;
 			_p = frame < 0 ? _length + frame - 1 : frame;
+			_prev += _p;
+			_next += _p;
+			
+			if (_prev < 0) _prev = 0;
+			else if (_prev >= _length) _prev = _length - 0.0001;
+			if (_next < 0) _next = 0;
+			else if (_next >= _length) _next = _length - 0.0001;
+			
 			_playing = false;
-			_renderer.bitmapData = _frames[_p];
-			_renderer.updateBitmap = _renderer.bitmapData != null;
-			if (_messages[_p])
-			{
-				sendMessage.apply(this, _messages[_p]);
-			}
+			updateFrame(temp);
 		}
 		/**
 		 * jumps to a specific frame and plays from there.
 		 * Setting this to a negative number will make it jump to a frame counting backwards from the end of the animation.
+		 * Has no effect if there's no animation selected and the <code>animationName</code> parameter is null.
 		 */
 		public function gotoAndPlay(frame : Number, animationName : String = null) : void
 		{
-			if (animationName && animationName != _animationName)
+			if (animationName)
 			{
-				CONFIG::debug
+				if (animationName != _animationName)
 				{
-					if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
+					CONFIG::debug
+					{
+						if (!_animations.hasOwnProperty(animationName)) throw new Error("The animation you are trying to play has not been loaded.");
+					}
+					_animationName = animationName;
+					_frames = _animations[animationName];
+					_framesPerSecond = _animationFPS[animationName];
+					_messages = _animationLabels[animationName];
+					_length = _frames.length;
 				}
-				_animationName = animationName;
-				_frames = _animations[animationName];
-				_messages = _animationLabels[animationName];
-				_length = _frames.length;
 			}
+			else if (!_animationName) return;
 			
 			frame = int(frame);
 			CONFIG::debug
 			{
 				if (frame <= -_length || frame > _length) throw new Error("frame " + frame + " is out of range [" + -_length + "-" + _length + "]");
 			}
+			
+			_prev -= _p;
+			_next -= _p;
 			_p = frame < 0 ? _length + frame - 1 : frame;
+			_prev += _p;
+			_next += _p;
+			
+			if (_prev < 0) _prev = 0;
+			else if (_prev >= _length) _prev = _length - 0.0001;
+			if (_next < 0) _next = 0;
+			else if (_next >= _length) _next = _length - 0.0001;
+			
 			_playing = true;
 		}
 		/**
@@ -454,10 +552,13 @@ When selecting another animation, set the <code>animationName</code> to the desi
 				}
 				_animationName = animationName;
 				_frames = _animations[animationName];
+				_framesPerSecond = _animationFPS[animationName];
 				_messages = _animationLabels[animationName];
 				_length = _frames.length;
-				_p = 0;
+				_p = _prev = _next = 0;
 			}
+			else if (!_animationName) return;
+			
 			_loops = loops;
 			_playing = true;
 		}
@@ -472,6 +573,35 @@ When selecting another animation, set the <code>animationName</code> to the desi
 			_reversed = !_reversed;
 			_frames = (_cloned ? _frames : _frames.concat()).reverse();
 			_p = _length + _p - 1;
+			_prev = _length + _prev - 1;
+			_next = _length + _next - 1;
+		}
+		
+		private function updateFrame(prevFrame : Number) : void
+		{
+			var index : int = prevFrame;
+			var targetIndex : int = _p;
+			
+			_renderer.bitmapData = _frames[targetIndex];
+			_renderer.updateBitmap = _renderer.bitmapData != null;
+			if (index > targetIndex)
+			{
+				while (++index < _length)
+				{
+					if (_messages[index])
+					{
+						if(sendMessage.apply(this, _messages[index])) return;
+					}
+				}
+				index = -1;
+			}
+			while (index++ < targetIndex)
+			{
+				if (_messages[index])
+				{
+					if(sendMessage.apply(this, _messages[index])) return;
+				}
+			}
 		}
 	}
 	

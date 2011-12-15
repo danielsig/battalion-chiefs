@@ -64,9 +64,12 @@ package comp.objects
 			var humanTr : Transform = human.gameObject.transform;
 			if (humanTr.x + 31 > tr.x - LeftStairs.HEIGHT * 0.5 && humanTr.x - 31 < tr.x + LeftStairs.HEIGHT * 0.5)
 			{
-				var height : Number = (tr.y - LeftStairs.HEIGHT * 0.5 - (humanTr.x - tr.x) * LeftStairs.RATIO) - humanTr.y;
+				var v : Point = human.gameObject.rigidbody.velocity;
+				var height : Number = ((tr.y - LeftStairs.HEIGHT * 0.5 - (humanTr.x - tr.x) * LeftStairs.RATIO) - humanTr.y);
 				//log(height);
-				if (height < 5 && height > -50)
+				var threshold : Number = LeftStairs.THRESHOLD;
+				if (v.x < 0) threshold += v.x * LeftStairs.RATIO * LeftStairs.WALK_THRESHOLD_FACTOR;
+				if (height < threshold && height > -50)
 				{
 					var dy : Number = gameObject.transform.y + LeftStairs.HEIGHT * 0.5 - (human.gameObject.transform.y + 63);
 					//log(height, human.verticalDirection);
@@ -81,9 +84,8 @@ package comp.objects
 						{
 							human.gameObject.rigidbody.addForceX(-human.verticalDirection * human.speed, ForceMode.ACCELLERATION);
 						}
-						var v : Point = human.gameObject.rigidbody.velocity;
-						v.x += human.currentVelocity * 0.003;
-						v.y = -v.x * 0.73;
+						v.x = v.x * LeftStairs.FRICTION + human.currentVelocity * LeftStairs.SPEED;
+						v.y = -v.x * LeftStairs.RATIO;
 						human.gameObject.rigidbody.velocity = v;
 						humanTr.y += height;
 					}

@@ -171,7 +171,7 @@ package com.battalion.flashpoint.core
 			_initialized = true;
 			_powerGridMaxSize = _maxSize;
 			PowerGrid.init(_grid, _unitSize, _maxSize);
-			PowerGrid.setOptimalMaxVelocity();
+			//PowerGrid.setOptimalMaxVelocity();
 			_unitSize = PowerGrid.unitSize;
 		}
 		
@@ -184,7 +184,12 @@ package com.battalion.flashpoint.core
 				PowerGrid.step(interval * 1000);
 			}
 		}
-		
+		/** @private **/
+		internal static function setHz(hz : Number) : void 
+		{
+			PowerGrid.hz = hz;
+			//PowerGrid.setOptimalMaxVelocity();
+		}
 	}
 
 }

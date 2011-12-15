@@ -15,10 +15,11 @@ package comp.particles
 		private static function init() : Boolean
 		{
 			Audio.load("hose", "assets/sound/sounds.mp3~150-750~");
-			Animation.load("WaterAnimation", "assets/img/water.png~0-71~");
-			Animation.addLabel("WaterAnimation", "destroyer", 71);
-			Animation.load("SteamAnimation", "assets/img/steam.png~0-62~");
-			Animation.addLabel("SteamAnimation", "destroyer", 62);
+			Animation.load("WaterAnimation", 50, "assets/img/water.png~0-71~");
+			Animation.addLabel("WaterAnimation", "recycleParticle", 71);
+			Animation.addLabel("WaterAnimation", "WaterParticle_shrink", 55);
+			Animation.load("SteamAnimation", 12, "assets/img/steam.png~0-62~");
+			Animation.addLabel("SteamAnimation", "recycleParticle", 62);
 			return true;
 		}
 		public static function createWaterHose(x : Number = 0, y : Number = 0, parent : GameObject = null) : GameObject
@@ -29,7 +30,7 @@ package comp.particles
 			return hose;
 		}
 		
-		public var thrust : Number = 500;
+		public var thrust : Number = 3000;
 		
 		private var _gen : ParticleGenerator;
 		private var _tr : Transform;
@@ -47,13 +48,22 @@ package comp.particles
 			_gen.radius = 8;
 			_gen.mass = 5;
 			_gen.hz = 100;
+			_gen.recycle = true;
 			_gen.maxParticleCount = uint.MAX_VALUE;
 		}
-		
 		public function onEmit(particle : GameObject) : void
 		{
 			particle.addComponent(WaterParticle);
-			particle.addConcise(Destroyer, "destroyer");
+			var renderer : Renderer = particle.renderer as Renderer;
+			if (_prev)
+			{
+				renderer.putBehind(_prev);
+			}
+			_prev = renderer;
+		}
+		public function onRecycle(particle : GameObject) : void
+		{
+			particle.waterParticle.awake();
 			var renderer : Renderer = particle.renderer as Renderer;
 			if (_prev)
 			{

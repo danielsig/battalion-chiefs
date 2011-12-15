@@ -2,24 +2,28 @@ package com.battalion.flashpoint.display
 {
 	import com.battalion.flashpoint.core.Transform;
 	import com.danielsig.BitmapLoader;
-	import com.danielsig.SpriteSheet;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.events.FocusEvent;
+	import flash.events.TextEvent;
 	import flash.filters.ColorMatrixFilter;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	import flash.text.TextFieldType;
 	import com.battalion.flashpoint.comp.Renderer;
 	import com.battalion.flashpoint.comp.TextRenderer;
 	import com.battalion.flashpoint.comp.TileRenderer;
 	import com.battalion.flashpoint.comp.Camera;
 	import com.battalion.flashpoint.core.GameObject;
-	import flash.text.TextFormat;
+	import com.battalion.Input;
 	import com.demonsters.debugger.MonsterDebugger;
+	import flash.utils.Dictionary;
 	
 	/**
 	 * View, FlashPoint's display object manager.<br/>
@@ -33,7 +37,6 @@ package com.battalion.flashpoint.display
 	 */
 	public final class View extends Sprite 
 	{
-		
 		private static var _texts : Vector.<TextRenderer> =  new Vector.<TextRenderer>();
 		private static var _tiles : Vector.<TileRenderer> =  new Vector.<TileRenderer>();
 		
@@ -52,6 +55,7 @@ package com.battalion.flashpoint.display
 		private var _dynamicLayer : Sprite = new Sprite();
 		private var _textLayer : Sprite = new Sprite();
 		private var _name : String;
+		private var _previousTexts : Dictionary = new Dictionary();
 		
 		/** @private **/
 		public static function addTilesToView(tiles : TileRenderer) : void
@@ -130,8 +134,13 @@ package com.battalion.flashpoint.display
 			}
 			for each(var view : View in _views)
 			{
+				delete view._previousTexts[text];
 				var textField : TextField = view._textFields[index];
-				if(textField && textField.parent) textField.parent.removeChild(textField);
+				if (textField)
+				{
+					textField.removeEventListener(FocusEvent.FOCUS_IN, view.onFocusIn);
+					if (textField.parent) textField.parent.removeChild(textField);
+				}
 				if (index < view._textFields.length - 1)
 				{
 					view._textFields[index] = view._textFields.pop();
@@ -164,7 +173,7 @@ package com.battalion.flashpoint.display
 			_cam = new GameObject(camName || "cam", Camera).camera;
 			_cam.setBounds(_bounds);
 			_views.push(this);
-			mouseChildren = mouseEnabled = false;
+			_tileLayer.mouseChildren = _tileLayer.mouseEnabled = _dynamicLayer.mouseChildren = _dynamicLayer.mouseEnabled = _textLayer.mouseEnabled = false;
 		}
 		private function onEveryFrame(e : Event) : void
 		{
@@ -201,6 +210,7 @@ package com.battalion.flashpoint.display
 			var bottom : Number = tr.y + _bounds.height * 0.5 * tr.scaleY;
 			
 			var i : uint = 0;
+			var count : uint = 0;
 			var renderer : Renderer = Renderer.tail;
 			if (renderer)
 			{
@@ -210,8 +220,9 @@ package com.battalion.flashpoint.display
 					if (renderer.bitmapData)
 					{
 						var rect : Rectangle = renderer.bounds;
-						if (rect.right > left && rect.left < right && rect.bottom > top && rect.top < bottom)
+						if (rect.right > left && rect.left < right && rect.bottom > top && rect.top < bottom && renderer.priority > count)
 						{
+							count++;
 							if (rendererSprite && !rendererSprite.visible)
 							{
 								_dynamicLayer.addChild(rendererSprite);
@@ -234,6 +245,10 @@ package com.battalion.flashpoint.display
 									(rendererSprite.getChildAt(0) as Bitmap).bitmapData = renderer.bitmapData;
 									if (_dynamicLayer.numChildren > i) _dynamicLayer.setChildIndex(rendererSprite, i);
 									else _dynamicLayer.addChild(rendererSprite);
+								}
+								if (renderer.optimized)
+								{
+									rendererSprite.transform.matrix = new Matrix();
 								}
 								renderer.updateBitmap = false;
 							}
@@ -276,14 +291,28 @@ package com.battalion.flashpoint.display
 			while (i--)
 			{
 				var text : TextRenderer = _texts[i];
+				var input : Boolean = text.restrict != "";
+				
 				if (text.text || text.htmlText)
 				{
 					var field : TextField = _textFields[i];
-					if (!field) field = _textFields[i] = new TextField();
-					if (text.htmlText) field.htmlText = text.htmlText;
+					if (!field)
+					{
+						field = _textFields[i] = new TextField();
+						field.addEventListener(FocusEvent.FOCUS_IN, onFocusIn);
+						field.addEventListener(TextEvent.TEXT_INPUT, onTextInput);
+						field.addEventListener(Event.CHANGE, onTextChanged);
+					}
+					field.type = input ? TextFieldType.INPUT : TextFieldType.DYNAMIC;
+					if (text.htmlText)
+					{
+						if (input && _previousTexts[text] == text.htmlText) text.htmlText = field.htmlText;
+						field.htmlText = _previousTexts[text] = text.htmlText;
+					}
 					else
 					{
-						field.text = text.text;
+						if (input && _previousTexts[text] == text.text) text.text = field.text;
+						field.text = _previousTexts[text] = text.text;
 						//Set format for text
 						var format : TextFormat = field.defaultTextFormat;
 						format.font = text.font;
@@ -292,34 +321,54 @@ package com.battalion.flashpoint.display
 						format.bold = text.bold;
 						format.italic = text.italic;
 						format.underline = text.underline;
+						format.align = text.align;
 						field.defaultTextFormat = format;
 					}
 					field.wordWrap = text.wordWrap;
 					field.width = text.width;
 					field.height = text.height;
-					field.autoSize = TextFieldAutoSize.CENTER;
-					field.selectable = false;
+					field.autoSize = text.autoSize;
+					field.mouseEnabled = field.selectable = text.selectable;
+					field.restrict = text.restrict;
+					field.background = text.background > -1;
+					field.border = text.border > -1;
+					field.backgroundColor = field.background ? text.background : 0;
+					field.borderColor = field.border ? text.border : 0;
+					field.alpha = text.alpha;
+					field.multiline = text.multiline;
+					
 					
 					m = text.gameObject.transform.globalMatrix;
+					
+					var offsetX : Number = 0;
+					var offsetY : Number = 0;
+					if (text.autoPosition == 0 || text.autoPosition == 2 || text.autoPosition == 6) offsetX = -field.textWidth * 0.5;
+					else if (text.autoPosition > 2 && text.autoPosition < 6) offsetX = -field.textWidth;
+					if (text.autoPosition == 0 || text.autoPosition == 4 || text.autoPosition == 8) offsetY = -field.textHeight * 0.5;
+					else if (text.autoPosition > 4 && text.autoPosition < 8) offsetY = -field.textHeight;
+					
 					if (text.offset)
 					{
 						var sx : Number = m.a * text.offset.a + m.c * text.offset.c;
 						var sy : Number = m.b * text.offset.b + m.d * text.offset.d;
 						field.scaleX = field.scaleY = Math.sqrt(sx * sx + sy * sy);
-						field.x = m.tx + text.offset.tx - field.textWidth * 0.5 * field.scaleX;
-						field.y = m.ty + text.offset.ty - field.textHeight * 0.5 * field.scaleY;
+						field.x = m.tx + text.offset.tx - offsetX * field.scaleX;
+						field.y = m.ty + text.offset.ty - offsetY * field.scaleY;
 					}
 					else
 					{
 						field.scaleX = field.scaleY = Math.sqrt((m.a + m.c) * (m.a + m.c) + (m.b + m.d) * (m.b + m.d));
-						field.x = m.tx - field.textWidth * 0.5 * field.scaleX;
-						field.y = m.ty - field.textHeight * 0.5 * field.scaleY;
+						field.x = m.tx - offsetX * field.scaleX;
+						field.y = m.ty - offsetY * field.scaleY;
 					}
 					_textLayer.addChild(_textFields[i]);
 				}
 				else if (_textFields[i])
 				{
 					_textLayer.removeChild(_textFields[i]);
+					_textFields[i].removeEventListener(FocusEvent.FOCUS_IN, onFocusIn);
+					_textFields[i].removeEventListener(TextEvent.TEXT_INPUT, onTextInput);
+					_textFields[i].removeEventListener(Event.CHANGE, onTextChanged);
 					_textFields[i] = null;
 				}
 			}
@@ -368,6 +417,36 @@ package com.battalion.flashpoint.display
 				{
 					_tileLayer.removeChild(tileView);
 				}
+			}
+		}
+		private function onFocusIn(e : FocusEvent) : void
+		{
+			var field : TextField = e.target as TextField;
+			if (field.selectable)
+			{
+				var text : TextRenderer = _texts[_textFields.indexOf(field)];
+				if (text.selectingLocksInput)
+				{
+					field.addEventListener(FocusEvent.FOCUS_OUT, Input.getLock());
+				}
+			}
+		}
+		private function onTextInput(e : TextEvent) : void
+		{
+			var field : TextField = e.target as TextField;
+			if (field.selectable && field.type == TextFieldType.INPUT)
+			{
+				var text : TextRenderer = _texts[_textFields.indexOf(field)];
+				text.sendMessage("onTextInput", e.text);
+			}
+		}
+		private function onTextChanged(e : Event) : void
+		{
+			var field : TextField = e.target as TextField;
+			if (field.selectable && field.type == TextFieldType.INPUT)
+			{
+				var text : TextRenderer = _texts[_textFields.indexOf(field)];
+				text.sendMessage("onTextChanged");
 			}
 		}
 	}

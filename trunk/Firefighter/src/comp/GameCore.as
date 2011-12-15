@@ -1,7 +1,9 @@
 package comp
 {
+	import com.danielsig.ChanceGenerator;
+	import com.danielsig.StringUtilPro;
+	import com.danielsig.DeletionType;
 	import comp.particles.*;
-	import comp.debug.*;
 	import comp.human.*;
 	import comp.objects.*;
 	import com.battalion.flashpoint.core.*;
@@ -36,10 +38,12 @@ package comp
 		
 		public function start() : void 
 		{
+			//Audio.useHeadphones = true;
+			
 			Physics.maxSize = 600;
-			Physics.restingSpeed = 0.002;
-			Physics.gravityVector = new Point(0, 0.9);
-			Physics.iterations = 3;
+			Physics.restingSpeed = 0.2;
+			Physics.gravityVector = new Point(0, 3000);
+			Physics.iterations = 2;
 			
 			TileRenderer.loadMap("level1", "assets/maps/tilemap1.png");
 			TileRenderer.loadSet("level1Set", "assets/tiles/tileset1.png~0-63~");
@@ -64,6 +68,9 @@ package comp
 			geomCode.source = "assets/geomcode/Level1.gmc";
 			
 			geomCode.construct("Level1");
+			//geomCode.construct("TV", {pos:new Point(180, 150), mass:10});
+			
+			
 			
 			
 			/*
@@ -88,9 +95,17 @@ package comp
 		public function tilesLoaded() : void 
 		{
 			//MouseLocation.create();
-			var player : GameObject = PlayerController.createPlayer(2500, 350);
+			var player : GameObject = PlayerController.createPlayer(2500, 330);
 			var human1 : GameObject = CivilianController.createCivilian(6200, 400);
 			var human2 : GameObject = CivilianController.createCivilian(4200, 400);
+			/*
+			var box : GameObject = new GameObject("myBox", Rigidbody, BoxCollider, Renderer, Heat);
+			(box.renderer as Renderer).setBitmapByName("tv0");
+			(box.renderer as Renderer).setOffset(0, -20);
+			(box.boxCollider as BoxCollider).dimensions = new Point(120, 100);
+			(box.boxCollider as BoxCollider).layers = Layers.OBJECTS_VS_OBJECTS | Layers.OBJECTS_VS_HUMANS | Layers.OBJECTS_VS_WATER | Layers.OBJECTS_VS_FIRE;
+			box.transform.x = 150;
+			box.transform.y = 150;*/
 		}
 	}
 }

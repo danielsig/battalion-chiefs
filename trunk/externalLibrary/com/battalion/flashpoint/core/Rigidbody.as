@@ -2,16 +2,16 @@ package com.battalion.flashpoint.core
 {
 	
 	import com.battalion.powergrid.*;
+	import com.battalion.flashpoint.core.ForceMode;
 	import flash.filters.ConvolutionFilter;
 	import flash.geom.Point;
 	import flash.geom.Matrix;
-	import com.battalion.flashpoint.comp.TextRenderer;
 	
 	/**
 	 * A Rigidbody, add this alone with a Collider to a GameObject to make it react to collisions.
 	 * Messages Sent:
-		 * onCollisionEnter(contactPoints : Vector.<ContactPoint>)
-		 * onCollisionStay(contactPoints : Vector.<ContactPoint>)
+		 * onCollisionEnter(contactPoints : Vector.&lt;ContactPoint&gt;)
+		 * onCollisionStay(contactPoints : Vector.&lt;ContactPoint&gt;)
 	 * @author Battalion Chiefs
 	 */
 	public final class Rigidbody extends Component implements IExclusiveComponent, IPhysicsSyncable
@@ -30,9 +30,10 @@ package com.battalion.flashpoint.core
 		private var _drag : Number = 0;
 		private var _mass : Number = 1;
 		private var _inertia : Number = 1;
-		private var _vanDerWaals : Number = 1;
+		private var _vanDerWaals : Number = 0;
 		private var _freeze : Boolean = false;
 		private var _afffectedByGravity : Boolean = true;
+		private var _enabled : Boolean = true;
 		private var _vx : Number = 0;
 		private var _vy : Number = 0;
 		private var _va : Number = 0;
@@ -40,6 +41,25 @@ package com.battalion.flashpoint.core
 		internal var _density : Number = NaN;
 		/** @private **/
 		internal var _massDistribution : Number = NaN;
+		
+		/**
+		 * Enables the rigidbody, it's almost equivalent to adding it except
+		 * that disabling and enabling is faster than destroying and adding.
+		 * This comes most in handy when you want to add a GameObject with a
+		 * rigidbody to a pool. <a href="http://en.wikipedia.org/wiki/Pool_(computer_science)">More info on pools here</a>.
+		 * @see enable()
+		 * @see disable()
+		 */
+		public function get enabled() : Boolean
+		{
+			if (body) return body.enabled;
+			else return _enabled;
+		}
+		public function set enabled(value : Boolean) : void
+		{
+			if (body) body.enabled = value;
+			else _enabled = value;
+		}
 		
 		/**
 		 * Determines if this rigidbody is affected by gravity or not, default is true.
@@ -123,6 +143,26 @@ package com.battalion.flashpoint.core
 				body.vx = _vx;
 				body.vy = _vy;
 			}
+		}
+		
+		/**
+		 * The length of the velocity vector.
+		 * @see #speedSquared
+		 */
+		public function get speed() : Number
+		{
+			if (body) Math.sqrt(body.vx * body.vx + body.vy * body.vy);
+			return Math.sqrt(_vx * _vx + _vy * _vy);
+		}
+		/**
+		 * The length of the velocity vector squared (to power of 2).
+		 * faster than speed!
+		 * @see #speed
+		 */
+		public function get speedSquared() : Number
+		{
+			if (body) body.vx * body.vx + body.vy * body.vy;
+			return _vx * _vx + _vy * _vy;
 		}
 		/**
 		 * The angular velocity of the rigidbody in degrees per fixedUpdate.
@@ -273,7 +313,7 @@ package com.battalion.flashpoint.core
 			return points;
 		}
 		
-		public function addTorque(torque : Number, mode : uint = ForceMode.FORCE) : void
+		public function addTorque(torque : Number, mode : uint = 0) : void
 		{
 			if (!body) return;
 			switch(mode)
@@ -283,13 +323,13 @@ package com.battalion.flashpoint.core
 				case ForceMode.IMPULSE:
 					body.va += torque / _inertia;
 				case ForceMode.ACCELLERATION:
-					body.va += torque * FlashPoint.fixedInterval * 0.001;
+					body.va += torque * FlashPoint.fixedDeltaTime;
 				case ForceMode.FORCE:
 				default:
-					body.va += torque * FlashPoint.fixedInterval * 0.001 / _inertia;
+					body.va += torque * FlashPoint.fixedDeltaTime / _inertia;
 			}
 		}
-		public function addForceX(force : Number, mode : uint = ForceMode.FORCE) : void
+		public function addForceX(force : Number, mode : uint = 0) : void
 		{
 			if (!body) return;
 			switch(mode)
@@ -299,13 +339,13 @@ package com.battalion.flashpoint.core
 				case ForceMode.IMPULSE:
 					body.vx += force / _mass;
 				case ForceMode.ACCELLERATION:
-					body.vx += force * FlashPoint.fixedInterval * 0.001;
+					body.vx += force * FlashPoint.fixedDeltaTime;
 				case ForceMode.FORCE:
 				default:
-					body.vx += force * FlashPoint.fixedInterval * 0.001 / _mass;
+					body.vx += force * FlashPoint.fixedDeltaTime / _mass;
 			}
 		}
-		public function addForceY(force : Number, mode : uint = ForceMode.FORCE) : void
+		public function addForceY(force : Number, mode : uint = 0) : void
 		{
 			if (!body) return;
 			switch(mode)
@@ -315,13 +355,13 @@ package com.battalion.flashpoint.core
 				case ForceMode.IMPULSE:
 					body.vy += force / _mass;
 				case ForceMode.ACCELLERATION:
-					body.vy += force * FlashPoint.fixedInterval * 0.001;
+					body.vy += force * FlashPoint.fixedDeltaTime;
 				case ForceMode.FORCE:
 				default:
-					body.vy += force * FlashPoint.fixedInterval * 0.001 / _mass;
+					body.vy += force * FlashPoint.fixedDeltaTime / _mass;
 			}
 		}
-		public function addForce(force : Point, mode : uint = ForceMode.FORCE) : void
+		public function addForce(force : Point, mode : uint = 0) : void
 		{
 			if (!body) return;
 			switch(mode)
@@ -334,13 +374,13 @@ package com.battalion.flashpoint.core
 					body.vx += force.x * invMass;
 					body.vy += force.y * invMass;
 				case ForceMode.ACCELLERATION:
-					body.vx += force.x * FlashPoint.fixedInterval * 0.001;
-					body.vy += force.y * FlashPoint.fixedInterval * 0.001;
+					body.vx += force.x * FlashPoint.fixedDeltaTime;
+					body.vy += force.y * FlashPoint.fixedDeltaTime;
 				case ForceMode.FORCE:
 				default:
 					invMass = 1.0 / _mass;
-					body.vx += force.x * invMass * FlashPoint.fixedInterval * 0.001;
-					body.vy += force.y * invMass * FlashPoint.fixedInterval * 0.001;
+					body.vx += force.x * invMass * FlashPoint.fixedDeltaTime;
+					body.vy += force.y * invMass * FlashPoint.fixedDeltaTime;
 			}
 		}
 		
@@ -369,9 +409,36 @@ package com.battalion.flashpoint.core
 				sendBefore("updatePhysics", "update");
 			}
 		}
-		/** @private */
-		public final function onDestroy() : Boolean
+		/**
+		 * Enables the rigidbody, it's almost equivalent to adding it except
+		 * that disabling and enabling is faster than destroying and adding.
+		 * This comes most in handy when you want to add a GameObject with a
+		 * rigidbody to a pool. <a href="http://en.wikipedia.org/wiki/Pool_(computer_science)">More info on pools here</a>.
+		 * @see disable()
+		 * @see #enabled
+		 */
+		public function enable() : void
 		{
+			if(body) body.enable();
+			else _enabled = true;
+		}
+		/**
+		 * Disables the rigidbody, it's almost equivalent to destroying it except
+		 * that disabling and enabling is faster than destroying and adding.
+		 * This comes most in handy when you want to add a GameObject with a
+		 * rigidbody to a pool. <a href="http://en.wikipedia.org/wiki/Pool_(computer_science)">More info on pools here</a>.
+		 * @see enable()
+		 * @see #enabled
+		 */
+		public function disable() : void
+		{
+			if(body) body.disable();
+			else _enabled = false;
+		}
+		/** @private */
+		public function onDestroy() : Boolean
+		{
+			delete _this.rigidbody;
 			if (body)
 			{
 				if (_this && _this.added == this) removePhysics();
@@ -390,7 +457,7 @@ package com.battalion.flashpoint.core
 		}
 		
 		/** @private */
-		internal final function addPhysics() : void 
+		internal function addPhysics() : void 
 		{
 			_this.added = this;
 			if (Collider._head)
@@ -401,7 +468,7 @@ package com.battalion.flashpoint.core
 			Collider._head = this;
 		}
 		/** @private */
-		internal final function removePhysics() : void 
+		internal function removePhysics() : void 
 		{
 			_this.added = null;
 			if (Collider._head == this) Collider._head = _next;
@@ -409,7 +476,7 @@ package com.battalion.flashpoint.core
 			if (_next) (_next as Collider || _next as Rigidbody)._prev = _prev;
 		}
 		/** @private */
-		internal final function syncPhysics() : IPhysicsSyncable 
+		internal function syncPhysics() : IPhysicsSyncable 
 		{
 			// updating the body
 			var bod : AbstractRigidbody = _this.body;

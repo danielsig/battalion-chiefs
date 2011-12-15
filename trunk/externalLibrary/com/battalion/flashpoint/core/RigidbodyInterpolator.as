@@ -1,5 +1,6 @@
 package com.battalion.flashpoint.core 
 {
+	import com.battalion.powergrid.AbstractRigidbody;
 	
 	/**
 	 * ...
@@ -18,23 +19,79 @@ package com.battalion.flashpoint.core
 		
 		private var _transform : Transform;
 		private var _notChanged : Boolean = true;
+		private var _started : Boolean = false;
 		
 		public function awake() : void
 		{
-			requireComponent(Rigidbody);
 			_transform = _gameObject.transform;
 		}
 		public function start() : void
 		{
+			_started = true;
 			_prevX = _nextX = _transform.x;
 			_prevY = _nextY = _transform.y;
 			_prevA = _nextA = _transform.rotation;
 		}
-		public function setPrevious(prevX : Number = NaN, prevY : Number = NaN, prevA : Number = NaN) : void
+		/**
+		 * Will only affect every remaining update frame until the next fixedUpdate.
+		 * Note that calling this method will not alter the course of the rigidbody.
+		 * @param	nextX
+		 * @param	nextY
+		 * @param	nextAngle
+		 */
+		public function setNext(nextX : Number = NaN, nextY : Number = NaN, nextAngle : Number = NaN) : void
 		{
-			if(!isNaN(prevX)) _prevX = prevX;
-			if(!isNaN(prevY)) _prevY = prevY;
-			if(!isNaN(prevA)) _prevA = prevA;
+			if (_started)
+			{
+				//(x <= Infinity) is faster than !isNaN() and uses the fact that any comparison with NaN returns false
+				if (nextX <= Infinity) _nextX = nextX;
+				if (nextY <= Infinity) _nextY = nextY;
+				if (nextAngle <= Infinity) _nextA = nextAngle;
+				if (_nextA - _prevA > 180) _prevA += 360;
+				if (_nextA - _prevA < -180) _prevA -= 360;
+			}
+			else
+			{
+				sendAfter("RigidbodyInterpolator_setNext", "start", nextX, nextY, nextAngle);
+			}
+		}
+		/**
+		 * Will only affect every remaining update frame until the next fixedUpdate.
+		 * Note that calling this method will not alter the course of the rigidbody.
+		 * @param	prevX
+		 * @param	prevY
+		 * @param	prevAngle
+		 */
+		public function setPrevious(prevX : Number = NaN, prevY : Number = NaN, prevAngle : Number = NaN) : void
+		{
+			if (_started)
+			{
+				//(x <= Infinity) is faster than !isNaN() and uses the fact that any comparison with NaN returns false
+				if (prevX <= Infinity) _prevX = prevX;
+				if (prevY <= Infinity) _prevY = prevY;
+				if (prevAngle <= Infinity) _prevA = prevAngle;
+				if (_nextA - _prevA > 180) _prevA += 360;
+				if (_nextA - _prevA < -180) _prevA -= 360;
+			}
+			else
+			{
+				sendAfter("RigidbodyInterpolator_setPrevious", "start", prevX, prevY, prevAngle);
+			}
+		}
+		public function get previousX() : Number
+		{
+			if (_prevX <= Infinity) return _prevX;
+			return _transform.x;
+		}
+		public function get previousY() : Number
+		{
+			if (_prevY <= Infinity) return _prevY;
+			return _transform.y;
+		}
+		public function get previousAngle() : Number
+		{
+			if (_prevA <= Infinity) return _prevA;
+			return _transform.rotation;
 		}
 		
 		public function update() : void

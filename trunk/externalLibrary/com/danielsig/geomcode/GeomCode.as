@@ -7,24 +7,24 @@ package com.danielsig.geomcode
 	import flash.utils.Dictionary;
 	
 	/**
-	 * A GeomCode parser. Use this class in order to parse and execute GeomCode.
-	 * GeomCode files have a <b>.gmc</b> extension.
-	 * In Debug mode, the syntax is roughly checked for common syntax errors.
-	 * In Release mode, the syntax is <b>not</b> checked for any errors.
-	 * 
-	 * GeomCode is a programming language designed specifically for the creation of solid geometry.
-	 * Every method you specify in GeomCode creates and returns a geometry.
-	 * Even an empty method still returns a geometry; an empty geometry.
-	 * GeomCode basicly does not create the actual geometry, it will call the <code>create()</code>
-	 * method for every geometry it wants to be created and uses the returned value as the object.
-	 * You can then change that object's properties within GeomCode.
-	 * 
-	 * <b>Syntax</b>
-	 * The syntax is pretty simple, it has almost every operator that actionscript has except bitwise operators.
-	 * Here's a list of operators and their operation:
+	 * A GeomCode parser. Use this class in order to parse and execute GeomCode.<br/>
+	 * GeomCode files have a <b>.gmc</b> extension.<br/>
+	 * In Debug mode, the syntax is roughly checked for common syntax errors.<br/>
+	 * In Release mode, the syntax is <b>not</b> checked for any errors.<br/>
+	 * <p>
+	 * GeomCode is a programming language designed specifically for the creation of solid geometry.<br/>
+	 * Every method you specify in GeomCode creates and returns a geometry.<br/>
+	 * Even an empty method still returns a geometry; an empty geometry.<br/>
+	 * GeomCode basicly does not create the actual geometry, it will call the <code>create()</code><br/>
+	 * method for every geometry it wants to be created and uses the returned value as the object.<br/>
+	 * You can then change that object's properties within GeomCode.<br/>
+	 * </p>
+	 * <b>Syntax</b><br/>
+	 * The syntax is pretty simple, it has almost every operator that actionscript has except bitwise operators.<br/>
+	 * Here's a list of operators and their operation:<pre>
 		 * +	addition
 		 * -	subtraction
-		 * *	multiplication
+		 * &#42;	multiplication
 		 * /	division
 		 * %	modulo
 		 * ++	increment (both post increment and pre increment)
@@ -32,21 +32,21 @@ package com.danielsig.geomcode
 		 * =	assignment
 		 * +=	addition assignment
 		 * -=	subtraction assignment
-		 * *=	multiplication assignement
+		 * &#42;=	multiplication assignement
 		 * /=	division assignment
 		 * %=	modulo assignemnt
-		 * &&	logical and
+		 * &amp;&amp;	logical and
 		 * ||	logical or
-		 * &&=	logical and assignment
+		 * &amp;&amp;=	logical and assignment
 		 * ||=	logical or assignment
 		 * !	logical not
 		 * ==	equality
 		 * !=	inequality
-		 * >	greater than
-		 * <	less than
-		 * >=	greater than or equals
-		 * <=	less than or equals
-	 * Parameters in GeomCode work like assignements, so every parameter must have a default value.
+		 * &gt;	greater than
+		 * &lt;	less than
+		 * &gt;=	greater than or equals
+		 * &lt;=	less than or equals</pre>
+	 * Parameters in GeomCode work like assignements, so every parameter must have a default value.<br />
 	 * Here's an example of a geometry made in GeomCode:
 		* <example>
 		* Stick( length = 10, width = 1 ) { }
@@ -63,11 +63,11 @@ package com.danielsig.geomcode
 		 * creates a Stick at it's position
 		 * moves itself one unit to the right
 		 * repeats until 10 sticks have been made
-	 * Does that header remind you something?... for-loops maybe? That's what's called a geometry loop
-	 * There are only two ways to create loops in GeomCode, recursions and geometry loops.
+	 * Does that header remind you something?... for-loops maybe? That's what's called a geometry loop<br />
+	 * There are only two ways to create loops in GeomCode, recursions and geometry loops.<br />
 	 * While recursions will make every subsequent geometry a child of it's preceding geometry,
-	 * a geometry loop will make every geometry a child of the first iteration.
-	 * example:
+	 * a geometry loop will make every geometry a child of the first iteration.<br />
+	 * example:<pre>
 		 * Recursion:
 			 * World
 			 * 	Fence
@@ -90,7 +90,7 @@ package com.danielsig.geomcode
 			 * 		Fence
 			 * 			Stick
 			 * 		...
-			 * 		
+			 * 		</pre>
 	 * @author Daniel Sig
 	 */
 	public final class GeomCode

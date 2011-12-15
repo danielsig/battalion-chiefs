@@ -13,7 +13,8 @@ package com.battalion.flashpoint.comp.misc
 		
 		public var target : Transform = null;
 		public var offset : Point = new Point(0, 0);
-		public var speed : Number = 0.1;
+		public var speed : Number = 3;
+		
 		private var _transform : Transform;
 		
 		public function follow(target : GameObject, speed : Number = 0.1, offset : Point = null) : void 
@@ -28,7 +29,6 @@ package com.battalion.flashpoint.comp.misc
 		{
 			_transform = gameObject.transform;
 		}
-		
 		/** @private **/
 		public function update() : void 
 		{
@@ -39,7 +39,9 @@ package com.battalion.flashpoint.comp.misc
 					if (!offset) throw new Error("The offset must be non-null.");
 					if (isNaN(speed)) throw new Error("Speed is NaN(Not a Number)!");
 				}
-				var scale : Number = speed * FlashPoint.deltaRatio;
+				var scale : Number = speed * FlashPoint.deltaTime;
+				if (scale > 1) scale = 1;
+				else if (scale < 0) scale = 0;
 				_transform.x += (offset.x + target.x - _transform.x) * scale;
 				_transform.y += (offset.y + target.y - _transform.y) * scale;
 			}

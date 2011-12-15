@@ -3,6 +3,8 @@ package com.battalion.flashpoint.comp
 	
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.display.ColorMatrix;
+	import com.battalion.flashpoint.comp.tools.Console;
+	import com.battalion.SyncedProperty;
 	import flash.display.ColorCorrection;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
@@ -23,9 +25,45 @@ package com.battalion.flashpoint.comp
 		private var _bounds : Rectangle = null;
 		private var _tr : Transform = null;
 		
+		private static var _main : Camera = null;
+		private static var _cams : Vector.<Camera> = new Vector.<Camera>();
+		private static var _mainSync : SyncedProperty = new SyncedProperty();
+		
+		/**
+		 * Don't use this, this is very a complicated thing compared to how useless it is.
+		 * @see #unsubscribeToMainCamera()
+		 */
+		public static function subscribeToMainCamera(target : *, targetPropertyNameChain : String, cameraPropertyNameChain : String = null) : *
+		{
+			return _mainSync.subscribe(target, targetPropertyNameChain, cameraPropertyNameChain);
+		}
+		/**
+		 * Don't use this, this is very a complicated thing compared to how useless it is.
+		 * @see #subscribeToMainCamera()
+		 */
+		public static function unsubscribeToMainCamera(target : *, targetPropertyNameChain : String, cameraPropertyNameChain : String = null) : void
+		{
+			_mainSync.unsubscribe(target, targetPropertyNameChain, cameraPropertyNameChain);
+		}
+		/**
+		 * The main camera is read only. This is equivalent to the 'GameObject.world.cam.camera'
+		 */
+		public static function get mainCamera() : Camera
+		{
+			return _main;
+		}
+		
 		/** @private **/
 		public function onDestroy() : Boolean
 		{
+			var index : int = _cams.indexOf(_main);
+			_cams.splice(index, 1);
+			if (_main == this)
+			{
+				if (_cams.length) _main = _cams[index];//because of the splice, this is the next cam in the row
+				_main = null;
+				_mainSync.sync(_main);
+			}
 			colorMatrix = null;
 			_bounds = null;
 			_tr = null;
@@ -35,9 +73,25 @@ package com.battalion.flashpoint.comp
 		/** @private **/
 		public function awake() : void
 		{
+			if (!_main)
+			{
+				_main = this;
+				_mainSync.sync(_main);
+				if (Console.mode == Console.MODE_ALWAYS) Console.getConsole();
+			}
+			_cams.push(this);
 			_tr = gameObject.transform;
 		}
-		
+		public function get width() : Number
+		{
+			if (_bounds) return _bounds.width;
+			return 1;
+		}
+		public function get height() : Number
+		{
+			if (_bounds) return _bounds.height;
+			return 1;
+		}
 		public function rectangleInSight(bounds : Rectangle) : Boolean
 		{
 			var left : Number = _tr.x - _bounds.width * 0.5 * _tr.scaleX;

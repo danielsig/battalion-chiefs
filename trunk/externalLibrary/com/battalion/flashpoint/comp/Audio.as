@@ -19,13 +19,15 @@ package com.battalion.flashpoint.comp
 	{
 		
 		private static var _sounds : Object = { };
-		public static var audioListener : Transform = world.cam.transform;
-		public static var volumeFalloff : Number = 0.0015;
+		public static var audioListener : Transform = Camera.subscribeToMainCamera(Audio, "audioListener", "gameObject.transform") || world.transform;
+		public static var globalVolumeFalloff : Number = 0.008;
 		public static var panningMultiplier : Number = 1;
 		public static var listenerZoomFactor : Number = 1;
 		
 		public var volume : Number = 1;
+		public var volumeFalloff : Number = 1;
 		public var panOffset : Number = 0;
+		public var timeScale : Number = 1;
 		
 		private var _player : AudioPlayer = new AudioPlayer();
 		private var _soundName : String;
@@ -172,13 +174,16 @@ When selecting another sound, set the <code>soundName</code> to the desired soun
 		{
 			if (_playing)
 			{
-				var dist : Number = _transform.gx - audioListener.x;
-				_player.panning = panOffset + dist * 0.002 * panningMultiplier / audioListener.scale;
+				var dist : Number = _transform.gx - audioListener.gx;
+				_player.panning = panOffset + dist * dist * dist * 0.000000002 * panningMultiplier / audioListener.scale;
 				if (dist < 0) dist = -dist;
-				var distY : Number = _transform.gy - audioListener.y;
+				var distY : Number = _transform.gy - audioListener.gy;
 				dist += (distY < 0 ? -distY : distY);
 				var volumeFactor : Number = ((1 - listenerZoomFactor) + listenerZoomFactor * audioListener.scale);
-				_player.volume = volume * ((1 - dist * volumeFalloff * (0.5 - (2 / (2 + audioListener.scale)))) / volumeFactor);
+				var vol : Number = 1 + (dist * volumeFalloff * globalVolumeFalloff * (0.5 - (2 / (2 + audioListener.scale))));
+				if (vol < 0) vol = 0;
+				_player.volume = volume * (vol / volumeFactor);
+				_player.timeScale = timeScale * FlashPoint.timeScale;
 			}
 		}
 		/**

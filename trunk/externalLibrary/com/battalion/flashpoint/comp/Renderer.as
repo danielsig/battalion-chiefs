@@ -4,12 +4,11 @@ package com.battalion.flashpoint.comp
 	CONFIG::flashPlayer10
 	{
 		import com.battalion.flashpoint.display.View;
-		import starling.display.Image;
 	}
-	CONFIG::flashPlayer11
+	/*CONFIG::flashPlayer11
 	{
 		import com.battalion.flashpoint.display.ViewFlash11;
-	}
+	}*/
 	
 	import com.battalion.flashpoint.core.*;
 	import com.danielsig.LoaderMax;
@@ -28,7 +27,7 @@ package com.battalion.flashpoint.comp
 	import flash.events.*;
 	
 	/**
-	 * Basic Renderer component. Renders a Bitmap image.<br/>
+	 * Basic Renderer component. Renders a Bitmap image.<br />
 	 * Use the <code>url</code> property to load an image from an url
 	 * or the static <code>load()</code> method, in case you want to use the bitmap more than once.
 	 * Interacts with the <code><a href="../display/View.html">View</a></code> class.
@@ -37,7 +36,7 @@ package com.battalion.flashpoint.comp
 	 * @see com.battalion.flashpoint.display.View
 	 * @author Battalion Chiefs
 	 */
-	public final class Renderer extends Component implements IExclusiveComponent
+	public final class Renderer extends Component implements IExclusiveComponent, IRotatableComponent
 	{
 		
 		/** @private **/
@@ -658,8 +657,10 @@ Renderer.draw("myWeirdArrow",
 		public var smoothing : Boolean = false;
 		
 		/**
-		 * Set this property to true in order to skip rotation, scaling and shearing
-		 * transformations in the final rendered bitmap to improve performance.
+		 * Set this property and the updateBitmap property to true in order to skip rotation,
+		 * scaling and shearing transformations in the final rendered bitmap to improve performance.
+		 * @see #updateBitmap
+		 * @see optimize()
 		 */
 		public var optimized : Boolean = false;
 		
@@ -670,10 +671,21 @@ Renderer.draw("myWeirdArrow",
 		public var bitmapData : BitmapData = null;
 		
 		/**
-		 * Setting the bitmapData property will not take effect until you set this property to true.
-		 * It is recommended to use the url property insteaad.
+		 * Setting the <code>bitmapData</code> property will not take effect until you set this property to true.
+		 * Setting the <code>optimized</code> property to true will not take effect until you set this property to true.
+		 * It is recommended to use the <code>url</code> property insteaad of the <code>bitmapData</code> property.
 		 */
 		public var updateBitmap : Boolean = false;
+		
+		/**
+		 * The rendering priority of this renderer. In case the number of renderers visible at any given time 
+		 * exceed this value, this renderer will be skipped and not rendererd.
+		 * This comes in handy when dealing with e.g. particle effects.
+		 * It is recommended that you give your particles a lower priority in order to avoid unacceptable lags.
+		 * The ParticleGenerator component does this for you when generating visible particles,
+		 * @see ParticleGenerator.graphicsPriority
+		 */
+		public var priority : uint = uint.MAX_VALUE;
 		
 		/** 
 		 * Read only!!!
@@ -719,6 +731,15 @@ Renderer.draw("myWeirdArrow",
 			{
 				ViewFlash11.addToView(this);
 			}
+		}
+		/**
+		 * Sets the optimised property and the updateBitmap property to true.
+		 * @see #optimized
+		 * @see #updateBitmap
+		 */
+		public function optimize() : void
+		{
+			optimized = updateBitmap = true;
 		}
 		/**
 		 * Caution! slow!!!
@@ -924,9 +945,50 @@ Renderer.draw("myWeirdArrow",
 			var height : Number = (sin * bitmapData.width) + (cos * bitmapData.height);
 			return new Rectangle(m.tx - width * 0.5, m.ty - height * 0.5, width, height);
 		}
+		/**
+		 * Easy way of setting an offset to the Renderer, relative to the GameObject.
+		 * @param	x, the offset along the x-axis
+		 * @param	y, the offset along the x-axis
+		 * @param	scale, the scale of the renderer
+		 */
 		public function setOffset(x : Number, y : Number, scale : Number = 1) : void
 		{
 			offset = new Matrix(scale, 0, 0, scale, x, y);
+		}
+		/**
+		 * Easy way of setting an offset to the Renderer, relative to the GameObject.
+		 * @param	x, the offset along the x-axis
+		 * @param	y, the offset along the x-axis
+		 * @param	scale, the scale of the renderer
+		 * @param	rotation, the rotation of the renderer
+		 */
+		public function setOffsetRotation(x : Number, y : Number, scale : Number = 1, rotation : Number = 0) : void
+		{
+			offset = new Matrix(scale, 0, 0, scale, x, y);
+			if (rotation) offset.rotate(rotation * 0.0174532925);
+		}
+		public function rotate(amount : Number) : void
+		{
+			if (!offset) offset = new Matrix();
+			offset.rotate(amount * 0.0174532925);
+		}
+		public function scale(amount : Number) : void
+		{
+			if (!offset) offset = new Matrix(amount, 0, 0, amount, 0, 0);
+			else
+			{
+				offset.a *= amount;
+				offset.d *= amount;
+			}
+		}
+		public function translate(x : Number, y : Number) : void
+		{
+			if (!offset) offset = new Matrix(1, 0, 0, 1, x, y);
+			else
+			{
+				offset.tx += x;
+				offset.ty += y;
+			}
 		}
 	}
 	
