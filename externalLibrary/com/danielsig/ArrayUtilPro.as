@@ -148,7 +148,7 @@ package com.danielsig
 			{
 				var numberA : Number = Number(arrA[i]);
 				var numberB : Number = Number(arrB[i]);
-				if(!isNaN(numberA) && !isNaN(numberB))
+				if(numberA == numberA && numberB == numberB)
 				{
 					arrA[i] = numberA * numberB;
 				}

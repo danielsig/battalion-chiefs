@@ -27,7 +27,7 @@ package com.battalion.flashpoint.comp
 	 * Use this component in order to render tiles maps
 	 * @author Battalion Chiefs
 	 */
-	public final class TileRenderer extends Component implements IExclusiveComponent 
+	public final class TileRenderer extends Component implements IExclusiveComponent, IOffsetableComponent
 	{
 		private static var _mapLoaders : Dictionary = new Dictionary();
 		private static var _setLoaders : Dictionary = new Dictionary();
@@ -114,7 +114,6 @@ package com.battalion.flashpoint.comp
 		 * After you have called this method, it's safe to call the <code>setTileSetByName()</code> method on a TileRenderer instance.
 		 * It will wait for the tile map and tile set to load and then display them as soon as they're both loaded.
 		 * Can be both individual image urls and/or spritesheet urls. Can also read spritesheet ranges.
-		 * </p>
 		 * <strong>See also</strong>
 <pre>   <a href="../../../danielsig/BitmapLoader.html">BitmapLoader</a>
    <a href="../../../danielsig/SpriteSheet.html">SpriteSheet</a></pre>
@@ -221,9 +220,33 @@ package com.battalion.flashpoint.comp
 			}
 		}
 		
+		/**
+		 * Easy way of setting an offset to the TileRenderer, relative to the GameObject.
+		 * @param	x, the offset along the x-axis
+		 * @param	y, the offset along the x-axis
+		 * @param	scale, the scale of the tiles
+		 */
 		public function setOffset(x : Number, y : Number, scale : Number = 1) : void
 		{
 			offset = new Matrix(scale, 0, 0, scale, x, y);
+		}
+		public function scale(amount : Number) : void
+		{
+			if (!offset) offset = new Matrix(amount, 0, 0, amount, 0, 0);
+			else
+			{
+				offset.a *= amount;
+				offset.d *= amount;
+			}
+		}
+		public function translate(x : Number, y : Number) : void
+		{
+			if (!offset) offset = new Matrix(1, 0, 0, 1, x, y);
+			else
+			{
+				offset.tx += x;
+				offset.ty += y;
+			}
 		}
 		
 		public function setAsCollisionMap(offset : Point, ...layerMasks) : void

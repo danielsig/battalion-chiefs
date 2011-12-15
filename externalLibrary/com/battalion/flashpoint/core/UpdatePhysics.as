@@ -6,7 +6,7 @@ package com.battalion.flashpoint.core
 	 * @private
 	 * @author Battalion Chiefs
 	 */
-	internal final class UpdatePhysics extends Component implements IExclusiveComponent, IConciseComponent 
+	internal final class UpdatePhysics extends Component implements IExclusiveComponent, IConciseComponent
 	{
 		public function updatePhysics() : void
 		{
@@ -14,7 +14,7 @@ package com.battalion.flashpoint.core
 			var body : AbstractRigidbody;
 			if (physics)
 			{
-				if (!(physics.rigidbody || physics.collider0))
+				if (!((physics.rigidbody && _gameObject.rigidbody) || physics.collider0))
 				{
 					if (_gameObject.beginMovement)
 					{
@@ -24,15 +24,24 @@ package com.battalion.flashpoint.core
 					return;
 				}
 				
-				var dx : Number = _gameObject.transform.x - physics.originalX;
-				var dy : Number = _gameObject.transform.y - physics.originalY;
-				var da : Number = _gameObject.transform.rotation - physics.originalA;
+				if (physics.originalX != undefined)
+				{
+					var dx : Number = _gameObject.transform.x - physics.originalX;
+					var dy : Number = _gameObject.transform.y - physics.originalY;
+					var da : Number = _gameObject.transform.rotation - physics.originalA;
+					
+					delete physics.originalX;
+					delete physics.originalY;
+					delete physics.originalA;
+				}
+				else
+				{
+					dx = _gameObject.transform.x;
+					dy = _gameObject.transform.y;
+					da = _gameObject.transform.rotation;
+				}
 				
-				delete physics.originalX;
-				delete physics.originalY;
-				delete physics.originalA;
-				
-				if (physics.length != 1 || physics.hasBox)//should it have a group?
+				if (physics.length != 1 || physics.hasBox || (!physics.collider0.enabled && physics.rigidbody))//should it have a group?
 				{
 					if (!physics.group)//does it NOT have a group?
 					{
@@ -55,7 +64,7 @@ package com.battalion.flashpoint.core
 							}
 						}
 					}
-					else body = physics.group;
+					else body = physics.group;//ok it already had a group
 				}
 				else// it should not have a group
 				{
@@ -70,35 +79,48 @@ package com.battalion.flashpoint.core
 				
 				for each(col in physics)
 				{
-					if (col is Collider)//for each collider
+					var collider : Collider = col as Collider;
+					if (collider)//for each collider
 					{
-						if(!(col.body is Group || col.body.added)) PowerGrid.addBody(col.body);
+						if (!(collider.body is Group || collider.body.added))
+						{
+							PowerGrid.addBody(collider.body);
+							collider.body.enabled = collider.enabled;
+						}
 					}
 				}
 				
 				if (physics.rigidbody)
 				{	
-					body.angularDrag = physics.rigidbody.angularDrag;
-					body.drag = physics.rigidbody.drag;
-					body.mass = isNaN(physics.rigidbody._density) ? physics.rigidbody.mass : physics.rigidbody.density * body.volume;
-					body.inertia = isNaN(physics.rigidbody._massDistribution) ? (physics.rigidbody.freezeRotation ? Infinity : physics.rigidbody.inertia) : (physics.rigidbody.massDistribution * body.volume);
-					body.affectedByGravity = physics.rigidbody.affectedByGravity;
-					body.vanDerWaals = physics.rigidbody.vanDerWaals;
-					var v : Point = physics.rigidbody.velocity;
-					body.vx = v.x;
-					body.vy = v.y;
-					body.va = physics.rigidbody.angularVelocity;
-					v = physics.rigidbody.gameObject.transform.position;
-					body.lastX = v.x - Physics.gridOffset.x;
-					body.lastY = v.y - Physics.gridOffset.y;
-					
-					physics.rigidbody.body = body;
-					
-					if (_gameObject.beginMovement)
+					if (_gameObject.rigidbody)
 					{
-						delete _gameObject.beginMovement;
-						delete _gameObject.endMovement;
+						if (_gameObject.rigidbody != physics.rigidbody) physics.rigidbody = _gameObject.rigidbody;
+						var rigidbody : Rigidbody = physics.rigidbody;
+						
+						body.angularDrag = rigidbody.angularDrag;
+						body.drag = rigidbody.drag;
+						body.mass = isNaN(rigidbody._density) ? rigidbody.mass : rigidbody.density * body.volume;
+						body.inertia = isNaN(rigidbody._massDistribution) ? (rigidbody.freezeRotation ? Infinity : rigidbody.inertia) : (rigidbody.massDistribution * body.volume);
+						body.affectedByGravity = rigidbody.affectedByGravity;
+						body.vanDerWaals = rigidbody.vanDerWaals;
+						var v : Point = rigidbody.velocity;
+						body.vx = v.x;
+						body.vy = v.y;
+						body.va = rigidbody.angularVelocity;
+						v = rigidbody.gameObject.transform.position;
+						body.lastX = v.x - Physics.gridOffset.x;
+						body.lastY = v.y - Physics.gridOffset.y;
+						body.enabled = rigidbody.enabled;
+						
+						rigidbody.body = body;
+						
+						if (_gameObject.beginMovement)
+						{
+							delete _gameObject.beginMovement;
+							delete _gameObject.endMovement;
+						}
 					}
+					else delete physics.rigidbody;
 				}
 				else
 				{

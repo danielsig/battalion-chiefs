@@ -17,11 +17,10 @@ package com.battalion.flashpoint.comp
 		
 		public var localTimeScale : Number = 1;
 		/**
-		 * The time in milliseconds it takes for this BoneAnimation to transition between different animations.
+		 * The time in seconds it takes for this BoneAnimation to transition between different animations.
 		 */
 		public var transitionTime : Number = 0;
 		
-		private var _pFixed : Number = 0;
 		private var _p : Number = 0;//playhead
 		private var _length : uint;
 		private var _framesPerSecond : Number = 30;
@@ -88,10 +87,30 @@ package com.battalion.flashpoint.comp
 			_labels[boneAnimName][frame < 0 ? labels.length + frame - 1 : frame] = [label].concat(params);
 		}
 		
-		/**boneAnimName = Tekur inn nafn á animation
-		*frameInterval = hversu fljótt animationið fer á milli ramma
-		*definition = dynamic object fyrir animationið
-		*/
+		/**
+		 * Defines a BoneAnimation to use for the BoneAnimation component.
+		 * @param	boneAnimName, the name that will be used as reference for the defined animation
+		 * @param	framesPerSecond, the number of frames per second for the defined animation
+		 * @param	definition, a dynamic object with information about the animation. Look at the examples.
+		 * 
+		 * @example An example of a simple bone animation.<listing version="3.0">
+Renderer.drawBox("bone1Graphics", 20, 80, 0x0000FF);
+Renderer.drawBox("bone2Graphics", 20, 80, 0x00FF00);
+BoneAnimation.define("myAnimation", 3.5, {bone1A:[0, 90, 180, -90, 0], bone2A:[0, 45, 90, 45, 0], bone1Y:[40, 40, 40, 40, 40], bone2Y:[80, 80, 80, 80, 80]});
+var myObj : GameObject = new GameObject(BoneAnimation);
+var myBone : GameObject = new GameObject("bone1", myObj, Renderer);
+var mySubBone : GameObject = new GameObject("bone2", myBone, Renderer);
+myBone.renderer.setBitmapByName("bone1Graphics");
+mySubBone.renderer.setBitmapByName("bone2Graphics");
+myBone.renderer.setOffset(0, 40);
+mySubBone.renderer.setOffset(0, 40);
+myObj.boneAnimation.play("myAnimation");
+	</listing>
+		Notice the properties of the dynamic object passed to the BoneAnimation.define function.
+		The name of the bone (GameObject) comes first in the name of the property,
+		then comes a capital letter determining what to animate.
+		'A' means the angle/rotation, 'X' means the x-coordinates and 'Y' means the y-coordinates.
+		 */
 		public static function define(boneAnimName: String, framesPerSecond: Number, definition: Object) : void
 		{
 			CONFIG::debug
@@ -229,9 +248,8 @@ package com.battalion.flashpoint.comp
 			_animation = _animations[value];
 			_length = _animation.length;
 			_framesPerSecond = _animation.framesPerSecond;
-			_p = _pFixed = 0;
-			_multiplierChangeAmount = FlashPoint.fixedInterval / transitionTime;
-			_multiplier = 0;
+			_multiplierChangeAmount = 1.0 / transitionTime;
+			_multiplier = _p = 0;
 			_playback = 1;
 			_messages = _labels[value];
 			
@@ -294,7 +312,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				else if (!_boneAnimName) throw new Error("You must define a bone animation before calling this method!");
 				if (frame <= -_length || frame >= _length) throw new Error("Can not set the playhead to " + frame + " for it is out of range [" + -_length + " - " + _length + "]");
 			}
-			_p = _pFixed = frame < 0 ? _length + frame / _length : frame / _length;
+			_p = frame < 0 ? _length + frame / _length : frame / _length;
 			_playing = false;
 		}
 		/**
@@ -320,7 +338,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				else if (!_boneAnimName) throw new Error("You must define a bone animation before calling this method!");
 			}
 			frame %= _length;
-			_p = _pFixed = frame < 0 ? _length + frame / _length : frame / _length;
+			_p = frame < 0 ? _length + frame / _length : frame / _length;
 			_playing = true;
 		}
 		
@@ -331,10 +349,8 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 			{
 				// UPDATE PLAYHEAD
 				
-				var framesPerFixedFrame : Number = (FlashPoint.fixedInterval * 0.001) * _framesPerSecond;
-				var frameLength : Number = localTimeScale / _length;
-				var step : Number = frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
-				if (_loops == 1) _p = _pFixed + step;
+				var step : Number = _framesPerSecond * FlashPoint.deltaTime * localTimeScale / _length;
+				if (_loops == 1) _p += step * _playback;
 					
 				if (_p >= 1 || _p < 0)
 				{
@@ -344,19 +360,13 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 						return;
 					}
 					if (_pingPongPlayback) _playback = -_playback;
-					else _p = _pFixed = (_p < 0 ? 1 : 0);
+					else _p = (_p < 0 ? 1 : 0);
 				}
 				
-				if (_loops != 1) _p = _pFixed + frameLength * (FlashPoint.frameInterpolationRatio || 1) * framesPerFixedFrame * _playback;
+				if (_loops != 1) _p += step * _playback;
 				
 				if (_p > 1) _p %= 1;
 				else if (_p < 0) _p = (_p % 1) + 1;
-				
-				if (!FlashPoint.frameInterpolationRatio)
-				{
-					_pFixed = _p;
-				}
-				
 				
 				// UPDATE BONES
 				
@@ -370,7 +380,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 				
 				if (_multiplierChangeAmount)
 				{
-					_multiplier += _multiplierChangeAmount * FlashPoint.deltaRatio;
+					_multiplier += _multiplierChangeAmount * FlashPoint.deltaTime;
 					if (_multiplier > 1)
 					{
 						_multiplier = 1;
@@ -389,6 +399,8 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					if (a2 - a1 < -180) a1 -= 360;
 					_bones[boneName].rotation += (a1 * floorRatio + a2  * ceilRatio - _bones[boneName].rotation) * _multiplier;
 				}
+				
+				// SEND MESSAGES
 				if (_playback > 0)
 				{
 					if (currentFrame < _prevFrame) _prevFrame = 0;
@@ -396,7 +408,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					{
 						if (currentFrame >= fr && _prevFrame < fr)
 						{
-							sendMessage.apply(this, _messages[fr]);
+							if(sendMessage.apply(this, _messages[fr])) return;
 						}
 					}
 				}
@@ -407,7 +419,7 @@ When selecting another animation, set the <code>boneAnimName</code> to the desir
 					{
 						if (currentFrame <= fr && _prevFrame > fr)
 						{
-							sendMessage.apply(this, _messages[fr]);
+							if(sendMessage.apply(this, _messages[fr])) return;
 						}
 					}
 				}

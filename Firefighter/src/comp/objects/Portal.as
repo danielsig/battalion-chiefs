@@ -122,8 +122,12 @@ package comp.objects
 							sendMessage("portalOpened", target.gameObject, this);
 							otherPortal.sendMessage("portalClosed", target.gameObject, otherPortal);
 							target.sendMessage("openingPortal", this);
-							world.cam.transform.x += otherPortal.gameObject.transform.x - target.x;
-							world.cam.transform.y += otherPortal.gameObject.transform.y - target.y + 7;
+							var mainCam : Camera = Camera.mainCamera;
+							if (mainCam)
+							{
+								world.cam.transform.x += otherPortal.gameObject.transform.x - target.x;
+								world.cam.transform.y += otherPortal.gameObject.transform.y - target.y + 7;
+							}
 							target.x = otherPortal.gameObject.transform.x;
 							target.y = otherPortal.gameObject.transform.y + 7;
 							

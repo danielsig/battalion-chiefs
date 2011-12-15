@@ -7,7 +7,8 @@ package com.battalion.flashpoint.core
 	 */
 	public interface IPhysicsSyncable 
 	{
-		
+		function enable() : void
+		function disable() : void
 	}
 	
 }

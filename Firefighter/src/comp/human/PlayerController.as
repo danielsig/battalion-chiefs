@@ -4,6 +4,7 @@ package comp.human
 	import comp.particles.*;
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.comp.*;
+	import com.battalion.flashpoint.comp.tools.*;
 	import com.battalion.flashpoint.comp.misc.*;
 	import com.battalion.Input;
 	import flash.display.PixelSnapping;
@@ -22,8 +23,12 @@ package comp.human
 			var player : GameObject = new GameObject("player", PlayerController);
 			player.transform.x = x;
 			player.transform.y = y;
-			world.cam.transform.x = player.transform.x;
-			world.cam.transform.y = player.transform.y;
+			var mainCam : Camera = Camera.mainCamera;
+			if (mainCam)
+			{
+				mainCam.gameObject.transform.x = player.transform.x;
+				mainCam.gameObject.transform.y = player.transform.y;
+			}
 			return player;
 		}
 		
@@ -32,6 +37,8 @@ package comp.human
 		private var _hose : GameObject;		
 		private var _tr : Transform;
 		private var _running : Boolean = false;
+		
+		public var playerCam : Camera = Camera.subscribeToMainCamera(this, "playerCam");
 		
 		public function awake() : void 
 		{
@@ -46,21 +53,22 @@ package comp.human
 			var mouseLook : LookAtMouse = gameObject.torso.rightArm.addComponent(LookAtMouse) as LookAtMouse;
 			mouseLook.passive = false;
 			mouseLook.angleOffset = 50;
-			mouseLook.transitionMultiplier = 0.3;
+			mouseLook.speed = 7;
 			mouseLook.lowerConstraints = -150;
 			mouseLook.upperConstraints = 0;
 			//	left hand
 			mouseLook = gameObject.torso.rightArm.rightForearm.addComponent(LookAtMouse) as LookAtMouse;
 			mouseLook.passive = false;
 			mouseLook.angleOffset = 90;
-			mouseLook.transitionMultiplier = 0.3;
+			mouseLook.speed = 7;
 			mouseLook.lowerConstraints = -150;
 			mouseLook.upperConstraints = 0;
 			
 			//CHEATS
 			if (cheatsEnabled)
 			{
-				requireComponent(TimeMachine);
+				(requireComponent(TimeMachine) as TimeMachine).upperLimit = 1;
+				requireComponent(HzController);
 				requireComponent(Zoomer);
 			}
 			
@@ -74,7 +82,7 @@ package comp.human
 			_hose.particleGenerator.emitting = false;
 			
 			//CAM
-			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 0.2, new Point(0, -50));
+			(world.cam.addComponent(Follow) as Follow).follow(gameObject, 5, new Point(0, -50));
 			
 			//CONTROLS
 			Input.assignDirectional("playerDirection", "d", "a", Keyboard.RIGHT, Keyboard.LEFT);
@@ -89,17 +97,24 @@ package comp.human
 		public function fixedUpdate() : void 
 		{
 			var thisPos : Point = _tr.globalPosition;
-			var mousePos : Point = world.cam.camera.screenToWorld(Input.mouse);
+			if (playerCam) var mousePos : Point = playerCam.screenToWorld(Input.mouse);
+			else mousePos = thisPos;
 			
 			//CONTROLS
 			sendMessage("HumanBody_face" + (mousePos.x < thisPos.x ? "Left" : "Right"));
-			sendMessage("HumanBody_go" + (mousePos.y < thisPos.y ? "Up" : "Down"));
+			sendMessage("HumanBody_go" + (mousePos.y < thisPos.y + 20 ? "Up" : "Down"));
 			var dir : int = Input.directional("playerVerticalDirection");
 			if(dir) sendMessage("HumanBody_go" + (dir > 0 ? "Up" : "Down") + "Stairs");
+			
 			dir = Input.directional("playerDirection");
 			if (dir) sendMessage("HumanBody_go" + (dir > 0 ? "Right" : "Left"));
 			if (_running != Input.holdButton("shift")) sendMessage("HumanBody_" + ((_running = !_running) ? "start" : "stop") + "Running");
-			if (Input.pressButton("jump")) sendMessage("HumanBody_jump");
+			
+			if (Input.pressButton("jump"))
+			{
+				sendMessage("HumanBody_jump");
+				log("jumping");
+			}
 			
 			if (_running || !gameObject.humanBody.grounded)
 			{
@@ -135,6 +150,8 @@ package comp.human
 				}
 			}
 			
+			//gameObject.transform.x = 2500;
+			//gameObject.transform.y = 330;
 		}
 		
 	}

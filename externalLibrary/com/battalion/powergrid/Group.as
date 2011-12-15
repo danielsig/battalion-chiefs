@@ -9,7 +9,11 @@ package com.battalion.powergrid
 		
 		private var _volume : Number = 0;
 		
-		public function get bodyList() : Vector.<AbstractRigidbody> { return bodies.vector; }
+		public function get bodyList() : Vector.<AbstractRigidbody>
+		{
+			if (!bodies) return new Vector.<AbstractRigidbody>();
+			return bodies.vector;
+		}
 		
 		public override function get volume() : Number
 		{
@@ -167,13 +171,31 @@ package com.battalion.powergrid
 		
 		public function getBodyAt(index : int) : AbstractRigidbody
 		{
+			CONFIG::debug
+			{
+				if(index < 0) throw new Error("specified index " + index + " is out of range " + length + ".");
+			}
+			if (!bodies)
+			{
+				CONFIG::debug
+				{
+					throw new Error("specified index " + index + " is out of range 0.");
+				}
+				return null;
+			}
 			var target : BodyNode = bodies;
-			while ((index--) && (target = target.next)){};
-			return target.body;
+			while ((index--) && (target = target.next)){}
+			if (target) return target.body;
+			CONFIG::debug
+			{
+				throw new Error("specified index " + (length + index) + " is out of range " + length + ".");
+			}
+			return null;
 		}
 		public function addLayers(layersToAdd : uint) : void
 		{
 			layers |= layersToAdd;
+			if (!bodies) return;
 			var target : BodyNode = bodies;
 			if (target)
 			{
@@ -188,6 +210,7 @@ package com.battalion.powergrid
 		{
 			layersToRemove = ~layersToRemove;
 			layers &= layersToRemove;
+			if (!bodies) return;
 			var target : BodyNode = bodies;
 			if (target)
 			{
@@ -204,6 +227,7 @@ package com.battalion.powergrid
 		 */
 		public function get groupLayers() : uint
 		{
+			if (!bodies) return layers;
 			layers = 0;
 			var target : BodyNode = bodies;
 			if (target)
@@ -219,6 +243,7 @@ package com.battalion.powergrid
 		public function set groupLayers(value : uint) : void
 		{
 			layers = value;
+			if (!bodies) return;
 			var target : BodyNode = bodies;
 			if (target)
 			{
@@ -235,6 +260,7 @@ package com.battalion.powergrid
 		}
 		public function get length() : int
 		{
+			if (!bodies) return 0;
 			var target : BodyNode = bodies;
 			for (var index : int = 0; target; index++) target = target.next;
 			return index;
@@ -293,18 +319,25 @@ package com.battalion.powergrid
 		 */
 		public function releaseBody(body : AbstractRigidbody, ...rest) : void
 		{
-			_inertia = _mass = _volume = 0;
+			CONFIG::debug
+			if (!body) throw new Error("Body must be non-null!");
 			
-			while (body._contacts)
-			{
-				body._contacts.dispose();
-			}
-			
+			if (!bodies) throw new Error("Group does not contain any of the rigidbodies specified in the arguements\nsince the group doesn't contain ANY rigidbodies at all!");
 			var target : BodyNode = bodies;
+			var lastBody : Boolean = !rest.length;
+			var newMass : Number = 0;
+			var newInertia : Number = 0;
+			var newVolume : Number = 0;
+			var index : int = 0;
 			do
 			{
 				if (target.body == body)
 				{
+					while (body._contacts)
+					{
+						body._contacts.dispose();
+					}
+					
 					target.body.group = null;
 					if (target.prev) target.prev.next = target.next;
 					if (target.next) target.next.prev = target.prev;
@@ -315,27 +348,49 @@ package com.battalion.powergrid
 					BodyNode.pool.brother = BodyNode.pool.prev = null;
 					BodyNode.pool.body = null;
 					BodyNode.pool.index = uint.MAX_VALUE;
+					
+					if (!lastBody)
+					{
+						CONFIG::debug
+						if (rest[index] is Circle || rest[index] is Triangle) throw new ArgumentError("All of the arguements must be of type Circle or Triangle!");
+						
+						body = rest[index++];
+						target = bodies;
+						lastBody = index >= rest.length;
+						continue;
+					}
 				}
-				else if(!rest.length)
+				else if(lastBody)
 				{
-					_mass += body._mass;
-					_inertia += body.inertia;
-					_volume += body.volume;
+					newMass += body._mass;
+					newInertia += body.inertia;
+					newVolume += body.volume;
 				}
+				target = target.next;
 			}
-			while ((target = target.next));
-			if (rest.length) releaseBody.apply(this, rest);
+			while (target);
+			if (!lastBody) throw new Error("Group does not contain the rigidbody arguement at index: " + index);
 			
-			_invMass = 1.0 / _mass;
-			_invInertia = 1.0 / _inertia;
+			_mass = newMass;
+			_inertia = newInertia;
+			_volume = newVolume;
+			
+			_invMass = 1.0 / newMass;
+			_invInertia = 1.0 / newInertia;
 		}
 		/**
 		 * Releases all bodies and removes this Group object from the PowerGrid.
 		 */
 		public function ungroup() : void
 		{
+			if (!bodies)
+			{
+				PowerGrid.removeBody(this);
+				return;
+			}
 			do
 			{
+				var next : BodyNode = bodies.next;
 				while (bodies.body._contacts)
 				{
 					bodies.body._contacts.dispose();
@@ -349,12 +404,13 @@ package com.battalion.powergrid
 				BodyNode.pool.body = null;
 				BodyNode.pool.index = uint.MAX_VALUE;
 			}
-			while ((bodies = bodies.next));
+			while ((bodies = next));
 			PowerGrid.removeBody(this);
 		}
 		
 		public function syncBodies() : void
 		{
+			if (!bodies) return;
 			var target : BodyNode = bodies;
 			if (target)
 			{
@@ -378,7 +434,12 @@ package com.battalion.powergrid
 		public function updateMassInertiaAndVolume() : void
 		{
 			_inertia = _mass = _volume = 0;
-			
+			if (!bodies)
+			{
+				_invMass = Infinity;
+				_invInertia = Infinity;
+				return;
+			}
 			var target : BodyNode = bodies;
 			if (target)
 			{

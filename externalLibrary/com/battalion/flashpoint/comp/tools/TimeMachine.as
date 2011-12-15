@@ -1,4 +1,4 @@
-package com.battalion.flashpoint.comp.misc 
+package com.battalion.flashpoint.comp.tools 
 {
 	
 	import com.battalion.flashpoint.core.*;
@@ -11,7 +11,7 @@ package com.battalion.flashpoint.comp.misc
 	 */
 	public class TimeMachine extends Component implements IExclusiveComponent
 	{
-		public var lowerLimit : Number = 0.06;
+		public var lowerLimit : Number = 0.01;
 		public var upperLimit : Number = 1;
 		
 		/** @private **/

@@ -2,6 +2,8 @@ package
 {
 	import com.battalion.flashpoint.core.*;
 	import com.battalion.flashpoint.comp.misc.*;
+	import com.battalion.flashpoint.comp.tools.Console;
+	import com.battalion.flashpoint.comp.tools.PhysicsDebugger;
 	import com.battalion.flashpoint.comp.TextRenderer;
 	import com.battalion.flashpoint.display.ViewFlash11;
 	import com.demonsters.debugger.MonsterDebugger;
@@ -35,11 +37,13 @@ package
 
 		private function init(e : Event = null) : void 
 		{
+			removeEventListener(Event.ADDED_TO_STAGE, init);
+			
+			//Console.mode = Console.MODE_NEVER;
 			stage.tabChildren = false;
 			stage.scaleMode = StageScaleMode.SHOW_ALL;
 			stage.quality = "low";
-			removeEventListener(Event.ADDED_TO_STAGE, init);
-			FlashPoint.fixedFPS = 30;
+			FlashPoint.fixedFPS = 24;
 			FlashPoint.timeScale = 1;
 			FlashPoint.init(stage);
 			GameObject.world.addComponent(GameCore);
@@ -54,11 +58,13 @@ package
 			{
 				new com.battalion.flashpoint.display.ViewFlash11(viewPort);
 			}
-			CONFIG::debug
+			//CONFIG::debug
 			{
 				GameObject.world.addComponent(PhysicsDebugger);
 				GameObject.world.physicsDebugger.debugSprite = addChild(new Sprite()) as Sprite;
 			}
+			//stage.tabChildren = stage.tabEnabled = false;
+			//stage.focus = this;
 		}
 		public var val : Number = 1;
 		public var obj : GameObject;

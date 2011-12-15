@@ -210,6 +210,11 @@ package com.battalion.powergrid
 		/** @private **/
 		public var gn31y : Number;
 		
+		public function get radius() : Number
+		{
+			return _extents;
+		}
+		
 		/**
 		 * scale the vertices by <code>scalar</code>.
 		 * @param	scalar

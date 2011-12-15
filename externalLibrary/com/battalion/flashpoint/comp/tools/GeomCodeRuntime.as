@@ -109,10 +109,10 @@ package com.battalion.flashpoint.comp.tools
 				else
 				{
 					obj.addComponent(Rigidbody);
-					if(!isNaN(obj.density)) obj.rigidbody.density = obj.density;
-					if(!isNaN(obj.massDistribution)) obj.rigidbody.massDistribution = obj.massDistribution;
-					if(!isNaN(obj.mass)) obj.rigidbody.mass = obj.mass;
-					if (!isNaN(obj.inertia)) obj.rigidbody.inertia = obj.inertia;
+					if (obj.density == obj.density) obj.rigidbody.density = obj.density;
+					if (obj.massDistribution == obj.massDistribution) obj.rigidbody.massDistribution = obj.massDistribution;
+					if (obj.mass == obj.mass) obj.rigidbody.mass = obj.mass;
+					if (obj.inertia == obj.inertia) obj.rigidbody.inertia = obj.inertia;
 				}
 			}
 			if (obj.texture)

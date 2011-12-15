@@ -1,7 +1,8 @@
 package com.battalion.flashpoint.core 
 {
 	
-	import com.battalion.flashpoint.comp.TextRenderer;
+	import com.battalion.flashpoint.comp.Camera;
+	import com.battalion.flashpoint.comp.tools.Console;
 	import flash.sampler.NewObjectSample;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.*;
@@ -21,7 +22,10 @@ trace(myGameObject.renderer);//WORLD.Untitled.renderer
 var myGameObject : GameObject = new GameObject("foo");
 var myChild : GameObject = new GameObject("bar");
 myGameObject.addChild(myChild);
-trace(myChild);//WORLD.foo.bar
+trace(myChild == World.foo.bar);//true
+trace(myChild == World.foo);//false
+trace(myGameObject == World.foo.bar);//false
+trace(myGameObject == World.foo);//true
 	 * </listing>
 	 * @see Component
 	 * @see Transform
@@ -126,6 +130,7 @@ trace(myChild);//WORLD.foo.bar
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
+				if (WORLD.cam as GameObject == this && this.camera is Camera) throw new Error("Can not change the parent of the default camera GameObject: world.cam");
 			}
 			(value || WORLD).addChild(this);
 		}
@@ -149,6 +154,7 @@ trace(myChild);//WORLD.foo.bar
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (value == null) throw new Error("Name must be non-null.");
+				if (WORLD.cam as GameObject == this && this.camera is Camera) throw new Error("Can not change the name of the default camera GameObject: world.cam");
 			}
 			
 			_parent.updateNameOf(this, value);
@@ -271,6 +277,7 @@ trace(myChild);//WORLD.foo.bar
 		}
 		/** Add multiple children.
 		 * @see #addChild()
+		 */
 		public function addChildren(...children) : void
 		{
 			CONFIG::debug
@@ -542,7 +549,8 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
-				if (this == WORLD) throw new Error("\r\tI was just chilling, minding my own business when suddenly you call this method:\r\t\t\"GameObject.world.destroy();\"\r\tOMG you're such a NOOB!");
+				if (this == WORLD) throw new Error("You can not destroy the root GameObject: world");
+				else if (this == WORLD.cam) throw new Error("You can not destroy the main camera GameObject: world.cam");
 			}
 			sendMessage("onDestroy");
 			_parent.unparentChild(this);
@@ -604,27 +612,47 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			return copy;
 		}
-		public function addListener(messageName : String, callbackFunction : Function) : void
+		/**
+		 * Add a listener to a specific message named <code>messageName</code> so that when
+		 * that message is sent, the callbackFunction is called.
+		 * @param	messageName, the name of the message to listen to
+		 * @param	callbackFunction, the function to call when the message will be sent
+		 */
+		public function addListener(messageName : String, callbackFunction : Function, firstParamIsGameObject : Boolean = false) : void
 		{
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (!messageName) throw new Error("MessageName must be non-null.");
-				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+				if (callbackFunction == null) throw new Error("CallbackFunction must be non-null.");
 			}
 			if (!_listeners[messageName]) _listeners[messageName] = new Dictionary();
+			else if (_listeners[messageName][callbackFunction]) return;
+			
 			var obj : Object = { };
-			obj[messageName] = callbackFunction;
-			_listeners[messageName][callbackFunction] = addDynamic(messageName + "Listener", obj, true);
+			if (firstParamIsGameObject)
+			{
+				(_listeners[messageName][callbackFunction] = addDynamic(messageName + "Listener", null, true)).addFunction(messageName, callbackFunction, true);
+			}
+			else
+			{
+				obj[messageName] = callbackFunction;
+				_listeners[messageName][callbackFunction] = addDynamic(messageName + "Listener", obj, true);
+			}
 			
 		}
+		/**
+		 * remove a previously added listener
+		 * @param	messageName, the name of the message that is being listened to and should be removed
+		 * @param	callbackFunction, the function that should bre removed that is being called when message named <code>messageName</code> is sent
+		 */
 		public function removeListener(messageName : String, callbackFunction : Function) : void
 		{
 			CONFIG::debug
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (!messageName) throw new Error("MessageName must be non-null.");
-				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+				if (callbackFunction == null) throw new Error("CallbackFunction must be non-null.");
 			}
 			if (_listeners[messageName] && _listeners[messageName][callbackFunction])
 			{
@@ -808,6 +836,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			{
 				return precursor;
 			}
+			//if (comp.init is Function) comp.init();
 			var instance : Component = new comp();
 			instance._gameObject = this;
 			_components.push(instance);
@@ -872,6 +901,13 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			}
 			return instance;
 		}
+		CONFIG::debug
+		private function requiredFilter(c : Component, i : int, v : Vector.<Component>) : Boolean
+		{
+			return c != _targetInstance;
+		}
+		CONFIG::debug
+		private var _targetInstance : Component;
 		/**
 		 * Remove a Component instance from this GameObject. Essentially the same as to call the destroy method on the Component itself.
 		 * Do not remove Components that are required by other Components.
@@ -884,22 +920,19 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 			{
 				if (!_parent) throw new Error("GameObject has been destroyed, but you're trying to access it");
 				if (instance == null) throw new Error("Instance must be non-null."); 
+				else if (instance == WORLD.cam.camera) throw new Error("You can not destroy the Camera component of the main camera GameObject: world.cam.camera");
 				if (_components.indexOf(instance) < 0) throw new Error("GameObject does not contain " + instance + "." );
 				if (instance._requiredBy.length > 0)
 				{
 					throw new Error("Component " + instance + " can not be removed. It is required by "
 					+ (instance._requiredBy.length > 1 ? "the following: [" + instance._requiredBy.join(", ") + "]." : instance._requiredBy[0]));
 				}
+				_targetInstance = instance;
 				if (instance._require.length > 0)
 				{
 					for each(var requiredComponent : Component in instance._require)
 					{
-						requiredComponent._requiredBy = requiredComponent._requiredBy.filter(
-							function(c : Component, i : int, v : Vector.<Component>) : Boolean
-							{
-								return c != instance;
-							}
-						);
+						requiredComponent._requiredBy = requiredComponent._requiredBy.filter(requiredFilter);
 					}
 				}
 			}
@@ -959,7 +992,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					functionName = message;
 					targetClass = Component;
 				}
-				
+				if(!targetClass) targetClass = Component;
 				if (instance is targetClass && instance.hasOwnProperty(functionName) && compObj[functionName] is Function)
 				{
 					var rcv : Vector.<Function> = _messages[message];
@@ -1257,7 +1290,7 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 					{
 						names[i] = _children[i].name;
 					}
-					trace(this + ": " + names.join(", "));
+					trace("4:" + this + ": " + names.join(", "));
 					for each(var comp : Component in _components)
 					{
 						if (comp is DynamicComponent)
@@ -1265,12 +1298,12 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 							var name : String = (comp as DynamicComponent)._name;
 							name = name.charAt(0).toLowerCase() + name.slice(1);
 							
-							trace("\t" + name + ": ");
+							trace("3:\t" + name + ": ");
 							for(var memberName : String in comp as DynamicComponent)
 							{
 								if (!(comp[memberName] is Function))
 								{
-									trace("\t\t" + memberName + ": " + comp[memberName]);
+									trace("4:\t\t" + memberName + ": " + comp[memberName]);
 								}
 							}
 						}
@@ -1280,13 +1313,65 @@ myGameObject.boxCollider.dimensions = new Point(10, 10);</listing>
 							name = name.slice(name.lastIndexOf("::") + 2);
 							name = name.charAt(0).toLowerCase() + name.slice(1);
 							
-							trace("\t" + name + ": ");
+							trace("3:\t" + name + ": ");
 							var info : XMLList = describeType(comp).children();
 							for each(var member : XML in info)
 							{
 								if ((member.name() == "variable" || member.name() == "accessor"))
 								{
-									trace("\t\t" + member.@name + ": " + comp[member.@name]);
+									trace("4:\t\t" + member.@name + ": " + comp[member.@name]);
+								}
+							}
+						}
+					}
+				}
+			}
+			CONFIG::release
+			{
+				var console : Console = Console.getConsole();
+				if (!console) return;
+				if (log.length > 0)
+				{
+					console.writeLine(this + ": " + args.join(", "));
+				}
+				else
+				{
+					var i : int = _children.length;
+					var names : Vector.<String> = new Vector.<String>(i);
+					while(i--)
+					{
+						names[i] = _children[i].name;
+					}
+					console.writeLine(this + ": " + names.join(", "));
+					for each(var comp : Component in _components)
+					{
+						if (comp is DynamicComponent)
+						{
+							var name : String = (comp as DynamicComponent)._name;
+							name = name.charAt(0).toLowerCase() + name.slice(1);
+							
+							console.writeLine("\t" + name + ": ");
+							for(var memberName : String in comp as DynamicComponent)
+							{
+								if (!(comp[memberName] is Function))
+								{
+									console.writeLine("\t\t" + memberName + ": " + comp[memberName]);
+								}
+							}
+						}
+						else
+						{
+							name = getQualifiedClassName(comp);
+							name = name.slice(name.lastIndexOf("::") + 2);
+							name = name.charAt(0).toLowerCase() + name.slice(1);
+							
+							console.writeLine("\t" + name + ": ");
+							var info : XMLList = describeType(comp).children();
+							for each(var member : XML in info)
+							{
+								if ((member.name() == "variable" || member.name() == "accessor"))
+								{
+									console.writeLine("\t\t" + member.@name + ": " + comp[member.@name]);
 								}
 							}
 						}

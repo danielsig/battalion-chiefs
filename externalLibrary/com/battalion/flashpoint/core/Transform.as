@@ -1,12 +1,14 @@
 package com.battalion.flashpoint.core 
 {
-	
+	import com.danielsig.StringUtilPro;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import com.battalion.Input;
+	import com.greensock.TweenMax;
+	import com.greensock.TweenLite;
 	
 	/**
-	 * Every GameObject always has exactly one Transform component.<br>
+	 * Every GameObject always has exactly one Transform component.<br />
 	 * The Transform component determines the GameObject's position, rotation, scale and shearing.
 	 * If you're used to work with <a href="http://unity3d.com/">Unity3D</a> then note that unlike Unity, all properties
 	 * are in local space not world space. World space properties are:
@@ -105,7 +107,19 @@ package com.battalion.flashpoint.core
 		 */
 		public function get globalRotation() : Number
 		{	
-			return Math.atan2(-globalMatrix.c, globalMatrix.a) * 57.2957795;
+			
+			var a : Number = globalMatrix.a;
+			var b : Number = globalMatrix.b;
+			var c : Number = globalMatrix.c;
+			var d : Number = globalMatrix.d;
+			
+			var ad : Number = a * d;
+			var bc : Number = b * c;
+			
+			if (ad > 0.0001 * bc) c = -c;
+			if (bc * ( -ad) < 0) a = -a;
+			
+			return Math.atan2(c, a) * 57.2957795;
 		}
 		public function set globalRotation(value : Number) : void
 		{
@@ -153,6 +167,58 @@ package com.battalion.flashpoint.core
 			else
 			{
 				y = value;
+			}
+		}
+		/**
+		 * The scale in global x-coordinates.
+		 */
+		public function get globalScaleX() : Number
+		{
+			
+			var cos : Number = globalMatrix.a;
+			var sin : Number = globalMatrix.b;
+			if (cos < 0) cos = -cos;
+			if (sin < 0) sin = -sin;
+			return cos + sin;
+		}
+		public function set globalScaleX(value : Number) : void
+		{
+			if (_gameObject.parent)
+			{
+				var matrix : Matrix = _gameObject.parent.transform.globalMatrix;
+				var p : Point = matrix.deltaTransformPoint(new Point(value, globalScaleY));
+				scaleX = p.x;
+				scaleY = p.y;
+			}
+			else
+			{
+				scaleX = value;
+			}
+		}
+		/**
+		 * The scale in global y-coordinates.
+		 */
+		public function get globalScaleY() : Number
+		{
+			
+			var cos : Number = globalMatrix.a;
+			var sin : Number = globalMatrix.b;
+			if (cos < 0) cos = -cos;
+			if (sin < 0) sin = -sin;
+			return cos + sin;
+		}
+		public function set globalScaleY(value : Number) : void
+		{
+			if (_gameObject.parent)
+			{
+				var matrix : Matrix = _gameObject.parent.transform.globalMatrix;
+				var p : Point = matrix.deltaTransformPoint(new Point(globalScaleX, value));
+				scaleX = p.x;
+				scaleY = p.y;
+			}
+			else
+			{
+				scaleY = value;
 			}
 		}
 		/**
@@ -295,6 +361,22 @@ package com.battalion.flashpoint.core
 				rotation += angle * amount;
 			}
 		}
+		public function tweenPosition(x : Number, y : Number, duration : Number = 1) : void
+		{
+			TweenMax.to(this, duration, { x:x, y:y, overwrite:true} );
+		}
+		public function tweenRotation(rotation : Number, duration : Number = 1) : void
+		{
+			TweenMax.to(this, duration, { rotation:rotation, overwrite:true} );
+		}
+		public function tweenScale(scaleX : Number, scaleY : Number, duration : Number = 1) : void
+		{
+			TweenMax.to(this, duration, { scaleX:scaleX, scaleY:scaleY, overwrite:true} );
+		}
+		public function tweenAll(x : Number, y : Number, rotation : Number, scaleX : Number, scaleY : Number, duration : Number = 1) : void
+		{
+			TweenMax.to(this, duration, {  x:x, y:y, rotation:rotation, scaleX:scaleX, scaleY:scaleY, overwrite:true} );
+		}
 		public function setMatrix(a : Number = 1, b : Number = 0, c : Number = 0, d : Number = 1, tx : Number = 0, ty : Number = 0) : void
 		{
 			rotation = Math.atan2(b, a) * 57.2957795;
@@ -323,6 +405,11 @@ package com.battalion.flashpoint.core
 			{
 				if (!_countStack[height])
 				{
+					var tween : TweenMax = TweenLite.fastEaseLookup[target];
+					if (tween && tween.cachedTimeScale != FlashPoint.timeScale)
+					{
+						tween.timeScale = FlashPoint.timeScale;
+					}
 					//FLUSH
 					CONFIG::debug
 					{

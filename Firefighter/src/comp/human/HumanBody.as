@@ -351,10 +351,10 @@ package comp.human
 			return true;
 		}
 		
-		public var speed : Number = 100;
-		public var backSpeed : Number = 60;
-		public var runSpeed : Number = 180;
-		public var jumpSpeed : Number = 220;
+		public var speed : Number = 12000;
+		public var backSpeed : Number = 10000;
+		public var runSpeed : Number = 18000;
+		public var jumpSpeed : Number = 12000;
 		
 		private var _animation : BoneAnimation = null;
 		private var _rigidbody : Rigidbody = null;
@@ -461,10 +461,6 @@ package comp.human
 			gameObject.torso.audio.volume = 1;
 			_rigidbody.affectedByGravity = true;
 			var points : Vector.<ContactPoint> = _rigidbody.touchingInDirection(new Point(0, 1), 0.2);
-			/*for each(var point : ContactPoint in points)
-			{
-				if(point.otherCollider) point.otherCollider.sendMessage("onHumanHit", this);
-			}*/
 			if (points && points.length || _forceGrounded)
 			{
 				if (_forceGrounded)
@@ -489,7 +485,7 @@ package comp.human
 						_rigidbody.addForceX((_facingLeft ? backSpeed : (_running ? runSpeed : speed)), ForceMode.ACCELLERATION);
 						_tr.scaleX = 1;
 						_animation.reversed = _facingLeft;
-						_animation.transitionTime = 300;
+						_animation.transitionTime = 0.2 - int(_running) * 0.1;
 						var correctAnimation : String = _running && !_facingLeft ? "humanRun" : "humanWalk";
 						var correctFrame : Number = _animation.currentName == "humanRun" || _animation.currentName == "humanWalk" ? _animation.playhead : (_animation.currentName == "humanIdle2" ? 2.1 : 5.1);
 						if(_animation.currentName != correctAnimation || !_animation.playing) _animation.gotoAndPlay(correctFrame, correctAnimation);
@@ -500,7 +496,7 @@ package comp.human
 						_rigidbody.addForceX(-(!_facingLeft ? backSpeed : (_running ? runSpeed : speed)), ForceMode.ACCELLERATION);
 						_tr.scaleX = -1;
 						_animation.reversed = !_facingLeft;
-						_animation.transitionTime = 300;
+						_animation.transitionTime = 0.2 - int(_running) * 0.1;
 						correctAnimation = _running && _facingLeft ? "humanRun" : "humanWalk";
 						correctFrame = _animation.currentName == "humanRun" || _animation.currentName == "humanWalk" ? _animation.playhead : (_animation.currentName == "humanIdle2" ? 2.1 : 5.1);
 						if(_animation.currentName != correctAnimation || !_animation.playing) _animation.gotoAndPlay(correctFrame, correctAnimation);
@@ -510,7 +506,7 @@ package comp.human
 						//grounded and not moving, but the human is not in an idle pose
 						if (_animation.currentName != "humanIdle1" && _animation.currentName != "humanIdle2")
 						{
-							_animation.transitionTime = 200;
+							_animation.transitionTime = 0.1;
 							if (leftFootAhead || (_animation.playhead > 6.5 || _animation.playhead < 3.5)) _animation.play("humanIdle2");
 							else _animation.play("humanIdle1");
 							gameObject.torso.head.transform.y = -TORSO_HALF_HEIGHT;
@@ -522,7 +518,7 @@ package comp.human
 				{
 					if (_forceGrounded) _tr.y -= 6;
 					_rigidbody.addForce(new Point(0, -jumpSpeed), ForceMode.ACCELLERATION);
-					_animation.transitionTime = 50;
+					_animation.transitionTime = 0.1;
 					_animation.play((_rigidbody.velocity.x > 20 || _rigidbody.velocity.x < -20) && !_animation.reversed ? "humanLeap" : "humanJump", 1);
 					_inAir = true;
 				}
@@ -550,7 +546,7 @@ package comp.human
 						{
 							_animation.currentName = "humanIdle1";
 						}
-						else if(_animation.currentName == "humanRun" || _animation.currentName == "humanWalk")
+						else if(!_animation.reversed && (_animation.currentName == "humanRun" || _animation.currentName == "humanWalk"))
 						{
 							_animation.playhead += 3;
 						}
@@ -570,7 +566,7 @@ package comp.human
 						{
 							_animation.currentName = "humanIdle1";
 						}
-						else if(_animation.currentName == "humanRun" || _animation.currentName == "humanWalk")
+						else if(!_animation.reversed && (_animation.currentName == "humanRun" || _animation.currentName == "humanWalk"))
 						{
 							_animation.playhead += 3;
 						}
@@ -726,10 +722,9 @@ package comp.human
 			requireComponent(RigidbodyInterpolator);
 			(requireComponent(Heat) as Heat).materialType = Heat.PLASTIC;
 			_tr = gameObject.transform;
-			
 			//PHSYICS
 			box.dimensions = new Point(62, 126);
-			box.material = new PhysicMaterial(0.3, 0);
+			box.material = new PhysicMaterial(32, 0);
 			box.layers = Layers.FIRE_VS_HUMANS | Layers.OBJECTS_VS_HUMANS | Layers.STAIRS;
 			_rigidbody.mass = 100;
 			_rigidbody.drag = 0;

@@ -19,6 +19,26 @@ package com.battalion.powergrid
 		 * True if this Rigidbody has been added to the Powergrid.
 		 */
 		public function get added() : Boolean { return _added; }
+		/**
+		 * True if this Rigidbody is enabled.
+		 * 
+		 * Disabling and enabling is faster than removing and adding from the PowerGrid.
+		 * @see enabled()
+		 * @see disable()
+		 */
+		public function get enabled() : Boolean { return _enabled; }
+		public function set enabled(value : Boolean) : void
+		{
+			if (value == _enabled) return;
+			if (_enabled)
+			{
+				disable();
+			}
+			else
+			{
+				enable();
+			}
+		}
 		
 		public function get contacts() : Vector.<Contact> { return _contacts ? _contacts.vector : null; }
 		/**
@@ -111,6 +131,8 @@ package com.battalion.powergrid
 		 * A bitmask indicating what layers to collide with.
 		 */
 		public var layers : uint = 1;
+		/** @private **/
+		internal var _enabled : Boolean = true;
 		
 		/**
 		 * A property to store user data
@@ -162,6 +184,66 @@ package com.battalion.powergrid
 		 */
 		public var lastY : Number = 0;
 		
+		/**
+		 * Disabling and enabling is faster than removing and adding from the PowerGrid.
+		 * @see disable()
+		 */
+		public function enable() : void
+		{
+			if (!_enabled)
+			{
+				_enabled = true;
+				if (BodyNode.pool)
+				{
+					var newBody : BodyNode = BodyNode.pool;
+					BodyNode.pool = BodyNode.pool.next;
+				}
+				else
+				{
+					//THIS SIMPLE LINE IS THE SLOWEST PART OF THE WHOLE ENGINE
+					newBody = new BodyNode();
+				}
+				newBody.body = this;
+				
+				if (this is Circle)
+				{
+					newBody.next = PowerGrid._circles;
+					if(PowerGrid._circles) PowerGrid._circles.prev = newBody;
+					PowerGrid._circles = newBody;
+				}
+				else if (this is Triangle)
+				{
+					newBody.next = PowerGrid._triangles;
+					if(PowerGrid._triangles) PowerGrid._triangles.prev = newBody;
+					PowerGrid._triangles = newBody;
+				}
+				else if (this is Group)
+				{
+					newBody.next = PowerGrid._groups;
+					if(PowerGrid._groups) PowerGrid._groups.prev = newBody;
+					PowerGrid._groups = newBody;
+					for (var child : BodyNode = (this as Group).bodies; child; child = child.next)
+					{
+						child.body.enable();
+					}
+				}
+			}
+		}
+		/**
+		 * Disabling and enabling is faster than removing and adding from the PowerGrid.
+		 * @see enable()
+		 */
+		public function disable() : void
+		{
+			if (this is Group)
+			{
+				for (var child : BodyNode = (this as Group).bodies; child; child = child.next)
+				{
+					child.body._enabled = false;
+				}
+			}
+			_enabled = false;
+		}
 		/**
 		 * If the rigidbody is sleeping, call this method before changing the velocity or angular velocity directly.
 		 */

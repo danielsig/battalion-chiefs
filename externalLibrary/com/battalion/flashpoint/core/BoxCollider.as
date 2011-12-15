@@ -97,6 +97,25 @@ package com.battalion.flashpoint.core
 			(body as Group).releaseBody(triangle1, triangle2);
 			PowerGrid.removeBody(triangle1);
 			PowerGrid.removeBody(triangle2);
+			triangle1 = triangle2 = null;
+		}
+		public override function enable() : void
+		{
+			triangle1.enable();
+			triangle2.enable();
+		}
+		public override function disable() : void
+		{
+			triangle1.disable();
+			triangle2.disable();
+		}
+		public override function get enabled() : Boolean
+		{
+			return triangle1.enabled;
+		}
+		public override function set enabled(value : Boolean) : void
+		{
+			triangle1.enabled = triangle2.enabled = value;
 		}
 	}
 

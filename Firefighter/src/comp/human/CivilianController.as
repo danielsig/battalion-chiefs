@@ -62,6 +62,7 @@ package comp.human
 		}
 		public function fixedUpdate() : void 
 		{
+			sendMessage("stopRunning");
 			if (_followPlayer)
 			{
 				var target : Transform = _player;

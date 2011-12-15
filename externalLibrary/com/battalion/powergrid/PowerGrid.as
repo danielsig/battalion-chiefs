@@ -1,15 +1,12 @@
 package com.battalion.powergrid 
 {
 	
-	import com.battalion.flashpoint.comp.TextRenderer;
-	import com.battalion.flashpoint.core.GameObject;
-	import comp.objects.RightStairs;
 	import flash.display.BitmapData;
-	import flash.display.Sprite;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
+	import com.battalion.flashpoint.comp.tools.Console;
 	
 	/**
 	 * The main class of the PowerGrid physics engine. Call the init method before anything else.
@@ -70,8 +67,8 @@ package com.battalion.powergrid
 		public static function set hz(value : uint) : void
 		{
 			_hz = value;
-			_milliHz = value * 0.001;
 			_invHz = 1.0 / value;
+			_milliInvHz = 1000 * _invHz;
 		}
 		/**
 		 * The amount of time in seconds that a rigidbody must be still in order to fall asleep.
@@ -121,8 +118,8 @@ package com.battalion.powergrid
 		private static var _sleepAngularVelocity : Number = 0;
 		
 		private static var _hz : uint = 30;
-		private static var _milliHz : Number = _hz * 0.001;
 		private static var _invHz : Number = 1.0 / _hz;
+		private static var _milliInvHz : Number = _invHz * 1000;
 		
         private static var sqrtTable:Vector.<Number>;
         private static var sqrtPow:Number;
@@ -134,6 +131,10 @@ package com.battalion.powergrid
 		private static var _wallBottom : AbstractRigidbody = new AbstractRigidbody();
 		
 		private static var colInfo : Vector.<Number> = new Vector.<Number>(4);
+		
+		//normalized gravity
+		private static var _gx : Number = 0;
+		private static var _gy : Number = 1;
 		
 		/**
 		 * Call this to initiate the PowerGrid.
@@ -148,8 +149,7 @@ package com.battalion.powergrid
 				if (!grid) throw new Error("grid must be non null");
 				if (isNaN(maxSizePromise)) throw new Error("maxSizePromise is NaN (Not a Number)");
 			}
-			//TODO change the first parameter (1) to 2, before release
-			generateSqrtTable(1, 0.01, maxSizePromise * 1.2);
+			generateSqrtTable(2, 0.01, maxSizePromise * 1.2);
 			maxSize = sqrtTable.length / sqrtPow;
 			_unitLog2 = 0;
 			while (unitSize >>> _unitLog2)
@@ -213,8 +213,7 @@ package com.battalion.powergrid
 		 */
 		public static function step(timeElapsed : Number = 33.3333333) : void
 		{	
-			var timeScale : Number = timeElapsed * _milliHz;
-			var deltaTimeElapsed : Number = timeScale * _invHz;
+			var deltaTime : Number = (_milliInvHz / timeElapsed) * _invHz;
 			if ((gravityX > 0 ? gravityX : -gravityX) < (gravityY > 0 ? gravityY : -gravityY))
 			{
 				if (gravityY > 0) var bottomWall : AbstractRigidbody = _wallBottom;
@@ -222,6 +221,18 @@ package com.battalion.powergrid
 			}
 			else if (gravityX > 0) bottomWall = _wallRight
 			else bottomWall = _wallLeft;
+			
+			if (!gravityX)//too common to ignore
+			{
+				_gx = 0;
+				_gy = 1;
+			}
+			else
+			{
+				var gInvLength : Number = 1 / Math.sqrt(gravityX * gravityX + gravityY * gravityY);
+				_gx = gravityX * gInvLength;
+				_gy = gravityY * gInvLength;
+			}
 				
 			var typeCount : uint = 3;
 			var bodies : BodyNode = _circles;
@@ -230,6 +241,43 @@ package com.battalion.powergrid
 				for(var body : BodyNode = bodies; body;)
 				{
 					var rigidbody : AbstractRigidbody = body.body;
+					if (!rigidbody._enabled)
+					{
+						var next : BodyNode = body.next;
+						
+						// removal from the grid buckets
+						for (var node : BodyNode = rigidbody.nodes; node;)
+						{
+							if (node.next) node.next.prev = node.prev;
+							if (node.prev) node.prev.next = node.next;
+							else _buckets[node.index] = node.next;
+							
+							node.next = BodyNode.pool;
+							BodyNode.pool = node;
+							node = node.brother;
+							
+							BodyNode.pool.brother = BodyNode.pool.prev = null;
+							BodyNode.pool.body = null;
+							BodyNode.pool.index = uint.MAX_VALUE;
+						}
+						rigidbody.nodes = null;
+						
+						//removal from the list of rigidbodies that are processed
+						if (body.next) body.next.prev = body.prev;
+						if (body.prev) body.prev.next = next;
+						else if (rigidbody is Circle) _circles = next;
+						else if (rigidbody is Triangle) _triangles = next;
+						else if (rigidbody is Group) _groups = next;
+						
+						body.next = BodyNode.pool;
+						BodyNode.pool = body;
+						
+						BodyNode.pool.brother = BodyNode.pool.prev = null;
+						BodyNode.pool.body = null;
+						BodyNode.pool.index = uint.MAX_VALUE;
+						body = next;
+						continue;
+					}
 					rigidbody.sleepTotalPenetration = 0;
 					
 					if (rigidbody.group && rigidbody is Circle)
@@ -256,19 +304,19 @@ package com.battalion.powergrid
 						&& xMove * xMove + yMove * yMove < _sleepVelocity
 						&& aMove * aMove < _sleepAngularVelocity
 						&& rigidbody.sleeping >= 0 && (contact || rigidbody.sleeping == sleepTime + 500)
-						&& (rigidbody.sleeping += deltaTimeElapsed) > sleepTime)
+						&& (rigidbody.sleeping += deltaTime) > sleepTime)
 					)
 					{
 						// sleep if still
 						rigidbody.sleep();
 						
-						var next : BodyNode = body.next;
+						next = body.next;
 						
 						if (body.next) body.next.prev = body.prev;
-						if (body.prev) body.prev.next = body.next;
-						else if (rigidbody is Circle) _circles = body.next;
-						else if (rigidbody is Triangle) _triangles = body.next;
-						else if (rigidbody is Group) _groups = body.next;
+						if (body.prev) body.prev.next = next;
+						else if (rigidbody is Circle) _circles = next;
+						else if (rigidbody is Triangle) _triangles = next;
+						else if (rigidbody is Group) _groups = next;
 						
 						body.next = BodyNode.pool;
 						BodyNode.pool = body;
@@ -320,8 +368,8 @@ package com.battalion.powergrid
 							{
 								if (rigidbody.affectedByGravity)
 								{
-									rigidbody.vx += gravityX * timeScale / rigidbody.resting;
-									rigidbody.vy += gravityY * timeScale / rigidbody.resting;
+									rigidbody.vx += gravityX * deltaTime / rigidbody.resting;
+									rigidbody.vy += gravityY * deltaTime / rigidbody.resting;
 								}
 							}
 							else if (!rigidbody.moved)
@@ -389,7 +437,7 @@ package com.battalion.powergrid
 								triangle.gn31x = cos * temp - triangle.gn31y * sin;
 								triangle.gn31y = cos * triangle.gn31y + temp * sin;
 								
-								triangle._prevAngle += triangle.va * timeScale;
+								triangle._prevAngle += triangle.va * deltaTime;
 							}
 							if (triangle.group)
 							{
@@ -404,9 +452,9 @@ package com.battalion.powergrid
 						
 						if (rigidbody.mass > 0)
 						{
-							rigidbody.vx *= 1 - rigidbody.drag * timeScale;
-							rigidbody.vy *= 1 - rigidbody.drag * timeScale;
-							rigidbody.va *= 1 - rigidbody.angularDrag * timeScale;
+							rigidbody.vx *= 1 - rigidbody.drag * deltaTime;
+							rigidbody.vy *= 1 - rigidbody.drag * deltaTime;
+							rigidbody.va *= 1 - rigidbody.angularDrag * deltaTime;
 							
 							var absVelocityX : Number = rigidbody.vx;
 							if (absVelocityX < 0) absVelocityX = -absVelocityX;
@@ -432,15 +480,9 @@ package com.battalion.powergrid
 							if (rigidbody.va > maxVelocityA) rigidbody.va = maxVelocityA;
 							else if (rigidbody.va < -maxVelocityA) rigidbody.va = -maxVelocityA;
 							
-							
-							rigidbody.x += rigidbody.vx * timeScale;
-							rigidbody.y += rigidbody.vy * timeScale;
-							rigidbody.a += rigidbody.va * timeScale;
-							
-							if (rigidbody.vx > 1000) rigidbody.vx = 1000;
-							if (rigidbody.vx < -1000) rigidbody.vx = -1000;
-							if (rigidbody.vy > 1000) rigidbody.vy = 1000;
-							if (rigidbody.vy < -1000) rigidbody.vy = -1000;
+							rigidbody.x += rigidbody.vx * deltaTime;
+							rigidbody.y += rigidbody.vy * deltaTime;
+							rigidbody.a += rigidbody.va * deltaTime;
 							
 							if (rigidbody.a > 180 || rigidbody.a < -180) rigidbody.a = ((rigidbody.a + 180) % 360) - 180;
 						}
@@ -491,7 +533,7 @@ package com.battalion.powergrid
 						circle.x = _physicalWidth - circle.radius;
 						left = circle.x - circle.radius - 0.1;
 						right = _physicalWidth - 0.1;
-						resolveWallCollision(circle, circle.radius, 0, -1, 0, timeScale);
+						resolveWallCollision(circle, circle.radius, 0, -1, 0, deltaTime);
 					}
 					else if (left <= 0)
 					{
@@ -502,7 +544,7 @@ package com.battalion.powergrid
 						circle.x = circle.radius;
 						left = 0;
 						right = circle.x + circle.radius;
-						resolveWallCollision(circle, -circle.radius, 0, 1, 0, timeScale);
+						resolveWallCollision(circle, -circle.radius, 0, 1, 0, deltaTime);
 					}
 					if (bottom >= _physicalHeight)
 					{
@@ -513,7 +555,7 @@ package com.battalion.powergrid
 						circle.y = _physicalHeight - circle.radius;
 						top = circle.y - circle.radius - 0.1;
 						bottom = _physicalHeight - 0.1;
-						resolveWallCollision(circle, 0, circle.radius, 0, -1, timeScale);
+						resolveWallCollision(circle, 0, circle.radius, 0, -1, deltaTime);
 					}
 					else if (top <= 0)
 					{
@@ -524,7 +566,7 @@ package com.battalion.powergrid
 						circle.y = circle.radius;
 						top = 0;
 						bottom = circle.y + circle.radius;
-						resolveWallCollision(circle, 0, -circle.radius, 0, 1, timeScale);
+						resolveWallCollision(circle, 0, -circle.radius, 0, 1, deltaTime);
 					}
 					//get indexes
 					lowerIndex = (left >> _unitLog2) + (top >> _unitLog2) * _width;
@@ -534,8 +576,8 @@ package com.battalion.powergrid
 					{
 						var collision : Boolean = false;
 						var touching : Boolean = false;
-						//remove previous nodes
-						for (var node : BodyNode = circle.nodes; node;)
+						//remove previous nodes from buckets
+						for (node = circle.nodes; node;)
 						{
 							//node.remove();
 							//------ this is because of the function call bottle neck in flash -----
@@ -597,7 +639,7 @@ package com.battalion.powergrid
 							
 							if (circle._mass && circle.layers & _tiles[i])
 							{
-								if (resolveCircleVsTile(circle, i, timeScale))
+								if (resolveCircleVsTile(circle, i, deltaTime))
 								{
 									tileCollision = collision = true;
 								}
@@ -661,7 +703,7 @@ package com.battalion.powergrid
 										{
 											invMass = (circle.vanDerWaals + otherCircle.vanDerWaals) / (circle._mass + otherCircle._mass);
 											length = Math.sqrt(distSquare);
-											invLength = 2 / (length * length + length);
+											invLength = deltaTime * 2 / (length * length + length);
 											nx = dx * invLength;
 											ny = dy * invLength;
 											
@@ -674,7 +716,7 @@ package com.battalion.powergrid
 									}
 									else if (otherTriangle && otherTriangle.layers & circle.layers && (!circle.group || circle.group != otherTriangle.group))
 									{
-										if (resolveTriangleVsCircle(otherTriangle, circle, timeScale))
+										if (resolveTriangleVsCircle(otherTriangle, circle, deltaTime))
 										{
 											contact1x = colInfo[0] - circle.x;
 											contact1y = colInfo[1] - circle.y;
@@ -684,10 +726,10 @@ package com.battalion.powergrid
 											ny = colInfo[3];
 										}
 									}
-									if (!isNaN(contact1x))
+									if (contact1x == contact1x)
 									{
 										touching = true;
-										resolveCollision(circle, other, contact1x, contact1y, contact2x, contact2y, nx, ny, timeScale);
+										resolveCollision(circle, other, contact1x, contact1y, contact2x, contact2y, nx, ny, deltaTime);
 									}
 								}
 							}
@@ -705,7 +747,7 @@ package com.battalion.powergrid
 						}
 						if (!touching)
 						{
-							circle.resting += (1 - circle.resting) * timeScale * 0.5;
+							circle.resting += (1 - circle.resting) * deltaTime * 0.5;
 						}
 					}
 					if (iterations && collision)
@@ -810,28 +852,28 @@ package com.battalion.powergrid
 							if (triangle.gx1 > triangle.gx2 && triangle.gx1 > triangle.gx3) var pos : Number = triangle.gy1;
 							else if (triangle.gx2 > triangle.gx3) pos = triangle.gy2;
 							else pos = triangle.gy3;
-							resolveWallCollision(triangle, right - triangle.x, pos, -1, 0, timeScale);
+							resolveWallCollision(triangle, right - triangle.x, pos, -1, 0, deltaTime);
 						}
 						else if (nx > 0)
 						{
 							if (triangle.gx1 < triangle.gx2 && triangle.gx1 < triangle.gx3) pos = triangle.gy1;
 							else if (triangle.gx2 < triangle.gx3) pos = triangle.gy2;
 							else pos = triangle.gy3;
-							resolveWallCollision(triangle, left - triangle.x, pos, 1, 0, timeScale);
+							resolveWallCollision(triangle, left - triangle.x, pos, 1, 0, deltaTime);
 						}
 						if (ny < 0)
 						{
 							if (triangle.gy1 > triangle.gy2 && triangle.gy1 > triangle.gy3) pos = triangle.gx1;
 							else if (triangle.gy2 > triangle.gy3) pos = triangle.gx2;
 							else pos = triangle.gx3;
-							resolveWallCollision(triangle, pos, bottom - triangle.y, 0, -1, timeScale);
+							resolveWallCollision(triangle, pos, bottom - triangle.y, 0, -1, deltaTime);
 						}
 						else if (ny > 0)
 						{
 							if (triangle.gy1 < triangle.gy2 && triangle.gy1 < triangle.gy3) pos = triangle.gx1;
 							else if (triangle.gy2 < triangle.gy3) pos = triangle.gx2;
 							else pos = triangle.gx3;
-							resolveWallCollision(triangle, pos, top - triangle.y, 0, 1, timeScale);
+							resolveWallCollision(triangle, pos, top - triangle.y, 0, 1, deltaTime);
 						}
 					}
 					
@@ -847,7 +889,7 @@ package com.battalion.powergrid
 						collision = false;
 						touching = false;
 						
-						//remove previous nodes
+						//remove previous nodes from buckets
 						for (node = triangle.nodes; node;)
 						{
 							//node.remove();
@@ -911,7 +953,7 @@ package com.battalion.powergrid
 							if (triangle._mass && triangle.layers & _tiles[i])
 							{
 								collision = true;
-								tileCollision ||= resolveTriangleVsTile(triangle, i, timeScale);
+								tileCollision ||= resolveTriangleVsTile(triangle, i, deltaTime);
 							}
 							
 							//check for collisions with other rigidbodies
@@ -928,7 +970,7 @@ package com.battalion.powergrid
 									
 									if (otherCircle && otherCircle.layers & triangle.layers && (!triangle.group || triangle.group != otherCircle.group))
 									{
-										if (resolveTriangleVsCircle(triangle,otherCircle, timeScale))
+										if (resolveTriangleVsCircle(triangle,otherCircle, deltaTime))
 										{
 											contact1x = colInfo[0] - triangle.x;
 											contact1y = colInfo[1] - triangle.y;
@@ -940,7 +982,7 @@ package com.battalion.powergrid
 									}
 									else if (otherTriangle && otherTriangle != triangle && otherTriangle.layers & triangle.layers && (!triangle.group || triangle.group != otherTriangle.group))
 									{
-										if (resolveTriangles(triangle, otherTriangle, timeScale))
+										if (resolveTriangles(triangle, otherTriangle, deltaTime))
 										{
 											//the other triangle is sleeping, let's wake it up											
 											contact1x = colInfo[0] - triangle.x;
@@ -951,11 +993,11 @@ package com.battalion.powergrid
 											ny = colInfo[3];
 										}
 									}
-									if (!isNaN(contact1x))
+									if (contact1x == contact1x)
 									{
 										touching = true;
-										if(other.mass > 0) resolveCollision(triangle, other, contact1x, contact1y, contact2x, contact2y, nx, ny, timeScale);
-										else resolveWallCollision(triangle, contact1x, contact1y, -nx, -ny, timeScale);
+										if(other.mass > 0) resolveCollision(triangle, other, contact1x, contact1y, contact2x, contact2y, nx, ny, deltaTime);
+										else resolveWallCollision(triangle, contact1x, contact1y, -nx, -ny, deltaTime);
 									}
 								}
 							}
@@ -973,7 +1015,7 @@ package com.battalion.powergrid
 						}
 						if (!touching)
 						{
-							triangle.resting += (1 - triangle.resting) * timeScale * 0.5;
+							triangle.resting += (1 - triangle.resting) * deltaTime * 0.5;
 						}
 					}
 					if (iterations && collision)
@@ -1016,7 +1058,7 @@ package com.battalion.powergrid
 		private static function resolveWallCollision(
 			body : AbstractRigidbody,
 			contactx : Number, contacty : Number,
-			nx : Number, ny : Number, timeScale : Number, staticBody : AbstractRigidbody = null) : void
+			nx : Number, ny : Number, deltaTime : Number, staticBody : AbstractRigidbody = null) : void
 		{
 			var original : AbstractRigidbody = body;
 			var originalStatic : AbstractRigidbody = staticBody;
@@ -1038,8 +1080,8 @@ package com.battalion.powergrid
 				}
 			}
 			
-			if (!nx && !ny) ny = 1;
-			if (nx * gravityX + ny * gravityY < 0) body.resting += timeScale * restingSpeed;
+			if (!(nx | ny)) ny = 1;
+			if (nx * gravityX + ny * gravityY < 0) body.resting += deltaTime * restingSpeed;
 			if (body.group)
 			{
 				body.group.syncBodies();
@@ -1079,7 +1121,7 @@ package com.battalion.powergrid
 			
 			rvNorm = -ny * velocityAtContactx + nx * velocityAtContacty;
 			
-			impulse = -(rvNorm / impulseDenominator) * (originalStatic ? original.friction * originalStatic.friction : original.friction);
+			impulse = -(rvNorm / impulseDenominator) * (originalStatic ? original.friction * originalStatic.friction : original.friction) * deltaTime;
 			
 			dlv1x -= ny * impulse;
 			dlv1y += nx * impulse;
@@ -1089,7 +1131,7 @@ package com.battalion.powergrid
 			body.vy += dlv1y;
 			body.va += dav1;
 			
-			body.va *= 1 - body.angularDragOnCollision * timeScale;
+			body.va *= 1 - body.angularDragOnCollision * deltaTime;
 			
 			if(wall) Contact.makeContact(contactx + body.x, contacty + body.y, nx, ny, original, wall);
 		}
@@ -1097,16 +1139,16 @@ package com.battalion.powergrid
 			first : AbstractRigidbody, second : AbstractRigidbody,
 			contact1x : Number, contact1y : Number,
 			contact2x : Number, contact2y : Number,
-			nx : Number, ny : Number, timeScale : Number) : void
+			nx : Number, ny : Number, deltaTime : Number) : void
 		{
-			if (!(nx & ny)) ny = 1;
+			if (!(nx | ny)) ny = 1;
 			
 			var originalFirst : AbstractRigidbody = first;
 			var originalSecond : AbstractRigidbody = second;
 			
-			var restingAmount : Number = (first.x - second.x) * gravityX + (first.y - second.y) * gravityY;
-			if (restingAmount > 0) first.resting += timeScale * restingSpeed * restingAmount;
-			else second.resting -= timeScale * restingSpeed * restingAmount;
+			var restingAmount : Number = nx * _gx + ny * _gy;
+			if (restingAmount > 0) first.resting += deltaTime * restingSpeed * restingAmount;
+			else second.resting -= deltaTime * restingSpeed * restingAmount;
 			
 			if (first.group)
 			{
@@ -1149,12 +1191,12 @@ package com.battalion.powergrid
 			
 			if (first._mass == 0)//is the first one static?
 			{
-				resolveWallCollision(originalSecond, contact2x, contact2y, nx, ny, timeScale, originalFirst);
+				resolveWallCollision(originalSecond, contact2x, contact2y, nx, ny, deltaTime, originalFirst);
 				return;
 			}
 			else if (second._mass == 0)//is the second one static?
 			{
-				resolveWallCollision(originalFirst, contact1x, contact1y, -nx, -ny, timeScale, originalSecond);
+				resolveWallCollision(originalFirst, contact1x, contact1y, -nx, -ny, deltaTime, originalSecond);
 				return;
 			}
 			
@@ -1205,7 +1247,7 @@ package com.battalion.powergrid
 			impulseDenominator += contactPerpTangent1 * contactPerpTangent1 * invInertia1;
 			impulseDenominator += contactPerpTangent2 * contactPerpTangent2 * invInertia2;
 			
-			impulse = -((-ny * relativeVelocityX + nx * relativeVelocityY) / impulseDenominator) * originalFirst.friction * originalSecond.friction;
+			impulse = -((-ny * relativeVelocityX + nx * relativeVelocityY) / impulseDenominator) * originalFirst.friction * originalSecond.friction * deltaTime;
 			
 			dlv1x -= ny * impulse * invMass1;
 			dlv1y += nx * impulse * invMass1;
@@ -1220,7 +1262,7 @@ package com.battalion.powergrid
 				first.vx += dlv1x;
 				first.vy += dlv1y;
 				first.va += dav1;
-				first.va *= 1 - first.angularDragOnCollision * timeScale;
+				first.va *= 1 - first.angularDragOnCollision * deltaTime;
 			}
 			
 			if (second.sleeping < sleepTime && second.mass > 0.0)
@@ -1228,10 +1270,10 @@ package com.battalion.powergrid
 				second.vx += dlv2x;
 				second.vy += dlv2y;
 				second.va += dav2;
-				second.va *= 1 - second.angularDragOnCollision * timeScale;
+				second.va *= 1 - second.angularDragOnCollision * deltaTime;
 			}
 		}
-		private static function resolveCircleVsTile(circle : Circle, tile : uint, timeScale : Number) : Boolean
+		private static function resolveCircleVsTile(circle : Circle, tile : uint, deltaTime : Number) : Boolean
 		{
 			var unit : uint = 1 << _unitLog2;
 			var tileX : uint = tile % _widthUint;
@@ -1297,7 +1339,7 @@ package com.battalion.powergrid
 							{
 								circle.x = colX;
 								circle.y = tileTop - radius;
-								resolveWallCollision(circle, 0, radius, 0, -1, timeScale);
+								resolveWallCollision(circle, 0, radius, 0, -1, deltaTime);
 								circle.prevX = circle.x += dx * (1 - toi);
 								circle.prevY = circle.y -= dy * (1 - toi);
 								circle.prevA = circle.a;
@@ -1312,7 +1354,7 @@ package com.battalion.powergrid
 							{
 								circle.x = colX;
 								circle.y = tileBottom + radius;
-								resolveWallCollision(circle, 0, -radius, 0, 1, timeScale);
+								resolveWallCollision(circle, 0, -radius, 0, 1, deltaTime);
 								circle.prevX = circle.x += dx * (1 - toi);
 								circle.prevY = circle.y -= dy * (1 - toi);
 								circle.prevA = circle.a;
@@ -1330,7 +1372,7 @@ package com.battalion.powergrid
 							{
 								circle.x = tileLeft - radius;
 								circle.y = colY;
-								resolveWallCollision(circle, radius, 0, -1, 0, timeScale);
+								resolveWallCollision(circle, radius, 0, -1, 0, deltaTime);
 								circle.prevX = circle.x -= dx * (1 - toi);
 								circle.prevY = circle.y += dy * (1 - toi);
 								circle.prevA = circle.a;
@@ -1345,7 +1387,7 @@ package com.battalion.powergrid
 							{
 								circle.x = tileRight + radius;
 								circle.y = colY;
-								resolveWallCollision(circle, -radius, 0, 1, 0, timeScale);
+								resolveWallCollision(circle, -radius, 0, 1, 0, deltaTime);
 								circle.prevX = circle.x -= dx * (1 - toi);
 								circle.prevY = circle.y += dy * (1 - toi);
 								circle.prevA = circle.a;
@@ -1373,11 +1415,11 @@ package com.battalion.powergrid
 					
 					if (doSide)
 					{
-						resolveWallCollision(circle, 0, colY - posY, dx < 0 ? 1 : -1, 0, timeScale);
+						resolveWallCollision(circle, 0, colY - posY, dx < 0 ? 1 : -1, 0, deltaTime);
 					}
 					else
 					{
-						resolveWallCollision(circle, colX - posX, 0, 0, dy < 0 ? 1 : -1, timeScale);
+						resolveWallCollision(circle, colX - posX, 0, 0, dy < 0 ? 1 : -1, deltaTime);
 					}
 					return true;
 				}
@@ -1393,14 +1435,14 @@ package com.battalion.powergrid
 					circle.x += dx * (radius - dist);
 					circle.y += dy * (radius - dist);
 					
-					resolveWallCollision(circle, colX - posX, colY - posY, -dx, -dy, timeScale);
+					resolveWallCollision(circle, colX - posX, colY - posY, -dx, -dy, deltaTime);
 					
 					return true;
 				}
 			}
 			return false;
 		}
-		private static function resolveTriangleVsTile(triangle : Triangle, tile : uint, timeScale : Number) : Boolean
+		private static function resolveTriangleVsTile(triangle : Triangle, tile : uint, deltaTime : Number) : Boolean
 		{
 			stopNOW = true;
 			
@@ -1699,14 +1741,14 @@ package com.battalion.powergrid
 				triangle.y += moveY;
 				var body : AbstractRigidbody = triangle.group || triangle;
 				if ((axisX == 1 || axisX == -1) && body.vx * axisX > 0 || (axisY == 1 || axisY == -1) && body.vy * axisY > 0) return true;
-				resolveWallCollision(triangle, pointX - triangle.x, pointY - triangle.y, axisX, axisY, timeScale);
+				resolveWallCollision(triangle, pointX - triangle.x, pointY - triangle.y, axisX, axisY, deltaTime);
 				
 				return true;
 			}
 			
 			return false;
 		}
-		private static function resolveTriangleVsCircle(triangle : Triangle, circle : Circle, timeScale : Number) : Boolean
+		private static function resolveTriangleVsCircle(triangle : Triangle, circle : Circle, deltaTime : Number) : Boolean
 		{
 			if (!(circle.layers & triangle.layers) || circle.group == triangle.group && triangle.group) return false;//in the same group;
 			var dx : Number = circle.x - triangle.x;
@@ -1854,7 +1896,7 @@ package com.battalion.powergrid
 			}
 			return false;
 		}
-		private static function resolveTriangles(triangle : Triangle, other : Triangle, timeScale : Number) : Boolean
+		private static function resolveTriangles(triangle : Triangle, other : Triangle, deltaTime : Number) : Boolean
 		{
 			if (!(other.layers & triangle.layers) || other.group == triangle.group && triangle.group) return false;//not in the same layers or in the same group
 			var dot1 : Number, dot2 : Number, dot3 : Number;
@@ -2104,7 +2146,7 @@ package com.battalion.powergrid
 			}
 			body._added = false;
 
-			//remove previous nodes
+			//remove previous nodes from buckets
 			for (var node : BodyNode = body.nodes; node;)
 			{
 				//node.remove();
@@ -2211,8 +2253,8 @@ package com.battalion.powergrid
 		 */
 		public static function setOptimalMaxVelocity() : void
 		{
-			maxVelocityX = maxVelocityY = unitSize;
-			maxVelocityA = 120;
+			maxVelocityX = maxVelocityY = unitSize * _hz;
+			maxVelocityA = 120 * _hz;
 		}
 		public static function getInAreaProperty(propertyName : String, vector : Vector.<*>, left : uint, top : uint, width : uint = 1, height : uint = 1) : void
 		{

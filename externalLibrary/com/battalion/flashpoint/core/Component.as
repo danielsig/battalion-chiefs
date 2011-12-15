@@ -6,11 +6,12 @@ package com.battalion.flashpoint.core
 	import flash.utils.getDefinitionByName;
 	import flash.utils.Dictionary;
 	import com.battalion.Input;
+	import com.battalion.flashpoint.comp.tools.Console;
 	
 	/**
 	 * Extend this class in order to make new components.
-	 * Do not instantate components yourself. Instead pass the type of a component as a parameter to certain methods within the GameObject class.
-	 * <strong>Good Design Princibles</strong><p>
+	 * Do not instantate components yourself. Instead pass the type of a component as a parameter to certain methods within the GameObject class.<pre>
+</pre>	 * <strong>Good Design Princibles</strong><p>
 	 * Strive to make only exclusive Components. Always have a good reason for creating non-exclusive components.
 	 * Make all your stateless components exclusive. A stateless Component is basicly a Component with no properties.
 	 * The only exception to make a non-exclusive Component is if it fulfills any of the folowing requirements:
@@ -136,27 +137,46 @@ package com.battalion.flashpoint.core
 				_gameObject._components.length--;
 			}
 		}
-		public function addListener(messageName : String, callbackFunction : Function) : void
+		/**
+		 * Add a listener to a specific message named <code>messageName</code> so that when
+		 * that message is sent, the callbackFunction is called.
+		 * @param	messageName, the name of the message to listen to
+		 * @param	callbackFunction, the function to call when the message will be sent
+		 */
+		public function addListener(messageName : String, callbackFunction : Function, firstParamIsGameObject : Boolean = false) : void
 		{
 			CONFIG::debug
 			{
 				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
 				if (!messageName) throw new Error("MessageName must be non-null.");
-				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+				if (callbackFunction == null) throw new Error("CallbackFunction must be non-null.");
 			}
 			if (!_gameObject._listeners[messageName]) _gameObject._listeners[messageName] = new Dictionary();
+			else if (_gameObject._listeners[messageName][callbackFunction]) return;
 			var obj : Object = { };
-			obj[messageName] = callbackFunction;
-			_gameObject._listeners[messageName][callbackFunction] = _gameObject.addDynamic(messageName + "Listener", obj, true);
+			if (firstParamIsGameObject)
+			{
+				(_gameObject._listeners[messageName][callbackFunction] = _gameObject.addDynamic(messageName + "Listener", null, true)).addFunction(messageName, callbackFunction, true);
+			}
+			else
+			{
+				obj[messageName] = callbackFunction;
+				_gameObject._listeners[messageName][callbackFunction] = _gameObject.addDynamic(messageName + "Listener", obj, true);
+			}
 			
 		}
+		/**
+		 * remove a previously added listener
+		 * @param	messageName, the name of the message that is being listened to and should be removed
+		 * @param	callbackFunction, the function that should bre removed that is being called when message named <code>messageName</code> is sent
+		 */
 		public function removeListener(messageName : String, callbackFunction : Function) : void
 		{
 			CONFIG::debug
 			{
 				if (!_gameObject || _gameObject._components.indexOf(this) < 0) throw new Error("Component has been removed, but you're trying to access it");
 				if (!messageName) throw new Error("MessageName must be non-null.");
-				if (!callbackFunction) throw new Error("CallbackFunction must be non-null.");
+				if (callbackFunction == null) throw new Error("CallbackFunction must be non-null.");
 			}
 			if (_gameObject._listeners[messageName] && _gameObject._listeners[messageName][callbackFunction])
 			{
@@ -295,11 +315,85 @@ package com.battalion.flashpoint.core
 			}
 			return instance;
 		}
+		private function emptyFunction(...args) : void { }
+		/**
+		 * Call this method in order to alter your function pointers.
+		 * The term function pointer in this context is a property of a component
+		 * that is of type Function. In other words, it is a public variable
+		 * that can reference an actual function.
+		 * <p>
+		 * If that function pointer is an update, fixedUpdate or a start function,
+		 * or a message handler (function called using the sendMessage() method),
+		 * and you change it with a simple assignment, then it's not likely you'll
+		 * see any changes. Instead, use this method to change function pointers.
+		 * </p>
+		 * @param	pointerName
+		 * @param	value
+		 */
+		public final function setFunctionPointer(pointerName : String, value : Function) : void
+		{
+			var thisComp : * = this;
+			if (thisComp.hasOwnProperty(pointerName) && (thisComp[pointerName] is Function || thisComp[pointerName] == null))
+			{
+				var oldFunction : Function = thisComp[pointerName];
+				value ||= emptyFunction;
+				if (value == oldFunction) return;
+				CONFIG::debug
+				{
+					try
+					{
+						thisComp[pointerName] = value;
+					}
+					catch (error : Error)
+					{
+						throw new Error(pointerName + " is not a function pointer, it's an actual function.\nPlease change it to a public variable that references a function before calling this method.");
+					}
+				}
+				CONFIG::release
+				{
+					thisComp[pointerName] = value;
+				}
+				
+				var functionArray : Vector.<Function> = null;
+				switch(pointerName)
+				{
+					case "update" :
+						functionArray = _gameObject._update;
+						break;
+					case "fixedUpdate" :
+						functionArray = _gameObject._fixedUpdate;
+						break;
+					case "start" :
+						functionArray = _gameObject._start;
+						break;
+				}
+				var done : Boolean = false;
+				do
+				{
+					if (functionArray)
+					{
+						var index : int = functionArray.lastIndexOf(oldFunction);
+						if (index >= 0)
+						{
+							functionArray[index] = value;
+						}
+					}
+					functionArray = _gameObject._messages[pointerName];
+				}
+				while (!(done = !done));
+			}
+			else
+			{
+				throw new Error("Function pointer " + pointerName + " was not found on " + this + ".");
+			}
+		}
 		/**
 		 * Use this to communicate with other Components in this GameObject.
 		 * Calls every function named message on every Component in this GameObject.
 		 * An exception to this is when you want to send a message only to a component of a specific type.
-		 * 
+		 * The returned Boolean indicates if this component or it's GameObject has been destroyed.
+		 * It is wise to put a sendMessage call inside an 'if' statement and terminate when it returns true
+		 * since a destroyed component isn't supposed to have any effect any more.
 		 * 
 		 * @example Here's an example of how sendMessage works:<listing version="3.0">
 		 * sendMessage("applyDamage", 10);
@@ -340,14 +434,18 @@ package com.battalion.flashpoint.core
 		 * 		log("Ouch! -" + amount + "Hp.");
 		 * 	}
 		 * }</listing>
+		 *  @example Here's an example of how one could handle the return value of the sendMessage method:<listing version="3.0">
+		 * if(sendMessage("applyDamage", 10)) return;
+		 * </listing>
 		 * @see #sendBefore()
 		 * @see #sendAfter()
 		 * @see #chain()
 		 * @see #sequence()
 		 * @param	message, the name of the message to send.
 		 * @param	...args, the parameters to pass along with the function call.
+		 * @return Boolean, true if sending the message has resulted in a self destruct, otherwise false.
 		 */
-		public final function sendMessage(message : String, ...args) : void
+		public final function sendMessage(message : String, ...args) : Boolean
 		{
 			CONFIG::debug
 			{
@@ -371,7 +469,7 @@ package com.battalion.flashpoint.core
 					}
 					else
 					{
-						return;
+						return false;
 					}
 				}
 				else
@@ -399,14 +497,14 @@ package com.battalion.flashpoint.core
 				for each(var before : Array in _gameObject._before[message])
 				{
 					sendMessage.apply(this, before);
-					if (!_gameObject || !_gameObject._parent) return;
+					if (!_gameObject || !_gameObject._parent) return true;
 				}
 				delete _gameObject._before[message];
 			}
 			for each(var receiver : Function in receivers)
 			{
 				receiver.apply(this, args);
-				if (!_gameObject || !_gameObject._parent) return;
+				if (!_gameObject || !_gameObject._parent) return true;
 			}
 			if (_gameObject._after.hasOwnProperty(message))
 			{
@@ -418,17 +516,18 @@ package com.battalion.flashpoint.core
 						for each(var f : Function in msg[after])
 						{
 							f(message);
-							if (!_gameObject || !_gameObject._parent) return;
+							if (!_gameObject || !_gameObject._parent) return true;
 						}
 					}
 					else
 					{
 						sendMessage.apply(this, msg[after]);
-						if (!_gameObject || !_gameObject._parent) return;
+						if (!_gameObject || !_gameObject._parent) return true;
 					}
 				}
-				delete _gameObject._after[message]
+				delete _gameObject._after[message];
 			}
+			return !_gameObject || !_gameObject._parent;
 		}
 		/**
 		 * Use this method to determine if there's any component added to this
@@ -615,13 +714,10 @@ package com.battalion.flashpoint.core
 		 */
 		public function logOn(gameObjectName : String, ...args) : Boolean
 		{
-			CONFIG::debug
+			if (gameObject.name == gameObjectName)
 			{
-				if (gameObject.name == gameObjectName)
-				{
-					log.apply(this, args);
-					return true;
-				}
+				log.apply(this, args);
+				return true;
 			}
 			return false;
 		}
@@ -633,7 +729,7 @@ package com.battalion.flashpoint.core
 				name = name.slice(name.lastIndexOf("::") + 2);
 				name = name.charAt(0).toLowerCase() + name.slice(1);
 				
-				trace(_gameObject._name + "." + name + ": ");
+				trace("2:" + _gameObject._name + "." + name + ": ");
 				for each(var member : String in _privateMemberNames)
 				{
 					var value : * = getPrivate(member);
@@ -646,7 +742,7 @@ package com.battalion.flashpoint.core
 						}
 						value = string.slice(0, -2) + "}";
 					}
-					trace("\t" + member + ": " + value);
+					trace("2:\t" + member + ": " + value);
 				}
 			}
 		}
@@ -688,13 +784,58 @@ package com.battalion.flashpoint.core
 				}
 				else
 				{
-					trace(_gameObject._name + "." + name + ": ");
+					trace("3:" + _gameObject._name + "." + name + ": ");
 					var info : XMLList = describeType(this).children();
 					for each(var member : XML in info)
 					{
 						if ((member.name() == "variable" || member.name() == "accessor"))
 						{
-							trace("\t" + member.@name + ": " + this[member.@name]);
+							trace("4:\t" + member.@name + ": " + this[member.@name]);
+						}
+					}
+				}
+			}
+			CONFIG::release
+			{
+				var console : Console = Console.getConsole();
+				if (!console) return;
+				var name : String = getQualifiedClassName(this);
+				name = name.slice(name.lastIndexOf("::") + 2);
+				name = name.charAt(0).toLowerCase() + name.slice(1);
+				
+				if (args.length > 0)
+				{
+					var string : String = _gameObject._name + "." + name + ": ";
+					if (args[0] is Point)
+					{
+						string += "{ x:" + args[0].x.toFixed(2) + ", y:" + args[0].y.toFixed(2) + " }";
+					}
+					else
+					{
+						string += args[0];
+					}
+					for (var i : int = 1; i < args.length; i++ )
+					{
+						if (args[i] is Point)
+						{
+							string += ", { x:" + args[i].x.toFixed(2) + ", y:" + args[i].y.toFixed(2) + " }";
+						}
+						else
+						{
+							string += ", " + args[i];
+						}
+					}
+					console.writeLine(string);
+				}
+				else
+				{
+					console.writeLine(_gameObject._name + "." + name + ": ");
+					var info : XMLList = describeType(this).children();
+					for each(var member : XML in info)
+					{
+						if ((member.name() == "variable" || member.name() == "accessor"))
+						{
+							console.writeLine("\t" + member.@name + ": " + this[member.@name]);
 						}
 					}
 				}

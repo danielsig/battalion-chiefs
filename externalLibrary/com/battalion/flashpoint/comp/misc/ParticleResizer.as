@@ -2,7 +2,6 @@ package com.battalion.flashpoint.comp.misc
 {
 	import com.battalion.flashpoint.core.Component;
 	import com.battalion.flashpoint.core.GameObject;
-	import com.battalion.flashpoint.core.IConciseComponent;
 	import com.battalion.flashpoint.core.IExclusiveComponent;
 	
 	/**

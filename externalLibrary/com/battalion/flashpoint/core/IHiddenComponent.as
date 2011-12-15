@@ -6,7 +6,7 @@ package com.battalion.flashpoint.core
 	 * inaccessable in any way except with the returned value of the
 	 * function that added it to it's GameObject. Concise components (components that implements
 	 * the IConciseComponent interface) are allways hidden. To make DynamicComponents hidden,
-	 * simply set the <code>hidden</code> parameter of the<code>addDynamic()</code>
+	 * simply set the <code>hidden</code> parameter of the <code>addDynamic()</code>
 	 * method call to true.
 	 * @author Battalion Chiefs
 	 */
