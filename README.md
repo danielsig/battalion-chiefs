@@ -31,9 +31,9 @@ When initializing the engine, you must specify a BitmapData? object as the grid.
 </ul>
 <h5>CONS</h5>
 <ul>
-<li>All rigidbodies are stuck inside the grid you specify</ul>
-<li>Huge moving objects can slow things down</ul>
-<li>The source is barely readable</ul>
+<li>All rigidbodies are stuck inside the grid you specify</li>
+<li>Huge moving objects can slow things down</li>
+<li>The source is barely readable</li>
 </ul>
 
 In order to download PowerGrid, you simply have to download the PowerGrid directory.
